@@ -13,15 +13,29 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  USER_178
+  USER_580
+  SEEDER
+  ADMIN
+}
+
+enum Status {
+  ACTIVE
+  BLOCKED
+}
+
 model User {
-  id        Int      @id @default(autoincrement())
-  mobile    String   @unique
-  pin       String
-  cid       String   @unique
-  name      String?
-  role      String   @default("user") // "user" or "admin"
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(uuid())
+  mobile       String   @unique
+  country_code String   @default("+91")
+  pin_hash     String
+  cid          String   @unique
+  name         String?
+  role         Role     @default(USER_178)
+  status       Status   @default(ACTIVE)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
   
   // Relations
   transactions Transaction[]
@@ -45,22 +59,22 @@ model Product {
 }
 
 model WalletMinute {
-  id      Int  @id @default(autoincrement())
-  userId  Int  @unique
-  user    User @relation(fields: [userId], references: [id])
-  balance Int  @default(0)
+  id      Int    @id @default(autoincrement())
+  userId  String @unique
+  user    User   @relation(fields: [userId], references: [id])
+  balance Int    @default(0)
 }
 
 model WalletCash {
-  id      Int   @id @default(autoincrement())
-  userId  Int   @unique
-  user    User  @relation(fields: [userId], references: [id])
-  balance Float @default(0.0)
+  id      Int    @id @default(autoincrement())
+  userId  String @unique
+  user    User   @relation(fields: [userId], references: [id])
+  balance Float  @default(0.0)
 }
 
 model Transaction {
   id              Int      @id @default(autoincrement())
-  userId          Int
+  userId          String
   user            User     @relation(fields: [userId], references: [id])
   type            String   // e.g., "PURCHASE", "BONUS"
   amount          Float
@@ -71,7 +85,7 @@ model Transaction {
 
 model Payout {
   id        Int      @id @default(autoincrement())
-  userId    Int
+  userId    String
   user      User     @relation(fields: [userId], references: [id])
   amount    Float
   status    String   @default("PENDING") // PENDING, COMPLETED, FAILED
@@ -81,9 +95,9 @@ model Payout {
 
 model Referral {
   id             Int      @id @default(autoincrement())
-  referrerId     Int
+  referrerId     String
   referrer       User     @relation("Referrer", fields: [referrerId], references: [id])
-  referredUserId Int      @unique
+  referredUserId String   @unique
   referredUser   User     @relation("ReferredUser", fields: [referredUserId], references: [id])
   level          Int      @default(1)
   status         String   @default("ACTIVE")
@@ -92,7 +106,7 @@ model Referral {
 
 model BonusLedger {
   id        Int      @id @default(autoincrement())
-  userId    Int
+  userId    String
   user      User     @relation(fields: [userId], references: [id])
   amount    Float
   type      String   // e.g., "LEVEL_1_BONUS"
