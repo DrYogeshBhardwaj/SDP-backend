@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - SDP</title>
+    <link rel="stylesheet" href="../assets/css/theme.css">
+</head>
+
+<body>
+    <div class="container mt-3">
+        <div class="card" style="max-width: 400px; margin: 0 auto;">
+            <h1 class="text-center">Login to SDP</h1>
+            <div id="error-message" class="alert alert-error"></div>
+
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="mobileNumber">Mobile Number</label>
+                    <input type="text" id="mobileNumber" class="form-control" required
+                        placeholder="Enter mobile number">
+                </div>
+                <div class="form-group">
+                    <label for="pin">PIN</label>
+                    <input type="password" id="pin" class="form-control" required placeholder="Enter your PIN">
+                </div>
+                <button type="submit" class="btn btn-primary mt-1" id="login-btn">Secure Login</button>
+            </form>
+            <div class="text-center mt-2">
+                <a href="register.html">Need an account? Register</a>
+            </div>
+            <div class="text-center mt-1">
+                <a href="index.html">Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Centralized Utilities -->
+    <script src="../assets/js/config.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script src="../assets/js/auth.js"></script>
+
+    <script>
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const mobile = document.getElementById('mobileNumber').value;
+            const pin = document.getElementById('pin').value;
+            const errorDiv = document.getElementById('error-message');
+            const submitBtn = document.getElementById('login-btn');
+
+            errorDiv.classList.remove('show');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Authenticating...';
+
+            try {
+                const response = await Auth.login(mobile, pin);
+
+                // Login successful, redirect based on role
+                const user = response.data?.user || response.user;
+                if (!user) throw new Error("Invalid response format");
+
+                if (user.role === 'ADMIN') {
+                    window.location.href = '/dashboard/admin.html';
+                } else if (user.role === 'SEEDER') {
+                    window.location.href = '/dashboard/seeder.html';
+                } else {
+                    window.location.href = '/dashboard/user.html';
+                }
+            } catch (err) {
+                errorDiv.textContent = err.message || 'Login failed. Please verify credentials.';
+                errorDiv.classList.add('show');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Secure Login';
+            }
+        });
+
+        // If already logged in, redirect
+        Auth.checkAuth().then(user => {
+            if (user) {
+                if (user.role === 'ADMIN') window.location.href = '/dashboard/admin.html';
+                else if (user.role === 'SEEDER') window.location.href = '/dashboard/seeder.html';
+                else window.location.href = '/dashboard/user.html';
+            }
+        });
+    </script>
+</body>
+
+</html>

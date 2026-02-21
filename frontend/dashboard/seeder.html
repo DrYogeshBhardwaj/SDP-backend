@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seeder Dashboard - SDP</title>
+    <link rel="stylesheet" href="../assets/css/theme.css">
+    <style>
+        .metric-card {
+            text-align: center;
+            background: var(--background-color);
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius);
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--spacing-md);
+        }
+
+        @media (min-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container mt-3">
+        <div class="card"
+            style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-md);">
+            <h2 style="margin: 0; font-size: 1.25rem;">Seeder: <span id="user-name-display">Loading...</span></h2>
+            <button class="btn btn-secondary logout-btn" style="width: auto; padding: 0.5rem 1rem;">Logout</button>
+        </div>
+
+        <div id="error-message" class="alert alert-error"></div>
+        <div id="success-message" class="alert alert-success"></div>
+
+        <div class="dashboard-grid mt-2">
+            <!-- Earnings & Referrals -->
+            <div class="card">
+                <h3>My Earnings</h3>
+                <div class="dashboard-grid mt-1">
+                    <div class="metric-card">
+                        <div>Wallet Balance</div>
+                        <div class="metric-value" id="wallet-balance">₹0</div>
+                    </div>
+                    <div class="metric-card" style="border: 1px solid var(--warning-color);">
+                        <div>Total Bonus</div>
+                        <div class="metric-value" style="color: var(--warning-color);" id="total-bonus">₹0</div>
+                    </div>
+                </div>
+
+                <div class="mt-2">
+                    <h4>Request Payout</h4>
+                    <form id="payout-form" class="mt-1">
+                        <div class="form-group mb-1">
+                            <input type="number" id="payout-amount" class="form-control" placeholder="Amount (Min ₹200)"
+                                min="200" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="payout-btn">Withdraw Funds</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Team & Rank -->
+            <div class="card">
+                <h3>Referral Network</h3>
+                <div class="mt-1 p-2" style="background: var(--background-color); border-radius: var(--border-radius);">
+                    <strong>My Referral Link:</strong>
+                    <div style="display: flex; gap: var(--spacing-sm); margin-top: var(--spacing-xs);">
+                        <input type="text" id="referral-link" class="form-control" readonly style="flex: 1;">
+                        <button id="copy-link-btn" class="btn btn-secondary" style="width: auto;">Copy</button>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid mt-2">
+                    <div class="metric-card">
+                        <div>Level 1 Team</div>
+                        <div class="metric-value" id="level1-count"
+                            style="color: var(--text-primary); font-size: 1.5rem;">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div>Level 2 Team</div>
+                        <div class="metric-value" id="level2-count"
+                            style="color: var(--text-primary); font-size: 1.5rem;">0</div>
+                    </div>
+                </div>
+
+                <div class="mt-2 text-center">
+                    <strong>Current Rank/Status:</strong>
+                    <span id="rank-status"
+                        style="padding: 0.25rem 0.5rem; background: var(--success-color); color: white; border-radius: 4px; font-size: 0.85rem; margin-left: var(--spacing-xs);">Active
+                        Seeder</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Team List -->
+        <div class="card mt-2">
+            <h3>My Team (Level 1)</h3>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; margin-top: var(--spacing-sm); min-width: 400px;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border-color); text-align: left;">
+                            <th style="padding: 0.75rem 0.5rem;">Mobile</th>
+                            <th style="padding: 0.75rem 0.5rem;">Joined</th>
+                            <th style="padding: 0.75rem 0.5rem;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="team-table-body">
+                        <tr>
+                            <td colspan="3" class="text-center" style="padding: 1rem;">Loading team...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Centralized Utilities -->
+    <script src="../assets/js/config.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/seeder.js"></script>
+</body>
+
+</html>

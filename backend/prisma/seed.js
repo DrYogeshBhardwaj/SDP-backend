@@ -33,6 +33,24 @@ async function main() {
     });
 
     console.log('Products seeded successfully.');
+
+    console.log('Seeding ranks...');
+    const ranks = [
+        { name: 'Seeder', directRequired: 0, networkRequired: 0, bonusAmount: 0 },
+        { name: 'Builder', directRequired: 10, networkRequired: 0, bonusAmount: 300 },
+        { name: 'Partner', directRequired: 0, networkRequired: 50, bonusAmount: 1000 },
+        { name: 'Senior Partner', directRequired: 0, networkRequired: 100, bonusAmount: 2500 },
+        { name: 'Elite Partner', directRequired: 0, networkRequired: 200, bonusAmount: 5000 }
+    ];
+
+    for (const rank of ranks) {
+        await prisma.rankConfig.upsert({
+            where: { name: rank.name },
+            update: rank,
+            create: rank
+        });
+    }
+    console.log('Ranks seeded successfully.');
 }
 
 main()

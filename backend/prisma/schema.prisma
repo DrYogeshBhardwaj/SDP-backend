@@ -26,25 +26,34 @@ enum Status {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  mobile       String   @unique
-  country_code String   @default("+91")
-  pin_hash     String
-  cid          String   @unique
-  name         String?
-  role         Role     @default(USER_178)
-  status       Status   @default(ACTIVE)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            String   @id @default(uuid())
+  mobile        String   @unique
+  country_code  String   @default("+91")
+  pin_hash      String
+  cid           String   @unique
+  referral_code String?  @unique
+  name          String?
+  role          Role     @default(USER_178)
+  status        Status   @default(ACTIVE)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
   
   // Relations
   transactions Transaction[]
   payouts      Payout[]
   referrals    Referral[]    @relation("Referrer")
-  referredBy   Referral?     @relation("ReferredUser")
+  referredBy   Referral[]    @relation("ReferredUser")
   minutes      WalletMinute?
   cash         WalletCash?
-  bonus        BonusLedger[]
+  bonus        BonusLedger[] @relation("BonusUser")
+  bonusSource  BonusLedger[] @relation("BonusSourceUser")
+  adminLogs    SystemLog[]   @relation("AdminLogs")
+  targetLogs   SystemLog[]   @relation("TargetLogs")
+  ranks            UserRank[]
+  sentMessages     Message[]       @relation("SentMessages")
+  receivedMessages Message[]       @relation("ReceivedMessages")
+  expenses         SystemExpense[] @relation("AdminExpenses")
+  announcements    Announcement[]  @relation("AdminAnnouncements")
 }
 
 enum ProductType {
@@ -56,6 +65,13 @@ enum TransactionType {
   PURCHASE
   MINUTE_DEDUCT
   BONUS
+  PAYOUT
+}
+
+enum PayoutStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 model Product {
@@ -94,40 +110,123 @@ model Transaction {
   status          String          @default("COMPLETED")
   referenceId     String?
   transactionDate DateTime        @default(now())
+
+  @@index([transactionDate])
+  @@index([userId])
+  @@index([status])
 }
 
 model Payout {
-  id        Int      @id @default(autoincrement())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  amount    Float
-  status    String   @default("PENDING") // PENDING, COMPLETED, FAILED
-  updatedAt DateTime @updatedAt
-  createdAt DateTime @default(now())
+  id           String       @id @default(uuid())
+  userId       String
+  user         User         @relation(fields: [userId], references: [id])
+  amount       Float
+  status       PayoutStatus @default(PENDING)
+  requested_at DateTime     @default(now())
+  processed_at DateTime?
+  processed_by String?
+  remarks      String?
+
+  @@index([requested_at])
+  @@index([userId])
+  @@index([status])
 }
 
 model Referral {
-  id             Int      @id @default(autoincrement())
+  id             String   @id @default(uuid())
   referrerId     String
   referrer       User     @relation("Referrer", fields: [referrerId], references: [id])
-  referredUserId String   @unique
+  referredUserId String
   referredUser   User     @relation("ReferredUser", fields: [referredUserId], references: [id])
-  level          Int      @default(1)
+  level          Int      @default(1) // 1 or 2 only
   status         String   @default("ACTIVE")
   createdAt      DateTime @default(now())
+  
+  @@unique([referredUserId, level])
 }
 
 model BonusLedger {
-  id        Int      @id @default(autoincrement())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  amount    Float
-  type      String   // e.g., "LEVEL_1_BONUS"
-  createdAt DateTime @default(now())
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation("BonusUser", fields: [userId], references: [id])
+  amount         Float
+  type           String   // e.g., "DIRECT", "LEVEL2"
+  sourceUserId   String?  // The user whose purchase generated this bonus
+  sourceUser     User?    @relation("BonusSourceUser", fields: [sourceUserId], references: [id])
+  createdAt      DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([userId])
 }
 
 model SystemSetting {
   id    Int    @id @default(autoincrement())
   key   String @unique
   value String
+}
+
+model SystemLog {
+  id           String   @id @default(uuid())
+  adminId      String
+  admin        User     @relation("AdminLogs", fields: [adminId], references: [id])
+  actionType   String
+  targetUserId String?
+  targetUser   User?    @relation("TargetLogs", fields: [targetUserId], references: [id])
+  description  String
+  createdAt    DateTime @default(now())
+}
+
+model RankConfig {
+  id              Int        @id @default(autoincrement())
+  name            String     @unique
+  directRequired  Int
+  networkRequired Int
+  bonusAmount     Float
+  active          Boolean    @default(true)
+  users           UserRank[]
+}
+
+model UserRank {
+  id         String     @id @default(uuid())
+  userId     String
+  user       User       @relation(fields: [userId], references: [id])
+  rankId     Int
+  rank       RankConfig @relation(fields: [rankId], references: [id])
+  achievedAt DateTime   @default(now())
+
+  @@unique([userId, rankId])
+}
+
+model SystemExpense {
+  id          String   @id @default(uuid())
+  adminId     String
+  admin       User     @relation("AdminExpenses", fields: [adminId], references: [id])
+  category    String
+  amount      Float
+  description String
+  date        DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([date])
+  @@index([adminId])
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  senderId   String
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiverId String
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  content    String
+  status     String   @default("UNREAD") // READ/UNREAD
+  createdAt  DateTime @default(now())
+}
+
+model Announcement {
+  id         String   @id @default(uuid())
+  title      String
+  message    String
+  created_by String
+  creator    User     @relation("AdminAnnouncements", fields: [created_by], references: [id])
+  createdAt  DateTime @default(now())
 }

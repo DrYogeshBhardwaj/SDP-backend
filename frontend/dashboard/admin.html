@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - SDP</title>
+    <link rel="stylesheet" href="../assets/css/theme.css">
+    <style>
+        .admin-nav {
+            display: flex;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+            overflow-x: auto;
+            padding-bottom: var(--spacing-xs);
+        }
+
+        .admin-nav button {
+            white-space: nowrap;
+            flex: 1;
+        }
+
+        .admin-section {
+            display: none;
+        }
+
+        .admin-section.active {
+            display: block;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        th,
+        td {
+            padding: 0.75rem 0.5rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .action-btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.85rem;
+            width: auto;
+            margin-right: 0.25rem;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container mt-3">
+        <div class="card"
+            style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-md);">
+            <h2 style="margin: 0; font-size: 1.25rem;">Admin Control Panel</h2>
+            <button class="btn btn-secondary logout-btn" style="width: auto; padding: 0.5rem 1rem;">Logout</button>
+        </div>
+
+        <div id="error-message" class="alert alert-error"></div>
+        <div id="success-message" class="alert alert-success"></div>
+
+        <div class="admin-nav">
+            <button class="btn btn-primary nav-btn" data-target="users-section">Users</button>
+            <button class="btn btn-secondary nav-btn" data-target="payouts-section">Payouts</button>
+            <button class="btn btn-secondary nav-btn" data-target="ledger-section">Ledger</button>
+            <button class="btn btn-secondary nav-btn" data-target="announcements-section">Announcements</button>
+            <button class="btn btn-secondary nav-btn" data-target="export-section">Exports</button>
+        </div>
+
+        <!-- Users Section -->
+        <div id="users-section" class="card admin-section active">
+            <h3>User Management</h3>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mobile</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Balance</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body">
+                        <tr>
+                            <td colspan="5" class="text-center">Loading users...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Payouts Section -->
+        <div id="payouts-section" class="card admin-section">
+            <h3>Pending Payouts</h3>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User (Mobile)</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="payouts-table-body">
+                        <tr>
+                            <td colspan="4" class="text-center">Loading pending payouts...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Ledger Section -->
+        <div id="ledger-section" class="card admin-section">
+            <h3>Expense Ledger (View Only)</h3>
+            <div style="font-size: 1.5rem; font-weight: bold; margin-bottom: var(--spacing-md);">
+                Total Platform Liability: <span id="ledger-total" style="color: var(--danger-color);">₹0</span>
+            </div>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ledger-table-body">
+                        <tr>
+                            <td colspan="4" class="text-center">Loading ledger...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Announcements Section -->
+        <div id="announcements-section" class="card admin-section">
+            <h3>Manage Announcements</h3>
+            <form id="announcement-form" class="mb-2 p-2"
+                style="background: var(--background-color); border-radius: var(--border-radius);">
+                <div class="form-group mb-1">
+                    <label>New Announcement Message</label>
+                    <textarea id="announcement-text" class="form-control" rows="3" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: auto;">Publish Announcement</button>
+            </form>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Message</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="announcements-table-body">
+                        <tr>
+                            <td colspan="3" class="text-center">Loading announcements...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Export Section -->
+        <div id="export-section" class="card admin-section">
+            <h3>CSV Data Export</h3>
+            <p class="mb-2">Download platform data for external analysis.</p>
+            <div style="display: flex; gap: var(--spacing-md); flex-wrap: wrap;">
+                <button class="btn btn-primary" onclick="triggerExport('users')"
+                    style="flex: 1; min-width: 200px;">Export Users (CSV)</button>
+                <button class="btn btn-primary" onclick="triggerExport('payouts')"
+                    style="flex: 1; min-width: 200px;">Export Payouts (CSV)</button>
+                <button class="btn btn-primary" onclick="triggerExport('ledger')"
+                    style="flex: 1; min-width: 200px;">Export Ledger (CSV)</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Centralized Utilities -->
+    <script src="../assets/js/config.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/admin.js"></script>
+</body>
+
+</html>
