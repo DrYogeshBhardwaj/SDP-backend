@@ -47,15 +47,27 @@ model User {
   bonus        BonusLedger[]
 }
 
+enum ProductType {
+  PERSONAL
+  FAMILY
+}
+
+enum TransactionType {
+  PURCHASE
+  MINUTE_DEDUCT
+  BONUS
+}
+
 model Product {
-  id          Int      @id @default(autoincrement())
-  name        String
-  price       Float
-  minutes     Int
-  description String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                String      @id @default(uuid())
+  name              String      @unique
+  price             Float
+  type              ProductType
+  minutes_allocated Int
+  description       String?
+  isActive          Boolean     @default(true)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
 }
 
 model WalletMinute {
@@ -73,14 +85,15 @@ model WalletCash {
 }
 
 model Transaction {
-  id              Int      @id @default(autoincrement())
+  id              Int             @id @default(autoincrement())
   userId          String
-  user            User     @relation(fields: [userId], references: [id])
-  type            String   // e.g., "PURCHASE", "BONUS"
+  user            User            @relation(fields: [userId], references: [id])
+  type            TransactionType // PURCHASE, MINUTE_DEDUCT, BONUS
   amount          Float
-  status          String   @default("COMPLETED")
+  description     String?
+  status          String          @default("COMPLETED")
   referenceId     String?
-  transactionDate DateTime @default(now())
+  transactionDate DateTime        @default(now())
 }
 
 model Payout {
