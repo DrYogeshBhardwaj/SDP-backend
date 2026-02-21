@@ -1,0 +1,106 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  mobile    String   @unique
+  pin       String
+  cid       String   @unique
+  name      String?
+  role      String   @default("user") // "user" or "admin"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  transactions Transaction[]
+  payouts      Payout[]
+  referrals    Referral[]    @relation("Referrer")
+  referredBy   Referral?     @relation("ReferredUser")
+  minutes      WalletMinute?
+  cash         WalletCash?
+  bonus        BonusLedger[]
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  price       Float
+  minutes     Int
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model WalletMinute {
+  id      Int  @id @default(autoincrement())
+  userId  Int  @unique
+  user    User @relation(fields: [userId], references: [id])
+  balance Int  @default(0)
+}
+
+model WalletCash {
+  id      Int   @id @default(autoincrement())
+  userId  Int   @unique
+  user    User  @relation(fields: [userId], references: [id])
+  balance Float @default(0.0)
+}
+
+model Transaction {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  user            User     @relation(fields: [userId], references: [id])
+  type            String   // e.g., "PURCHASE", "BONUS"
+  amount          Float
+  status          String   @default("COMPLETED")
+  referenceId     String?
+  transactionDate DateTime @default(now())
+}
+
+model Payout {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  amount    Float
+  status    String   @default("PENDING") // PENDING, COMPLETED, FAILED
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
+
+model Referral {
+  id             Int      @id @default(autoincrement())
+  referrerId     Int
+  referrer       User     @relation("Referrer", fields: [referrerId], references: [id])
+  referredUserId Int      @unique
+  referredUser   User     @relation("ReferredUser", fields: [referredUserId], references: [id])
+  level          Int      @default(1)
+  status         String   @default("ACTIVE")
+  createdAt      DateTime @default(now())
+}
+
+model BonusLedger {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  amount    Float
+  type      String   // e.g., "LEVEL_1_BONUS"
+  createdAt DateTime @default(now())
+}
+
+model SystemSetting {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String
+}
