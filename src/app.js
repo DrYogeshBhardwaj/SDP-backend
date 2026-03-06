@@ -27,8 +27,6 @@ const adminAnnouncementRoutes = require('./modules/communication/admin.announcem
 const exportRoutes = require('./modules/admin/export.routes');
 const { errorResponse } = require('./utils/response');
 
-const app = express();
-
 
 // 2. Production Security
 app.set('trust proxy', 1);
