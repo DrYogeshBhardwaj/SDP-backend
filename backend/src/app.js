@@ -62,23 +62,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan('dev'));
 
-// Serve frontend for local testing
-app.use(express.static(path.join(__dirname, '../../frontend/public')));
-app.use('/assets', express.static(path.join(__dirname, '../../frontend/assets')));
-
-// Specific Frontend Layout Routes
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/public/index.html')));
-app.get('/login', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/public/login.html')));
-app.get('/buyer', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/public/buyer.html')));
-app.get('/dashboard', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/dashboard/user.html')));
-app.get('/seeder', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/public/seeder.html')));
-app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/dashboard/admin.html')));
-app.get('/admin.html', (req, res) => res.redirect('/admin'));
-app.get('/seeder-form', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/public/seeder_form.html')));
-app.get('/seeder-offer', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/public/seeder_offer.html')));
-app.get('/join-580', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/public/join_580.html')));
-app.get('/invite', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/public/invite.html')));
-
+// Next line starts Routes //
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api', otpRoutes);
