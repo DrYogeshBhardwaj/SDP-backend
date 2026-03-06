@@ -5,7 +5,6 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "SDP Backend Running" });
 });
 
-const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
