@@ -1,3 +1,7 @@
+app.get('/', (req, res) => {
+    res.json({ message: 'SDP Backend API Running' });
+});
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
