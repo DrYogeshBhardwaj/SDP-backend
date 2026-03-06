@@ -24,8 +24,6 @@ const adminAnnouncementRoutes = require('./modules/communication/admin.announcem
 const exportRoutes = require('./modules/admin/export.routes');
 const { errorResponse } = require('./utils/response');
 
-const app = express();
-
 // Production Security Trusts (for VPS Reverse Proxy like Nginx)
 app.set('trust proxy', 1);
 app.disable('x-powered-by');
