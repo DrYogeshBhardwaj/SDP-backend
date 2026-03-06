@@ -1,15 +1,12 @@
-const express = require("express");
-const app = express();
-
-app.get("/api/health", (req, res) => {
-  res.json({ status: "SDP Backend Running" });
-});
-
+const express = require('express');
+const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
+
+// 1. All Necessary Imports 
 const authRoutes = require('./modules/auth/auth.routes');
 const otpRoutes = require('./modules/auth/otp.routes');
 const productRoutes = require('./modules/products/product.routes');
@@ -24,7 +21,9 @@ const adminAnnouncementRoutes = require('./modules/communication/admin.announcem
 const exportRoutes = require('./modules/admin/export.routes');
 const { errorResponse } = require('./utils/response');
 
-// Production Security Trusts (for VPS Reverse Proxy like Nginx)
+const app = express();
+
+// Production Security Trusts
 app.set('trust proxy', 1);
 app.disable('x-powered-by');
 
@@ -65,11 +64,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan('dev'));
 
-// Serve frontend for local testing
+// Static Frontend Serve 
 app.use(express.static(path.join(__dirname, '../../frontend/public')));
 app.use('/assets', express.static(path.join(__dirname, '../../frontend/assets')));
 
-// Specific Frontend Layout Routes
+// Frontend Layout Routes
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/public/index.html')));
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/public/login.html')));
 app.get('/buyer', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/public/buyer.html')));
@@ -82,7 +81,7 @@ app.get('/seeder-offer', (req, res) => res.sendFile(path.join(__dirname, '../../
 app.get('/join-580', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/public/join_580.html')));
 app.get('/invite', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/public/invite.html')));
 
-// Routes
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api', otpRoutes);
 app.use('/api/products', productRoutes);
@@ -96,6 +95,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/announcements', announcementRoutes);
 
+// Health Check API (jo aap add karna chahte the)
 app.get('/api/health', (req, res) => {
     res.json({ status: 'SDP Backend Running' });
 });
@@ -113,7 +113,7 @@ app.use((err, req, res, next) => {
         ? 'Internal Server Error'
         : (err.message || 'Internal Server Error');
 
-    return errorResponse(res, statusCode, message);
+    return res.status(statusCode).json({ success: false, message });
 });
 
 module.exports = app;
