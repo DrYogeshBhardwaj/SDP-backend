@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Sinaank Partner Access</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Outfit:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            background: radial-gradient(circle at top, #1a1500, #000);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: linear-gradient(145deg, rgba(20, 20, 20, 0.95), rgba(10, 10, 10, 0.98));
+            border: 1px solid #ffd700;
+            padding: 30px 20px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 350px;
+            text-align: center;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.15);
+        }
+
+        .brand-logo {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+            letter-spacing: 1.5px;
+            text-shadow: 0 2px 10px rgba(255, 170, 0, 0.2);
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.8rem;
+            color: #ffd700;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .input-field:focus {
+            border-color: #ffd700;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .btn-access {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(90deg, #ffd700, #ffaa00);
+            color: #000;
+            border: none;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 1rem;
+            margin-top: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(255, 170, 0, 0.3);
+        }
+
+        .btn-access:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 170, 0, 0.4);
+        }
+
+        .btn-access:disabled {
+            background: #333;
+            color: #555;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .footer-link {
+            margin-top: 20px;
+            font-size: 0.8rem;
+            color: #888;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-link:hover {
+            color: #ffd700;
+        }
+
+        ul li {
+            margin-bottom: 8px;
+            color: #ddd;
+        }
+
+        strong {
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 1. INFO / TERMS VIEW (DEFAULT) -->
+    <div id="term-view" class="login-card">
+        <div class="brand-logo">PARTNER PROGRAM</div>
+        <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 5px; letter-spacing: 1px;">Information & Consent</p>
+        <p style="font-size: 0.7rem; color: #888; margin-bottom: 20px;">जानकारी एवं सहमति</p>
+
+        <div
+            style="text-align: left; font-size: 0.85rem; color: #ccc; line-height: 1.5; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #333;">
+            <p style="margin-bottom: 10px;"><strong>Program Details:</strong></p>
+            <ul style="padding-left: 20px; list-style-type: disc; color: #aaa;">
+                <li>This is a Direct Sales Model (Not MLM / Networking).<br>
+                    <span style="font-size:0.7rem; color:#666;">यह डायरेक्ट सेल्स मॉडल है (MLM / नेटवर्किंग
+                        नहीं)।</span>
+                </li>
+                <li>Becoming a Seller is completely optional.<br>
+                    <span style="font-size:0.7rem; color:#666;">विक्रेता बनना पूरी तरह वैकल्पिक है।</span>
+                </li>
+                <li>No targets. No selling pressure.<br>
+                    <span style="font-size:0.7rem; color:#666;">कोई टारगेट या दबाव नहीं।</span>
+                </li>
+                <li>Earnings are only on direct sales.<br>
+                    <span style="font-size:0.7rem; color:#666;">कमाई केवल आपकी प्रत्यक्ष बिक्री पर आधारित है।</span>
+                </li>
+                <li>You may stop anytime without penalty.<br>
+                    <span style="font-size:0.7rem; color:#666;">आप कभी भी बिना किसी बाध्यता के बाहर निकल सकते
+                        हैं।</span>
+                </li>
+            </ul>
+        </div>
+
+        <div style="text-align: left; margin-bottom: 20px; display: flex; align-items: start; gap: 10px;">
+            <input type="checkbox" id="term-check"
+                style="margin-top: 3px; transform: scale(1.2); accent-color: #ffd700;">
+            <label for="term-check" style="font-size: 0.8rem; color: #fff; cursor: pointer;">
+                I understand the terms and wish to proceed.<br>
+                <span style="color: #bbb; font-size: 0.7rem;">मैं सभी शर्तों को समझता/समझती हूँ और आगे बढ़ना चाहता/चाहती
+                    हूँ।</span>
+            </label>
+        </div>
+
+        <button id="btn-term-continue" onclick="handleTermContinue()" class="btn-access"
+            style="background: #444; color: #888; cursor: not-allowed;" disabled>
+            CONTINUE <span style="font-size:0.8rem; font-weight:normal;">(आगे बढ़ें)</span>
+        </button>
+        <button onclick="goBack()"
+            style="background: transparent; border: none; color: #666; font-size: 0.8rem; margin-top: 15px; cursor: pointer;">Cancel
+            & Return</button>
+    </div>
+
+    <!-- 2. LOGIN VIEW -->
+    <div id="login-view" class="login-card hidden">
+        <div class="brand-logo">SELLER LOGIN</div>
+        <p style="font-size: 0.8rem; color: #666; margin-bottom: 30px; letter-spacing: 1px;">
+            विक्रेता लॉगिन
+        </p>
+
+        <div class="input-group">
+            <label>Mobile Number</label>
+            <input type="tel" id="partner-mobile" class="input-field" placeholder="Enter Registration Mobile"
+                maxlength="10">
+        </div>
+
+        <div class="input-group">
+            <label>Security PIN</label>
+            <input type="password" id="partner-pin" class="input-field" placeholder="Enter 4-Digit PIN" maxlength="4"
+                style="letter-spacing: 3px;">
+        </div>
+
+        <button onclick="handleLogin()" class="btn-access">ACCESS PANEL</button>
+        <p id="login-error" style="color: #ff4444; font-size: 0.8rem; margin-top: 15px;" class="hidden"></p>
+
+        <button onclick="switchView('term')"
+            style="background:transparent; border:none; color:#444; margin-top:15px; font-size:0.75rem; cursor:pointer;">Back
+            to Info</button>
+    </div>
+
+    <!-- 3. REGISTRATION VIEW -->
+    <div id="register-view" class="login-card hidden">
+        <div class="brand-logo" style="font-size:1.5rem;">CREATE SELLER PROFILE</div>
+        <p style="font-size: 0.75rem; color: #888; margin-bottom: 20px;">विक्रेता प्रोफ़ाइल बनाएँ</p>
+
+        <div class="input-group">
+            <label>Name (as per ID)</label>
+            <input type="text" id="reg-name" class="input-field" placeholder="Your Full Name">
+        </div>
+
+        <div class="input-group">
+            <label>Pin Code</label>
+            <input type="tel" id="reg-pincode" class="input-field" placeholder="Enter Pincode" maxlength="6">
+        </div>
+
+        <!-- Hidden City (Keeping for structure if needed, or just removing) -->
+        <input type="hidden" id="reg-city" value="-">
+
+        <div class="input-group">
+            <label>Mobile Number</label>
+            <input type="tel" id="reg-mobile" class="input-field" readonly
+                style="background: rgba(255,255,255,0.05); color:#888; cursor:not-allowed;">
+        </div>
+
+        <div class="input-group">
+            <label>Create PIN (4 digits)</label>
+            <input type="password" id="reg-pin" class="input-field" placeholder="Set Secure PIN" maxlength="4"
+                style="letter-spacing: 3px;">
+        </div>
+
+        <div style="text-align: left; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <input type="checkbox" id="reg-consent" checked disabled style="accent-color: #ffd700;">
+            <label style="font-size: 0.75rem; color: #888;">I agree to the Seller Agreement.</label>
+        </div>
+
+        <button onclick="handleRegistration()" class="btn-access" style="background:#ffd700; color:#000;">
+            CREATE SELLER PROFILE<br><span style="font-size:0.7rem; font-weight:normal;">विक्रेता प्रोफ़ाइल बनाएँ</span>
+        </button>
+        <p id="reg-error" style="color: #ff4444; font-size: 0.8rem; margin-top: 15px;" class="hidden"></p>
+
+        <button onclick="switchView('login')"
+            style="background:transparent; border:none; color:#666; margin-top:15px; font-size:0.75rem; cursor:pointer;">Existing
+            User? Login</button>
+    </div>
+
+    <!-- 4. WELCOME VIEW (NEW) -->
+    <div id="welcome-view" class="login-card hidden">
+        <div class="brand-logo" style="font-size:1.4rem;">WELCOME TO SELLER PROGRAM</div>
+        <p style="font-size: 0.75rem; color: #ffd700; margin-bottom: 20px;">विक्रेता कार्यक्रम में आपका स्वागत है</p>
+
+        <div
+            style="text-align: left; font-size: 0.85rem; color: #ccc; line-height: 1.5; background: rgba(255,215,0,0.05); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #444;">
+            <ul style="padding-left: 20px; list-style-type: none; color: #fff;">
+                <li style="margin-bottom:10px;">🔗 <strong>Share your personal seller link.</strong><br>
+                    <span style="font-size:0.7rem; color:#888;">अपना व्यक्तिगत विक्रेता लिंक साझा करें।</span>
+                </li>
+                <li style="margin-bottom:10px;">💰 <strong>Make direct sales using your link.</strong><br>
+                    <span style="font-size:0.7rem; color:#888;">अपने लिंक से सीधे बिक्री करें।</span>
+                </li>
+                <li style="margin-bottom:10px;">🎁 <strong>Earn rewards on every successful sale.</strong><br>
+                    <span style="font-size:0.7rem; color:#888;">हर सफल बिक्री पर लाभ प्राप्त करें।</span>
+                </li>
+                <li>😌 <strong>No targets. No pressure.</strong><br>
+                    <span style="font-size:0.7rem; color:#888;">कोई टारगेट या दबाव नहीं।</span>
+                </li>
+            </ul>
+        </div>
+
+        <div
+            style="background: rgba(0,0,0,0.3); padding:10px; border-radius:8px; border:1px solid #333; margin-bottom:20px;">
+            <label style="font-size:0.7rem; color:#aaa; display:block; margin-bottom:5px;">Your Seller Link:</label>
+            <div style="display:flex; gap:5px;">
+                <input type="text" id="seller-link-display" readonly
+                    style="width:100%; background:transparent; border:none; color:#ffd700; font-size:0.8rem; font-family:monospace;"
+                    value="...">
+                <button onclick="copySellerLink()"
+                    style="background:#333; color:#fff; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:0.7rem;">COPY</button>
+            </div>
+            <p style="margin-top: 12px; font-size: 0.75rem; color: #ccc; line-height: 1.5; margin-bottom: 0;">
+                Copy this link and share it with your customers/users. Any purchase made through this link will be
+                credited to you.<br>
+                <span style="color: #999; font-size: 0.75rem;">इस लिंक को कॉपी करके अपने ग्राहक/उपयोगकर्ता को भेजें। इसी
+                    लिंक से की गई खरीद पर आपको लाभ मिलेगा।</span>
+            </p>
+        </div>
+
+        <button onclick="goToDashboard()" class="btn-access">
+            GO TO SELLER DASHBOARD<br><span style="font-size:0.7rem; font-weight:normal;">विक्रेता डैशबोर्ड खोलें</span>
+        </button>
+    </div>
+
+    <a href="index.html" class="footer-link">← Return to Main Site</a>
+
+    <script src="js/ssb.js"></script>
+    <script src="js/lang.js"></script>
+    <script>
+        // Init Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const mode = params.get('mode');
+            let mobile = params.get('mobile');
+            let name = params.get('name');
+            const from = params.get('from');
+
+            // Setup Term Checkbox Listener
+            const termCheck = document.getElementById('term-check');
+            const termBtn = document.getElementById('btn-term-continue');
+            termCheck.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    termBtn.disabled = false;
+                    termBtn.style.background = "#fff";
+                    termBtn.style.color = "#000";
+                    termBtn.style.cursor = "pointer";
+                } else {
+                    termBtn.disabled = true;
+                    termBtn.style.background = "#444";
+                    termBtn.style.color = "#888";
+                    termBtn.style.cursor = "not-allowed";
+                }
+            });
+
+            // STRICT URL PROTECTION RULE:
+            let hasConsent = sessionStorage.getItem('ssb_seller_consent') === 'true';
+
+            // Auto-Consent for Returning Users (Login Mode)
+            if (mode === 'login' && mobile) {
+                hasConsent = true;
+                sessionStorage.setItem('ssb_seller_consent', 'true');
+            }
+
+            if (!hasConsent) {
+                // FORCE INFO PAGE
+                switchView('term');
+            } else {
+                // CONSENT PRESENT -> Honor URL Mode
+                if (mode === 'login') {
+                    switchView('login');
+                } else if (mode === 'register') {
+                    switchView('register');
+                } else {
+                    switchView('term');
+                }
+            }
+
+            // Fallback: Check Local Session if URL params missing
+            if (!mobile || !name) {
+                try {
+                    const sessionRaw = localStorage.getItem('ssb_session');
+                    if (sessionRaw) {
+                        const sess = JSON.parse(sessionRaw);
+                        if (!mobile && (sess.phone || sess.mobile)) mobile = sess.phone || sess.mobile;
+                        if (!name && sess.name) name = sess.name;
+                    }
+                } catch (e) {
+                    console.log("Auto-fill error", e);
+                }
+            }
+
+            if (mobile) {
+                document.getElementById('partner-mobile').value = mobile;
+                document.getElementById('reg-mobile').value = mobile;
+
+                const baseURL = window.location.href.split('/').slice(0, -1).join('/');
+                const link = `${baseURL}/course.html?ref=${mobile}`;
+                document.getElementById('seller-link-display').value = link;
+            }
+            if (name) {
+                document.getElementById('reg-name').value = name;
+            }
+        });
+
+        function switchView(view) {
+            ['term', 'login', 'register', 'welcome'].forEach(v => {
+                const el = document.getElementById(v + '-view');
+                if (el) el.classList.add('hidden');
+            });
+            document.getElementById(view + '-view').classList.remove('hidden');
+        }
+
+        function goBack() {
+            // Explicitly Clear Consent if they cancel
+            sessionStorage.removeItem('ssb_seller_consent');
+
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('from') === 'dashboard') {
+                window.location.href = 'course.html';
+            } else if (document.referrer && !document.referrer.includes('index.html')) {
+                history.back();
+            } else {
+                window.location.href = 'index.html';
+            }
+        }
+
+        function handleTermContinue() {
+            // 1. SET CONSENT FLAG
+            sessionStorage.setItem('ssb_seller_consent', 'true');
+
+            // 2. Critical Logic: Check if User acts like a seller
+            const mobile = document.getElementById('reg-mobile').value || document.getElementById('partner-mobile').value;
+
+            if (mobile && typeof SSBLogic !== 'undefined') {
+                const isSeller = SSBLogic.isAuthorizedSeller(mobile);
+                const hasPin = SSBLogic.hasAuthPin(mobile);
+
+                // STRICT: Only Login if FULLY onboarded
+                if (isSeller && hasPin) {
+                    switchView('login');
+                } else {
+                    switchView('register');
+                }
+            } else {
+                // If no mobile in URL, or SSBLogic not loaded, default to register
+                switchView('register');
+            }
+        }
+
+        function handleLogin() {
+            const mobile = document.getElementById('partner-mobile').value.trim();
+            const pin = document.getElementById('partner-pin').value.trim();
+            const errEl = document.getElementById('login-error');
+
+            errEl.classList.add('hidden');
+
+            if (mobile.length !== 10) return showError(errEl, "Invalid Mobile Number");
+            if (pin.length < 4) return showError(errEl, "Enter 4-digit PIN");
+
+            if (typeof SSBLogic !== 'undefined') {
+                if (SSBLogic.verifyPin(mobile, pin)) {
+                    // Admin & Demo Overrides logic retained safely
+                    const isProtected = ['9818869428', '8851168290'].includes(mobile);
+                    // Login logic
+                    // ... (Assuming standard login flow for existing users)
+
+                    let type = 'PARTNER';
+                    let name = "Partner";
+
+                    if (isProtected) {
+                        type = 'ADMIN';
+                        name = "System Admin";
+                    } else {
+                        let sellers = localStorage.getItem('ssb_authorized_sellers');
+                        sellers = sellers ? JSON.parse(sellers) : {};
+                        if (sellers[mobile]) name = sellers[mobile].name;
+                    }
+
+                    const profile = { name, mobile, isPaid: true, type };
+                    localStorage.setItem('ssb_partner_session', JSON.stringify(profile));
+
+                    if (mobile === '9818869428') window.location.href = 'admin.html';
+                    else window.location.href = 'dashboard.html';
+
+                } else {
+                    showError(errEl, "Access Denied: Incorrect PIN");
+                }
+            } else {
+                showError(errEl, "System Error: Logic not loaded");
+            }
+        }
+
+        function handleRegistration() {
+            const name = document.getElementById('reg-name').value.trim();
+            // City removed from UI, defaulting to dash
+            const city = "-";
+            // Pincode now from input
+            const pincode = document.getElementById('reg-pincode').value.trim();
+
+            const mobile = document.getElementById('reg-mobile').value.trim();
+            const pin = document.getElementById('reg-pin').value.trim();
+            const errEl = document.getElementById('reg-error');
+
+            errEl.classList.add('hidden');
+
+            if (name.length < 3) return showError(errEl, "Enter valid name");
+            // Validating Pincode (6 digits)
+            if (pincode.length !== 6 || isNaN(pincode)) return showError(errEl, "Enter valid 6-digit Pincode");
+
+            if (mobile.length !== 10) return showError(errEl, "Enter 10-digit Mobile");
+            if (mobile.length !== 10) return showError(errEl, "Enter 10-digit Mobile");
+            if (pin.length < 4) return showError(errEl, "Set a 4-digit PIN");
+
+            if (typeof SSBLogic !== 'undefined') {
+                // Check if already seller AND has PIN (Fully Onboarded)
+                if (SSBLogic.isAuthorizedSeller(mobile) && SSBLogic.hasAuthPin(mobile)) {
+                    showError(errEl, "Account Exists. Please Login.");
+                    setTimeout(() => switchView('login'), 1500);
+                    return;
+                }
+
+                // Register (Claim/Create)
+                SSBLogic.registerSeller(mobile, name, city, pincode);
+
+                // Set Auth PIN
+                let db = localStorage.getItem('ssb_auth_pins');
+                db = db ? JSON.parse(db) : {};
+                db[mobile] = pin;
+                localStorage.setItem('ssb_auth_pins', JSON.stringify(db));
+
+                // DO NOT AUTO LOGIN IMMEDIATELY. Show Welcome Screen.
+                // Prepare Session but wait for user to click "Go to Dashboard"
+
+                // Update Link Display for Welcome
+                const baseURL = window.location.href.split('/').slice(0, -1).join('/');
+                // ADDING 'M' PREFIX TO ID
+                const link = `${baseURL}/course.html?ref=M${mobile}`;
+                document.getElementById('seller-link-display').value = link;
+
+                switchView('welcome');
+            }
+        }
+
+        function copySellerLink() {
+            const link = document.getElementById('seller-link-display').value;
+            navigator.clipboard.writeText(link).then(() => {
+                alert("Link Copied!");
+            });
+        }
+
+        function goToDashboard() {
+            // Finalize Login
+            const mobile = document.getElementById('reg-mobile').value.trim();
+            const name = document.getElementById('reg-name').value.trim();
+
+            const profile = { name, mobile, isPaid: true, type: 'PARTNER' };
+            localStorage.setItem('ssb_partner_session', JSON.stringify(profile));
+            window.location.href = 'dashboard.html';
+        }
+
+        function showError(el, msg) {
+            el.textContent = msg;
+            el.classList.remove('hidden');
+        }
+    </script>
+</body>
+
+</html>

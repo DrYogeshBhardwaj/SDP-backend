@@ -51,6 +51,52 @@ async function main() {
         });
     }
     console.log('Ranks seeded successfully.');
+
+    console.log('Seeding initial users...');
+    const bcrypt = require('bcrypt');
+    const salt = await bcrypt.genSalt(10);
+    const pin_hash = await bcrypt.hash('1234', salt);
+
+    const testUsers = [
+        {
+            mobile: '9999999999',
+            name: 'System Admin',
+            role: 'ADMIN',
+            cid: 'CID_ADMIN123',
+            pin_hash,
+            status: 'ACTIVE'
+        },
+        {
+            mobile: '9625645211',
+            name: 'Test Seeder',
+            role: 'SEEDER',
+            cid: 'CID_TESTSD',
+            pin_hash,
+            status: 'ACTIVE'
+        },
+        {
+            mobile: '9211755211',
+            name: 'Test Buyer',
+            role: 'USER_178',
+            cid: 'CID_TESTBY',
+            pin_hash,
+            status: 'ACTIVE'
+        }
+    ];
+
+    for (const user of testUsers) {
+        await prisma.user.upsert({
+            where: { mobile: user.mobile },
+            update: {},
+            create: {
+                ...user,
+                cash: { create: { balance: user.role === 'ADMIN' ? 0 : 500 } },
+                minutes: { create: { balance: 3650 } }
+            }
+        });
+    }
+
+    console.log('Initial Test Users seeded successfully.');
 }
 
 main()

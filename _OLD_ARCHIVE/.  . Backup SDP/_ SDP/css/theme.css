@@ -1,0 +1,198 @@
+/* 
+   Sinaank Digital Pause - v1.1 Light Theme Overlay 
+   Design Goal: Light, Clean, Clear (Matching SDP/style.css)
+*/
+
+:root {
+    /* Color Palette - Light & Clean */
+    --bg-dark: #F5F7FA;
+    /* Renamed/Remapped to Light for compatibility */
+    --bg-card: #FFFFFF;
+    --text-primary: #1E293B;
+    /* Slate 800 */
+    --text-secondary: #64748B;
+    /* Slate 500 */
+    --accent-gold: #F59E0B;
+    --accent-cyan: #06b6d4;
+    --success-green: #10b981;
+    --danger-red: #ef4444;
+    --primary-blue: #3B82F6;
+
+    /* Spacing & Borders */
+    --radius-lg: 12px;
+    --radius-md: 8px;
+    --glass-border: 1px solid rgba(0, 0, 0, 0.05);
+
+    /* Shadows */
+    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Global Reset & Typography override */
+body {
+    background-color: #F5F7FA;
+    color: var(--text-primary);
+    background-image: none !important;
+    /* Force remove dark gradient */
+}
+
+.bg-surface {
+    background-color: #F5F7FA;
+}
+
+/* Navbar */
+.navbar-custom {
+    background: #FFFFFF;
+    border-bottom: 1px solid #E2E8F0;
+    color: var(--text-primary);
+}
+
+.nav-links a {
+    color: var(--text-secondary);
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+    color: var(--primary-blue);
+}
+
+/* Cards */
+.visual-card,
+.card,
+.product-card {
+    background: #FFFFFF !important;
+    border: 1px solid #E2E8F0 !important;
+    color: var(--text-primary) !important;
+    box-shadow: var(--shadow-card) !important;
+}
+
+.visual-title,
+.info-title,
+h1,
+h2,
+h3 {
+    color: var(--text-primary) !important;
+}
+
+.visual-desc,
+p {
+    color: var(--text-secondary);
+}
+
+/* Hero */
+.hero-title {
+    background: none;
+    -webkit-text-fill-color: var(--primary-blue);
+    color: var(--primary-blue);
+}
+
+/* Footer */
+.site-footer {
+    background: #FFFFFF;
+    border-top: 1px solid #E2E8F0;
+    color: var(--text-secondary);
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--primary-blue);
+    color: white;
+}
+
+.btn-secondary {
+    background-color: white;
+    border: 1px solid #E2E8F0;
+    color: var(--text-primary);
+}
+
+/* --- Auth Container (Glassmorphism) --- */
+.auth-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+}
+
+.auth-container {
+    width: 100%;
+    max-width: 400px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    padding: 2rem;
+    border-radius: 1.5rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.auth-header h2 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.auth-header p {
+    color: #64748b;
+    font-size: 0.95rem;
+}
+
+/* Styled Inputs */
+.form-label {
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.form-control,
+.form-select {
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid #cbd5e1;
+    background-color: #f8fafc;
+    transition: all 0.2s;
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: #fff;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.btn-primary {
+    border-radius: 0.75rem;
+    padding: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    border: none;
+    width: 100%;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.text-link {
+    color: #3b82f6;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.text-link:hover {
+    text-decoration: underline;
+}
+
+.hidden {
+    display: none !important;
+}

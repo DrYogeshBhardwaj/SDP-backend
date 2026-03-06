@@ -65,6 +65,7 @@ async function runTest() {
     await prisma.referral.deleteMany();
     await prisma.walletCash.deleteMany();
     await prisma.walletMinute.deleteMany();
+    await prisma.systemLog.deleteMany();
 
     // Instead of deleteMany() which might fail or wipe too much:
     await prisma.$executeRaw`DELETE FROM "User" WHERE mobile IN ('9999999999', '8888888888')`;

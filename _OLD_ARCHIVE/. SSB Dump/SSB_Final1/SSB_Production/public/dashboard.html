@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Partner Portal | Login</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body style="display:flex; justify-content:center; align-items:center; min-height:100vh;">
+
+    <div class="lang-switch" style="position:absolute; top:20px; right:20px; z-index:100;">
+        <button onclick="toggleLanguage('en')" id="btn-en" class="lang-btn active">EN</button>
+        <button onclick="toggleLanguage('hi')" id="btn-hi" class="lang-btn">HI</button>
+    </div>
+
+    <div class="container" style="max-width:400px; padding:20px;">
+
+        <section class="card text-center" id="state-login">
+            <h1 class="glow-text mb-20" style="font-size:1.8rem;" data-i18n="seller_prog">Seller Program</h1>
+            <div class="text-plate">
+                <p class="text-muted" style="margin: 0;" data-i18n="auth_access">Authorized Distribution Access</p>
+            </div>
+
+            <label class="text-muted" style="display:block; text-align:left; font-size:0.8rem; margin-bottom:5px;"
+                data-i18n="your_mobile">Your Mobile Number</label>
+            <input type="tel" id="partner-mobile" data-i18n-ph="ph_mobile" placeholder="9XXXXXXXXX" maxlength="10"
+                style="width:100%; padding:12px; background:rgba(0,0,0,0.3); border:1px solid #333; color:#fff; border-radius:8px; margin-bottom:15px;"
+                onkeyup="if(event.key === 'Enter') checkAccess()">
+
+            <label class="text-muted"
+                style="display:block; text-align:left; font-size:0.8rem; margin-bottom:5px;">Security PIN</label>
+            <input type="password" inputmode="numeric" id="partner-pin" placeholder="Enter PIN" maxlength="4"
+                style="width:100%; padding:12px; background:rgba(0,0,0,0.3); border:1px solid #333; color:#fff; border-radius:8px; margin-bottom:20px; letter-spacing: 5px; text-align: center;"
+                oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeyup="if(event.key === 'Enter') checkAccess()">
+
+            <button onclick="checkAccess()" class="btn-primary" data-i18n="btn_verify">Verify & Proceed</button>
+
+            <div id="msg-block" class="hidden"
+                style="margin-top:15px; padding:10px; border-radius:5px; font-size:0.8rem;"></div>
+
+            <p class="text-muted" style="font-size:0.7rem; margin-top:20px;">
+                <a href="index.html" class="text-muted" data-i18n="back_home">← Back to Home</a>
+            </p>
+
+            <!-- DEMO MODE -->
+            <button onclick="startDemoSession()"
+                style="margin-top:20px; background:transparent; border:1px dashed #555; color:#666; font-size:0.7rem; padding:5px 10px; cursor:pointer;">
+                Start SMP Demo
+            </button>
+        </section>
+
+        <!-- Registration Form (Hidden by default) -->
+        <section class="card hidden" id="state-register">
+            <h2 class="text-highlight" data-i18n="join_net">Seller Registration</h2>
+            <div class="text-plate">
+                <p class="text-muted" style="font-size:0.8rem; margin: 0;" data-i18n="join_desc">
+                    Hum pehle product khud use karwate hain, uske baad hi kisi ko bechne ka adhikar dete hain.
+                </p>
+            </div>
+
+            <label class="text-muted" style="display:block; text-align:left;" data-i18n="lbl_fullname">Full Name</label>
+            <input type="text" id="reg-name" data-i18n-ph="ph_yourname" placeholder="Poonam Sharma"
+                oninput="validateName(this)"
+                style="width:100%; padding:10px; margin-bottom:15px; background:#111; border:1px solid #333; color:#fff; border-radius:5px;">
+
+            <style>
+                /* Simple Toggle Switch */
+                .switch {
+                    position: relative;
+                    display: inline-block;
+                    width: 50px;
+                    height: 26px;
+                    flex-shrink: 0;
+                }
+
+                .switch input {
+                    opacity: 0;
+                    width: 0;
+                    height: 0;
+                }
+
+                .slider {
+                    position: absolute;
+                    cursor: pointer;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background-color: #333;
+                    transition: .4s;
+                    border-radius: 34px;
+                    border: 1px solid #555;
+                }
+
+                .slider:before {
+                    position: absolute;
+                    content: "";
+                    height: 20px;
+                    width: 20px;
+                    left: 2px;
+                    bottom: 2px;
+                    background-color: white;
+                    transition: .4s;
+                    border-radius: 50%;
+                }
+
+                input:checked+.slider {
+                    background-color: var(--color-primary);
+                    border-color: var(--color-primary);
+                }
+
+                input:checked+.slider:before {
+                    transform: translateX(24px);
+                }
+
+                /* Disabled Button */
+                .btn-disabled {
+                    opacity: 0.5;
+                    pointer-events: none;
+                    background: #333 !important;
+                    color: #888 !important;
+                    border: 1px solid #444 !important;
+                }
+
+                /* SMP GOLD THEME */
+                body.theme-smp {
+                    background: radial-gradient(circle at top, #1a1500, #000) !important;
+                }
+
+                body.theme-smp .card {
+                    border-color: #ffd700 !important;
+                    box-shadow: 0 0 15px rgba(255, 215, 0, 0.1) !important;
+                }
+
+                body.theme-smp .text-highlight,
+                body.theme-smp h2,
+                body.theme-smp h3 {
+                    color: #ffd700 !important;
+                    text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+                }
+
+                body.theme-smp .btn-primary {
+                    background: linear-gradient(135deg, #ffd700, #b8860b) !important;
+                    color: #000 !important;
+                    border: none !important;
+                    font-weight: 800;
+                }
+
+                body.theme-smp .seller-badge {
+                    background: #ffd700;
+                    color: #000;
+                    padding: 2px 8px;
+                    border-radius: 4px;
+                    font-size: 0.7rem;
+                    font-weight: bold;
+                    margin-left: 5px;
+                }
+
+                /* Share Link Button */
+                .btn-share-link {
+                    background: transparent;
+                    border: 1px solid #00ff99;
+                    color: #00ff99;
+                    font-size: 0.7rem;
+                    padding: 2px 8px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                }
+
+                body.theme-smp .btn-share-link {
+                    border-color: #ffd700;
+                    color: #ffd700;
+                }
+            </style>
+
+            <div
+                style="text-align:left; margin-bottom:20px; font-size:0.8rem; color:#aaa; display:flex; align-items:center; gap:15px; background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
+                <label class="switch">
+                    <input type="checkbox" id="reg-toggle" onchange="toggleButtonState()">
+                    <span class="slider"></span>
+                </label>
+                <span data-i18n="i_satisfy" style="line-height:1.4;">I have personally used Sinaank Mobile Therapy (SMT)
+                    and am satisfied.</span>
+            </div>
+
+            <button id="btn-activate" onclick="completeRegistration()" class="btn-primary btn-disabled"
+                data-i18n="btn_activate">Activate Seller Panel</button>
+        </section>
+
+        <!-- Terms Modal -->
+        <div id="terms-modal" class="hidden"
+            style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:1000; padding:20px; display:flex; justify-content:center; align-items:center;">
+            <div class="card"
+                style="max-width:500px; max-height:80vh; overflow-y:auto; text-align:left; border:1px solid #00f0ff;">
+                <h3 class="text-highlight" style="margin-top:0;" data-i18n="term_title">Authorized Seller Agreement</h3>
+                <div class="text-muted" style="font-size:0.8rem; line-height:1.6;">
+                    <p data-i18n="term_1"><strong>1. Independent Status:</strong> You are an independent authorized
+                        seller, not an employee or agent of SINAANK.</p>
+                    <p data-i18n="term_2"><strong>2. Direct Sales Only:</strong> You earn commission only on direct
+                        personal sales. This is NOT a multi-level marketing (MLM) or pyramid scheme.</p>
+                    <p data-i18n="term_3"><strong>3. Commission:</strong> You receive "Seller Credits" for each verified
+                        sale. Credits are subject to tax deduction (TDS) as per government rules.</p>
+                    <p data-i18n="term_4"><strong>4. No Misrepresentation:</strong> You agree NOT to claim this product
+                        cures medical diseases. It is a "Wellness & Relaxation" tool only.</p>
+                    <p data-i18n="term_5"><strong>5. Anti-Spam:</strong> You agree not to send unsolicited spam. You may
+                        only share with contacts who have consented.</p>
+                    <p data-i18n="term_6"><strong>6. Termination:</strong> SINAANK reserves the right to revoke seller
+                        status for violation of these terms.</p>
+                </div>
+                <button onclick="closeTerms()" class="btn-secondary" style="margin-top:20px; width:100%;"
+                    data-i18n="btn_close">Close</button>
+            </div>
+        </div>
+
+        <!-- DASHBOARD STATE (Hidden by default) -->
+        <section class="card hidden" id="state-dashboard"
+            style="text-align:left; width:100%; max-width:500px; padding:0; overflow:hidden;">
+
+            <!-- Premium Header Card -->
+            <div
+                style="background: linear-gradient(135deg, #111 0%, #222 100%); padding: 25px 20px; text-align:center; border-bottom: 1px solid #333; position:relative;">
+
+                <!-- Language (Absolute Top Left) - REMOVED (Global Used) -->
+
+                <!-- Logout (Absolute Top Right) -->
+                <button onclick="logoutPartner()"
+                    style="position:absolute; top:15px; right:15px; background:rgba(0,0,0,0.3); border:1px solid #444; border-radius:20px; padding:5px 12px; color:#aaa; font-size:0.75rem; cursor:pointer;"
+                    data-i18n="btn_logout">Logout</button>
+
+                <!-- Large Profile Photo -->
+                <div
+                    style="width:100px; height:100px; margin:0 auto 15px auto; border-radius:50%; border:3px solid #ffd700; padding:3px; background:#000; box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);">
+                    <div style="width:100%; height:100%; border-radius:50%; overflow:hidden; background:#222;">
+                        <img id="seller-photo" src="favicon.png" alt="Profile"
+                            style="width:100%; height:100%; object-fit:cover;">
+                    </div>
+                </div>
+
+                <!-- Identity -->
+                <h2 class="text-highlight"
+                    style="margin:0 0 5px 0; font-size:1.5rem; letter-spacing:1px; color:#ffd700;"
+                    data-i18n="smp_title">Sinaank Money Plant</h2>
+                <div style="font-size:1.1rem; color:#fff; font-weight:600;" id="seller-name">-</div>
+                <div style="display:flex; justify-content:center; align-items:center; gap:10px; margin-bottom:15px;">
+                    <span style="font-size:0.8rem; color:#666;" id="seller-id">-</span>
+                    <button onclick="copyReferralLink()" class="btn-share-link"
+                        style="border:1px solid #ffd700; background:transparent; color:#ffd700; padding:2px 8px; font-size:0.7rem; border-radius:4px; cursor:pointer; display:flex; align-items:center; gap:5px;">
+                        🔗 <span data-i18n="smp_btn_link">Copy Link</span>
+                    </button>
+                </div>
+                <p
+                    style="margin-top: -10px; margin-bottom: 20px; font-size: 0.7rem; color: #ccc; line-height: 1.4; max-width: 90%; margin-left: auto; margin-right: auto;">
+                    Copy this link and share it with your customers/users. Any purchase made through this link will be
+                    credited to you.<br>
+                    <span style="color: #888; font-size: 0.65rem;">इस लिंक को कॉपी करके अपने ग्राहक/उपयोगकर्ता को भेजें।
+                        इसी लिंक से की गई खरीद पर आपको लाभ मिलेगा।</span>
+                </p>
+
+                <!-- Address Box -->
+                <div id="seller-address-block" class="hidden"
+                    style="background:rgba(255,255,255,0.03); border:1px solid #333; border-radius:8px; padding:12px; display:inline-block; max-width:90%; margin:0 auto;">
+                    <div style="font-size:0.85rem; color:#ccc; line-height:1.5; white-space: pre-wrap;">📍 <span
+                            id="seller-address">-</span></div>
+                    <div style="font-size:0.8rem; color:#888; margin-top:4px;">Pincode: <span id="seller-pincode"
+                            style="color:#aaa;">-</span></div>
+                </div>
+
+            </div>
+
+            <div style="padding:20px;">
+                <!-- Stats Grid (Moved inside padding) -->
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
+                    <div
+                        style="background:rgba(255,255,255,0.05); padding:15px; border-radius:8px; text-align:center; border:1px solid #333;">
+                        <div style="font-size:2rem; font-weight:700; color:var(--color-primary);" id="val-sales">0</div>
+                        <div style="font-size:0.75rem; color:#aaa;" data-i18n="smp_sales">TOTAL SALES</div>
+                    </div>
+                    <div
+                        style="background:rgba(255,255,255,0.05); padding:15px; border-radius:8px; text-align:center; border:1px solid #333;">
+                        <div style="font-size:2rem; font-weight:700; color:#00ff99;" id="val-earnings">₹0</div>
+                        <div style="font-size:0.75rem; color:#aaa;" data-i18n="smp_earn">EST. EARNINGS</div>
+                    </div>
+                </div>
+
+                <!-- SMP UPGRADE -->
+                <div id="smp-upgrade-section" class="hidden"
+                    style="margin-bottom:25px; border: 1px solid #ffd700; background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(0,0,0,0.8) 100%); padding:20px; border-radius:12px; position:relative; overflow:hidden; box-shadow: 0 0 15px rgba(255, 215, 0, 0.15);">
+                    <!-- Decorative Shine -->
+                    <div
+                        style="position:absolute; top:-50%; left:-50%; width:200%; height:200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%); pointer-events:none;">
+                    </div>
+
+                    <div style="position:relative; z-index:2; text-align:center;">
+                        <div style="font-size:2.5rem; margin-bottom:10px;">👑</div>
+                        <h3 style="color: #ffd700; margin:0 0 5px 0; font-family:'Outfit', sans-serif; font-weight:700; letter-spacing:1px; text-transform:uppercase; text-shadow: 0 2px 4px rgba(0,0,0,0.5);"
+                            data-i18n="smp_elite_title">
+                            Elite Status Unlocked
+                        </h3>
+                        <p style="font-size: 0.85rem; color: #fff; margin-bottom: 20px; opacity:0.9; line-height:1.5;"
+                            data-i18n="smp_elite_desc">
+                            You have completed <span style="color:#ffd700; font-weight:bold;">5+ Sales</span>.<br>
+                            Apply now effectively to become a <span style="color:#ffd700;">Zero Investment Business
+                                Partner</span>.
+                        </p>
+                        <button onclick="openSMPForm()" class="btn-primary"
+                            style="background: linear-gradient(90deg, #ffd700, #ffaa00); color: #000; font-weight: 800; border:none; padding:12px 30px; border-radius:30px; box-shadow: 0 4px 15px rgba(255, 170, 0, 0.4); text-transform:uppercase; letter-spacing:1px; width:auto; font-size:0.9rem;"
+                            data-i18n="smp_elite_btn">
+                            Apply for SMP
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SMP CONTROLS -->
+                <!-- SMP CONTROLS -->
+                <div id="smp-dashboard-section" class="hidden"
+                    style="margin-bottom:20px; padding:15px; border-radius:12px; border: 1px solid #00ff99; background: rgba(0,255,153,0.05);">
+                    <h3 style="color: #ffd700; margin-top:0; font-size:1.1rem; text-transform:uppercase; letter-spacing:1px; display:flex; align-items:center; gap:8px;"
+                        data-i18n="smp_ctrl_title">
+                        🌿 SMP CONTROLS
+                    </h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+
+                        <!-- 1. COPY LINK -->
+                        <button onclick="copyReferralLink()" class="btn-smp-gold">
+                            <div style="font-size:1.2rem; margin-bottom:5px;">🔗</div>
+                            <div style="line-height:1.1;" data-i18n="smp_gold_copy">COPY<br>LINK</div>
+                        </button>
+
+                        <!-- 2. PAID ENTRY -->
+                        <button onclick="openManualEntry()" class="btn-smp-gold">
+                            <div style="font-size:1.2rem; margin-bottom:5px;">+</div>
+                            <div style="line-height:1.1;" data-i18n="smp_gold_paid">PAID<br>ENTRY</div>
+                        </button>
+
+                        <!-- 3. EDIT NAME -->
+                        <button onclick="openSMPEditName()" class="btn-smp-gold">
+                            <div style="font-size:1.2rem; margin-bottom:5px;">✎</div>
+                            <div style="line-height:1.1;" data-i18n="smp_gold_edit">EDIT<br>NAME</div>
+                        </button>
+
+                    </div>
+                    <style>
+                        .btn-smp-gold {
+                            background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+                            color: #000;
+                            border: none;
+                            border-radius: 8px;
+                            /* Slightly rounded */
+                            padding: 15px 5px;
+                            font-size: 0.7rem;
+                            font-weight: 800;
+                            cursor: pointer;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;
+                            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+                            transition: transform 0.2s;
+                            height: 100%;
+                            width: 100%;
+                            /* Chamfer-like effect using clip-path could be added, but border-radius is safer */
+                        }
+
+                        .btn-smp-gold:active {
+                            transform: scale(0.95);
+                        }
+                    </style>
+                </div>
+
+                <!-- SMP NETWORK SECTION (New) -->
+                <div id="smp-network-section" class="hidden" style="margin-top:25px; margin-bottom:25px;">
+                    <h3 class="text-highlight"
+                        style="font-size:1.1rem; border-bottom:1px solid #444; padding-bottom:10px; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
+                        <span data-i18n="smp_net_head">My Network</span>
+                        <span
+                            style="font-size:0.7rem; background:#333; padding:2px 8px; border-radius:10px; color:#aaa;">2nd
+                            Income Source</span>
+                    </h3>
+
+                    <div
+                        style="background:linear-gradient(135deg, rgba(255,215,0,0.1), rgba(0,0,0,0.5)); padding:15px; border-radius:12px; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center; border:1px solid #444;">
+                        <div>
+                            <div style="font-size:0.75rem; color:#aaa; text-transform:uppercase; letter-spacing:1px;"
+                                data-i18n="smp_net_bonus">Group Bonus</div>
+                            <div style="font-size:1.8rem; color:#ffd700; font-weight:700; text-shadow:0 0 10px rgba(255,215,0,0.3);"
+                                id="smp-network-bonus">₹0</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:0.75rem; color:#aaa; text-transform:uppercase; letter-spacing:1px;"
+                                data-i18n="smp_net_members">Active Team</div>
+                            <div style="font-size:1.8rem; color:#fff; font-weight:700;" id="smp-network-count">0</div>
+                        </div>
+                    </div>
+
+                    <div style="background:rgba(0,0,0,0.3); border-radius:8px; border:1px solid #333;">
+                        <div
+                            style="padding:10px; background:rgba(255,255,255,0.05); font-size:0.8rem; color:#888; border-bottom:1px solid #333; display:grid; grid-template-columns: 2fr 1fr;">
+                            <span data-i18n="smp_col_partner">Partner</span>
+                            <span style="text-align:right;" data-i18n="smp_col_perf">Performance</span>
+                        </div>
+                        <div id="smp-network-list" style="max-height:200px; overflow-y:auto;">
+                            <!-- Filled via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Buyer List -->
+                <h3 class="text-muted"
+                    style="font-size:0.9rem; margin-bottom:10px; border-bottom:1px solid #333; padding-bottom:5px;"
+                    data-i18n="smp_net_title">Your
+                    Network</h3>
+                <div id="buyer-list-container" style="max-height:300px; overflow-y:auto; padding-right:5px;">
+                    <!-- Filled via JS -->
+                </div>
+
+                <!-- Support Section (Migrated from Partner.html) -->
+                <div
+                    style="margin-top:20px; border: 1px solid rgba(0, 240, 255, 0.2); padding:15px; border-radius:8px; background:rgba(0,0,0,0.2);">
+                    <h3 class="text-muted" style="font-size:0.9rem; margin-bottom:10px; color:var(--color-primary);"
+                        data-i18n="sec_support">Support / Help Desk</h3>
+
+                    <select id="support-issue" class="form-input" style="margin-bottom:10px;">
+                        <option value="General" data-i18n="opt_gen">General Help</option>
+                        <option value="PIN" data-i18n="opt_pin">PIN Change Request</option>
+                        <option value="Slot" data-i18n="opt_slot">Mobile Slot Issue</option>
+                        <option value="Payment" data-i18n="opt_pay">Payment Confusion</option>
+                        <option value="Other" data-i18n="opt_other">Other</option>
+                    </select>
+
+                    <textarea id="support-msg" placeholder="Describe the issue..."
+                        style="width:100%; height:80px; background:#111; border:1px solid #444; color:#fff; padding:10px; border-radius:5px; margin-bottom:10px; resize:none;"></textarea>
+
+                    <button onclick="sendSupportMessage()" class="btn-primary" style="width:100%; font-size:0.8rem;"
+                        data-i18n="btn_send">SEND TO SUPPORT</button>
+
+                    <div id="support-feedback"
+                        style="margin-top:10px; font-size:0.8rem; color:#44ff44; text-align:center; display:none;"
+                        data-i18n="msg_sent">
+                        ✓ Message sent to FCC Panel
+                    </div>
+                </div>
+
+                <div style="margin-top:20px; display:flex; justify-content:center; gap:15px;">
+                    <button onclick="logoutPartner()"
+                        style="background:transparent; border:1px solid #ff4444; color:#ff4444; padding:8px 20px; border-radius:20px; font-size:0.8rem; cursor:pointer;"
+                        data-i18n="btn_logout">
+                        Logout
+                    </button>
+                </div>
+
+                <p class="text-muted" style="font-size:0.7rem; margin-top:15px;">
+                    <a href="index.html" class="text-muted" data-i18n="back_home">← Back to Home</a>
+                </p>
+
+        </section>
+
+        <!-- SMP APP MODAL -->
+        <div id="smp-app-modal" class="hidden"
+            style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:2000; display:flex; justify-content:center; align-items:center; backdrop-filter:blur(5px);">
+            <div class="card"
+                style="background:#0f1115; padding:25px; border-radius:16px; width:90%; max-width:400px; border:1px solid rgba(255, 215, 0, 0.3); box-shadow: 0 0 30px rgba(255, 215, 0, 0.1);">
+
+                <h3 style="margin-top:0; color:#ffd700; text-align:center; font-size:1.4rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:20px;"
+                    data-i18n="smp_form_title">
+                    SMP Application
+                </h3>
+
+                <!-- Cleaned up Legacy Fields -->
+                <div id="smp-application-form"
+                    style="margin-top:20px; background:rgba(0,0,0,0.5); padding:15px; border-radius:8px; border:1px solid #333;">
+                    <div
+                        style="font-size:1.1rem; color:#ffd700; margin-bottom:15px; text-transform:uppercase; letter-spacing:1px; text-align:center;">
+                        SMP Application</div>
+
+                    <div class="input-group">
+                        <label>Applicant Name (as per ID)</label>
+                        <input type="text" id="smp-name" class="input-field" placeholder="Full Name">
+                    </div>
+
+                    <!-- Address Field Removed for Data Minimization -->
+                    <div class="input-group">
+                        <label>Pincode <span
+                                style="font-size:0.7rem; color:#00ff99; font-weight:normal;">(Auto-Detected)</span></label>
+                        <input type="tel" id="smp-pincode" class="input-field" placeholder="Detecting..." maxlength="6">
+                        <div style="font-size:0.65rem; color:#777; margin-top:5px;">You can edit this if incorrect.
+                        </div>
+                    </div>
+
+                    <div class="input-group" style="margin-top:10px;">
+                        <label>Aadhaar (Last 4 digits – Optional)</label>
+                        <input type="tel" id="smp-aadhaar" class="input-field" placeholder="xxxx" maxlength="4"
+                            style="letter-spacing:3px; text-align:center; width: 100%;">
+                    </div>
+                    <div
+                        style="font-size:0.65rem; color:#666; margin-top:-10px; margin-bottom:15px; font-style:italic;">
+                        Aadhaar may be verified physically by our SMP if required. No document upload is
+                        needed.<br>
+                        (आवश्यक होने पर आधार कार्ड की भौतिक जाँच हमारे SMP द्वारा की जा सकती है। कोई दस्तावेज़
+                        अपलोड आवश्यक नहीं है।)
+                    </div>
+
+                    <div class="input-group">
+                        <label style="color:#ffd700;">Partner Photo (Selfie)</label>
+                        <div id="smp-photo-container">
+                            <input type="file" id="smp-photo" accept="image/*"
+                                style="background:rgba(0,255,255,0.05); padding:10px; border-radius:4px; border:1px solid #333; width:100%; color:#aaa;">
+                            <div style="font-size:0.65rem; color:#666; margin-top:5px;">Upload a clear, professional
+                                photo for your ID Card.</div>
+                        </div>
+                        <div style="margin-top:10px;">
+                            <input type="checkbox" id="smp-use-avatar" onchange="toggleSMPPhotoInput()"> <label
+                                for="smp-use-avatar" style="font-size:0.75rem; color:#aaa;">Use System Avatar (For
+                                Testing
+                                Only)</label>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:10px; margin-top:20px;">
+                        <button onclick="document.getElementById('smp-app-modal').classList.add('hidden')"
+                            class="btn-secondary" style="border:1px solid #444; color:#888;">Cancel</button>
+                        <button onclick="submitSMPApplication()" class="btn-primary"
+                            style="background:#ffd700; color:#000; border:none; font-weight:bold;">SUBMIT
+                            APPLICATION</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MANUAL ENTRY MODAL -->
+        <div id="smp-manual-entry-modal" class="hidden"
+            style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; display:flex; justify-content:center; align-items:center;">
+            <div class="card"
+                style="background:var(--admin-card-bg); padding:20px; border-radius:12px; width:90%; max-width:400px; border:1px solid #00ff99;">
+                <h3 style="margin-top:0; color:#00ff99;" data-i18n="smp_m_man">Manual Paid Entry</h3>
+                <input type="tel" id="man-mobile" data-i18n-ph="smp_ph_mob" placeholder="Mobile Number"
+                    class="form-input" maxlength="10">
+                <input type="text" id="man-name" data-i18n-ph="smp_ph_usr" placeholder="User Name" class="form-input"
+                    oninput="this.value=this.value.replace(/[^a-zA-Z\s]/g,'')" style="margin-top:10px;">
+                <select id="man-kit" class="form-input" style="margin-top:10px;">
+                    <option value="KIT1" data-i18n="kit_1">SMT Base</option>
+                    <option value="KIT2" data-i18n="kit_2">SMT Mix</option>
+                    <option value="KIT3" data-i18n="kit_3">SMT Family</option>
+                </select>
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+                    <button onclick="document.getElementById('smp-manual-entry-modal').classList.add('hidden')"
+                        class="action-btn" data-i18n="btn_cancel">Cancel</button>
+                    <button onclick="smpSubmitManualEntry()" class="btn-primary" style="width:auto;"
+                        data-i18n="btn_add">Add Entry</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- EDIT NAME MODAL -->
+        <div id="smp-edit-modal" class="hidden"
+            style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; display:flex; justify-content:center; align-items:center;">
+            <div class="card"
+                style="background:var(--admin-card-bg); padding:20px; border-radius:12px; width:90%; max-width:400px; border:1px solid #fff;">
+                <h3 style="margin-top:0; color:#fff;" data-i18n="smp_m_edit">Edit Name</h3>
+                <input type="tel" id="smp-edit-mobile" data-i18n-ph="smp_ph_tmob" placeholder="Target Mobile"
+                    class="form-input" maxlength="10">
+                <input type="text" id="smp-edit-oldname" data-i18n-ph="smp_ph_oname" placeholder="Old Name (Current)"
+                    class="form-input" style="margin-top:10px;">
+                <input type="text" id="smp-edit-name" data-i18n-ph="smp_ph_nname" placeholder="New Name"
+                    class="form-input" style="margin-top:10px;">
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+                    <button onclick="document.getElementById('smp-edit-modal').classList.add('hidden')"
+                        class="action-btn" data-i18n="btn_cancel">Cancel</button>
+                    <button onclick="smpSubmitEditName()" class="btn-primary" style="width:auto;"
+                        data-i18n="btn_update">Update</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="js/lang.js"></script>
+    <script src="js/ssb.js"></script>
+    <div id="terms-modal" class="hidden"
+        style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; display:flex; justify-content:center; align-items:center;">
+        <div class="card"
+            style="background:var(--admin-card-bg); padding:20px; border-radius:12px; width:90%; max-width:500px; max-height:80vh; overflow-y:auto; border:1px solid #444;">
+            <h3 class="text-highlight" data-i18n="term_title">Authorized Seller Agreement</h3>
+            <div class="text-muted" style="text-align:left; font-size:0.85rem; line-height:1.5;">
+                <p data-i18n="term_1"><strong>1. Independent Status:</strong> You are an independent authorized
+                    seller, not an employee or agent of SINAANK.</p>
+                <p data-i18n="term_2"><strong>2. Direct Sales Only:</strong> You earn commission only on direct
+                    personal sales. This is NOT a multi-level marketing (MLM) or pyramid scheme.</p>
+                <p data-i18n="term_3"><strong>3. Commission:</strong> You receive "Seller Credits" for each
+                    verified
+                    sale. Credits are subject to tax deduction (TDS) as per government rules.</p>
+                <p data-i18n="term_4"><strong>4. No Misrepresentation:</strong> You agree NOT to claim this
+                    product
+                    cures medical diseases. It is a "Wellness & Relaxation" tool only.</p>
+                <p data-i18n="term_5"><strong>5. Anti-Spam:</strong> You agree not to send unsolicited spam. You
+                    may
+                    only share with contacts who have consented.</p>
+                <p data-i18n="term_6"><strong>6. Termination:</strong> SINAANK reserves the right to revoke
+                    seller
+                    status for violation of these terms.</p>
+            </div>
+            <button onclick="closeTerms()" class="btn-secondary" style="margin-top:20px; width:100%;"
+                data-i18n="btn_close">Close</button>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="js/lang.js"></script>
+    <script>
+        // --- INIT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            SSBLogic.initBackground();
+
+            // Auto Login Check
+            const session = JSON.parse(localStorage.getItem('ssb_partner_session'));
+            if (session) {
+                loadPartnerDashboard();
+            }
+        });
+
+        const msgBlock = document.getElementById('msg-block');
+
+        // --- LOGIN LOGIC ---
+
+        function showMsg(text, type = 'error') {
+            msgBlock.textContent = text;
+            msgBlock.classList.remove('hidden');
+            if (type === 'error') {
+                msgBlock.style.background = 'rgba(255,0,0,0.1)';
+                msgBlock.style.border = '1px solid red';
+                msgBlock.style.color = '#ff4444';
+            } else {
+                msgBlock.style.background = 'rgba(0,255,0,0.1)';
+                msgBlock.style.border = '1px solid green';
+                msgBlock.style.color = '#44ff44';
+            }
+        }
+
+        function checkAccess() {
+            const mobile = document.getElementById('partner-mobile').value.trim();
+            const pin = document.getElementById('partner-pin').value.trim();
+            const lang = localStorage.getItem('ssb_lang') || 'en';
+
+            if (mobile.length !== 10) return showMsg(TRANSLATIONS[lang]['err_mobile']);
+            if (pin.length !== 4) return showMsg(TRANSLATIONS[lang]['err_pin_len']);
+
+            if (!SSBLogic.verifyPin(mobile, pin)) {
+                return showMsg(TRANSLATIONS[lang]['err_pin_match']);
+            }
+
+            // 1. Is already Authorized?
+            if (SSBLogic.isAuthorizedSeller(mobile)) {
+                // Fetch Name
+                const sellerDB = JSON.parse(localStorage.getItem('ssb_authorized_sellers'));
+                const name = sellerDB[mobile].name;
+
+                const sessionData = { mobile, name };
+                localStorage.setItem('ssb_partner_session', JSON.stringify(sessionData));
+                loadPartnerDashboard();
+                return;
+            }
+
+            // 2. Eligibility Check
+            const session = SSBLogic.getSession();
+            const history = SSBLogic.checkHistoryStatus(mobile);
+            let isPaidUser = (session && session.phone === mobile && session.isPaid) || (history.found);
+
+            if (!isPaidUser) {
+                const msg = TRANSLATIONS[lang]['err_access'] || TRANSLATIONS['en']['err_access'];
+                showMsg(msg);
+                return;
+            }
+
+            // 3. Register Flow
+            document.getElementById('state-login').classList.add('hidden');
+            document.getElementById('state-register').classList.remove('hidden');
+            if (session && session.name) document.getElementById('reg-name').value = session.name;
+        }
+
+        function completeRegistration() {
+            const name = document.getElementById('reg-name').value.trim();
+            const mobile = document.getElementById('partner-mobile').value.trim();
+            const toggle = document.getElementById('reg-toggle').checked;
+
+            if (!name) return alert("Enter Name");
+            if (!toggle) return alert("Please confirm the declaration.");
+
+            SSBLogic.registerSeller(mobile, name);
+
+            const sessionData = { mobile, name };
+            localStorage.setItem('ssb_partner_session', JSON.stringify(sessionData));
+            loadPartnerDashboard();
+        }
+
+        function logoutPartner() {
+            if (confirm('Logout?')) {
+                localStorage.removeItem('ssb_partner_session');
+                window.location.href = 'seller.html';
+            }
+        }
+
+        // --- DASHBOARD LOGIC ---
+
+        function loadPartnerDashboard() {
+            // Hide Login/Reg
+            document.getElementById('state-login').classList.add('hidden');
+            document.getElementById('state-register').classList.add('hidden');
+            document.getElementById('state-dashboard').classList.remove('hidden');
+
+            const session = JSON.parse(localStorage.getItem('ssb_partner_session'));
+            if (!session) return location.reload();
+
+            // Load Data
+            const stats = SSBLogic.getPartnerStats(session.mobile);
+
+            // Render basic info
+            document.getElementById('seller-name').textContent = session.name || 'Partner';
+
+            // FETCH REAL SELLER ID
+            const sellersDB = JSON.parse(localStorage.getItem('ssb_authorized_sellers') || '{}');
+            const realSeller = sellersDB[session.mobile];
+            document.getElementById('seller-id').textContent = (realSeller && realSeller.sellerId) ? realSeller.sellerId : 'ID: ' + session.mobile;
+            document.getElementById('val-sales').textContent = stats.sales || 0;
+            document.getElementById('val-earnings').textContent = '₹' + (stats.earnings || 0);
+
+            // Render List
+            const listContainer = document.getElementById('buyer-list-container');
+            listContainer.innerHTML = '';
+
+            if (stats.buyers && stats.buyers.length > 0) {
+                [...stats.buyers].reverse().forEach(buyer => {
+                    const row = document.createElement('div');
+                    row.style.cssText = "display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid #222;";
+                    row.innerHTML = `
+                        <div>
+                            <div style="color:#fff; font-weight:500;">${buyer.mobile}</div>
+                            <div style="font-size:0.75rem; color:#888;">${buyer.name || 'User'}</div>
+                            <div style="font-size:0.75rem; color:#aaa;">PIN: <span style="color:#ffaa00; font-weight:bold;">${buyer.pin || 'N/A'}</span></div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="color:var(--color-primary); font-size:0.9rem;">${buyer.kitId}</div>
+                            <div style="font-size:0.7rem; color:#666;">${SSBLogic.formatDate(buyer.date)}</div>
+                        </div>
+                    `;
+                    listContainer.appendChild(row);
+                });
+            } else {
+                listContainer.innerHTML = '<div style="padding:20px; text-align:center; color:#666;">No sales yet.</div>';
+            }
+
+            // SMP Check
+            checkSMPStatus(session, stats);
+
+            // Re-apply Language (in case of dynamic content or init)
+            const currentLang = localStorage.getItem('ssb_lang') || 'en';
+            if (typeof toggleLanguage === 'function') {
+                toggleLanguage(currentLang);
+            }
+        }
+
+        function checkSMPStatus(session, stats) {
+            const smpList = JSON.parse(localStorage.getItem('ssb_smp_list') || '{}');
+            const smpData = smpList[session.mobile];
+            const smpStatus = smpData ? smpData.status : null;
+
+            document.getElementById('smp-upgrade-section').classList.add('hidden');
+            document.getElementById('smp-dashboard-section').classList.add('hidden');
+            document.getElementById('seller-address-block').classList.add('hidden');
+
+            // Reset Theme
+            document.body.classList.remove('theme-smp');
+
+            // Default Avatar
+            document.getElementById('seller-photo').src = 'favicon.png';
+
+            if (smpStatus === 'ACTIVE') {
+                // ACTIVATE GOLD THEME
+                document.body.classList.add('theme-smp');
+
+                document.getElementById('smp-dashboard-section').classList.remove('hidden');
+
+                // Show Photo
+                if (smpData.photo) {
+                    document.getElementById('seller-photo').src = smpData.photo;
+                }
+
+                // Show Address
+                if (smpData.address) {
+                    document.getElementById('seller-address-block').classList.remove('hidden');
+                    document.getElementById('seller-address').textContent = smpData.address;
+                    if (smpData.pincode) document.getElementById('seller-pincode').textContent = smpData.pincode;
+                }
+
+                // Add Badge if not exists (Cleared by default textContent setter)
+                if (!document.getElementById('seller-name').innerHTML.includes('badge')) {
+                    document.getElementById('seller-name').innerHTML += ' <span class="seller-badge">SMP GOLD</span>';
+                }
+
+                // LOAD NETWORK STATS
+                const netStats = SSBLogic.getNetworkStats(session.mobile);
+                const netSection = document.getElementById('smp-network-section');
+
+                if (netSection) {
+                    netSection.classList.remove('hidden');
+                    document.getElementById('smp-network-bonus').textContent = '₹' + netStats.totalBonus;
+                    document.getElementById('smp-network-count').textContent = netStats.members.length;
+
+                    const netList = document.getElementById('smp-network-list');
+                    netList.innerHTML = '';
+                    if (netStats.members.length > 0) {
+                        netStats.members.forEach(m => {
+                            const div = document.createElement('div');
+                            div.style.cssText = "display:grid; grid-template-columns: 2fr 1fr; padding:12px 10px; border-bottom:1px solid #222; font-size:0.85rem; align-items:center;";
+                            div.innerHTML = `
+                                <div>
+                                    <div style="color:#fff; font-weight:500;">${m.name}</div>
+                                    <div style="color:#aaa; font-size:0.75rem; margin-top:2px;">
+                                        Mob: <span style="color:#fff;">${m.mobile}</span>
+                                    </div>
+                                    <div style="color:#aaa; font-size:0.75rem;">
+                                        🔑 PIN: <span style="color:#ffaa00; font-weight:bold;">${m.pin || 'N/A'}</span>
+                                    </div>
+                                </div>
+                                <div style="text-align:right;">
+                                    <div style="color:#ffd700; font-weight:bold;">+₹${m.bonus}</div>
+                                    <div style="color:#666; font-size:0.75rem;">${m.sales} Sales</div>
+                                </div>
+                            `;
+                            netList.appendChild(div);
+                        });
+                    } else {
+                        netList.innerHTML = '<div style="color:#555; text-align:center; padding:20px; font-size:0.8rem;">Invite others to join & earn overrides.</div>';
+                    }
+                }
+
+            } else if (smpStatus === 'PENDING') {
+                const banner = document.getElementById('smp-upgrade-section');
+                banner.classList.remove('hidden');
+                banner.innerHTML = '<h3 style="color:#ffd700;">🌟 Application Pending</h3><p style="color:#ccc;">Under Review.</p>';
+            } else {
+                // ELIGIBILITY CHECK
+                // 1. 5+ Sales
+                // 2. Family Pack (KIT3) Owner
+                const history = SSBLogic.checkHistoryStatus(session.mobile);
+                const isFamilyPack = history.found && history.data.kitId === 'KIT3';
+
+                if (stats.sales >= 5 || isFamilyPack) {
+                    document.getElementById('smp-upgrade-section').classList.remove('hidden');
+
+                    // Customize text for Family Pack users if they have 0 sales
+                    if (isFamilyPack && stats.sales < 5) {
+                        document.querySelector('#smp-upgrade-section [data-i18n="smp_elite_desc"]').innerHTML =
+                            'As a <span style="color:#ffd700; font-weight:bold;">SSB Family Partner</span>,<br>' +
+                            'You are eligible to become a <span style="color:#ffd700;">Business Partner</span>.';
+                    }
+                }
+            }
+        }
+
+        // --- SMP ACTIONS ---
+
+
+        // Legacy openSMPForm removed
+
+        function openSMPForm() {
+            const session = JSON.parse(localStorage.getItem('ssb_partner_session'));
+            // Pre-fill Name
+            document.getElementById('smp-name').value = session.name || '';
+            document.getElementById('smp-app-modal').classList.remove('hidden');
+
+            // Auto-Detect Pincode
+            const pinInput = document.getElementById('smp-pincode');
+            if (!pinInput.value) { // Only fetch if empty
+                fetch('https://ipapi.co/json/')
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.postal) {
+                            pinInput.value = data.postal;
+                            pinInput.style.borderColor = '#00ff99'; // Visual cue
+                        } else {
+                            pinInput.placeholder = "Enter Pincode";
+                        }
+                    })
+                    .catch(err => {
+                        console.log('Geo-IP failed', err);
+                        pinInput.placeholder = "Enter Pincode manually";
+                    });
+            }
+        }
+        function toggleSMPPhotoInput() {
+            const chk = document.getElementById('smp-use-avatar').checked;
+            const container = document.getElementById('smp-photo-container');
+            if (chk) container.classList.add('hidden');
+            else container.classList.remove('hidden');
+        }
+
+        function openManualEntry() { document.getElementById('smp-manual-entry-modal').classList.remove('hidden'); }
+        function openSMPEditName() { document.getElementById('smp-edit-modal').classList.remove('hidden'); }
+
+        function submitSMPApplication() {
+            // Address Removed - Passing empty string or null
+            const address = "";
+            const pincode = document.getElementById('smp-pincode').value.trim();
+            const aadhar = document.getElementById('smp-aadhaar').value.trim(); // Last 4 digits only
+            const useDefault = document.getElementById('smp-use-avatar').checked;
+
+            // Photo Validation
+            let photoUrl = 'favicon.png';
+            if (!useDefault) {
+                const fileInput = document.getElementById('smp-photo');
+                if (fileInput.files.length === 0) return alert("REQUIRED: Please upload a professional selfie/photo.");
+
+                // For local logic, we simulate upload by using placeholder or blob if we wanted.
+                // Keeping consistent with previous logic:
+                photoUrl = 'assets/user_placeholder.png';
+            } else {
+                photoUrl = 'assets/smp_default.png';
+            }
+
+            // Minimal Validation
+            if (pincode.length !== 6) return alert("Invalid Pincode (6 Digits required).");
+
+            const session = JSON.parse(localStorage.getItem('ssb_partner_session'));
+            let smpList = JSON.parse(localStorage.getItem('ssb_smp_list') || '{}');
+
+            // Use the name from the input field (pre-filled or edited)
+            const nameInput = document.getElementById('smp-name').value.trim();
+            const finalName = nameInput || session.name;
+
+            smpList[session.mobile] = {
+                mobile: session.mobile,
+                name: finalName,
+                address, pincode,
+                aadhar: aadhar || 'XXXX',
+                photo: photoUrl,
+                date: Date.now(),
+                status: 'PENDING'
+            };
+            localStorage.setItem('ssb_smp_list', JSON.stringify(smpList));
+
+            document.getElementById('smp-app-modal').classList.add('hidden');
+            loadPartnerDashboard();
+            alert("Application Submitted! Status: Review Pending.");
+        }
+
+        function smpSubmitManualEntry() {
+            const mobile = document.getElementById('man-mobile').value;
+            const name = document.getElementById('man-name').value;
+            const kitId = document.getElementById('man-kit').value;
+
+            if (mobile.length !== 10 || !name) return alert("Invalid");
+
+            // --- RESTRICTION: Check for Privileged Users ---
+            const admins = ['9818869428', '9211755211', '9999999991']; // Hardcoded from SSBLogic
+            const smps = JSON.parse(localStorage.getItem('ssb_smp_list') || '{}');
+            const sellers = JSON.parse(localStorage.getItem('ssb_authorized_sellers') || '{}');
+
+            if (admins.includes(mobile)) return alert("RESTRICTED: Cannot add Admin as a customer.");
+            if (smps[mobile] && smps[mobile].status === 'APPROVED') return alert("RESTRICTED: This user is already an Active SMP.");
+            if (sellers[mobile] && sellers[mobile].status === 'APPROVED') return alert("RESTRICTED: This user is already an Authorized Seller.");
+
+            // --- RESTRICTION: Check if Buyer Exists (Online Payment Enforced) ---
+            let history = JSON.parse(localStorage.getItem('ssb_paid_history') || '[]');
+            const existingBuyer = history.find(h => h.phone === mobile);
+
+            if (!existingBuyer) {
+                return alert("RESTRICTED: Unproven Entry. This user has not purchased any Kit online yet.\n\nSince this is a 100% Digital Platform, please ask the user to buy from the website first.");
+            }
+            // --------------------------------------------------------------------
+
+            const session = JSON.parse(localStorage.getItem('ssb_partner_session'));
+            let stats = JSON.parse(localStorage.getItem('ssb_partner_stats') || '{}');
+
+            if (!stats[session.mobile]) stats[session.mobile] = { sales: 0, earnings: 0, buyers: [] };
+
+            // Update Sales Count based on Kit Size
+            const salesCount = (kitId === 'KIT3' ? 5 : kitId === 'KIT2' ? 2 : 1);
+            stats[session.mobile].sales += salesCount;
+            // stats[session.mobile].earnings += ... (Earnings logic remains, assuming claiming credit for online sale)
+            stats[session.mobile].earnings += (kitId === 'KIT3' ? 390 : kitId === 'KIT2' ? 130 : 56);
+
+            stats[session.mobile].buyers.push({
+                name, mobile, kitId, date: Date.now(), status: 'ACTIVE'
+            });
+            localStorage.setItem('ssb_partner_stats', JSON.stringify(stats));
+
+            // DO NOT Duplicate into history (User already exists)
+            // history.push(...) -> REMOVED
+
+            document.getElementById('smp-manual-entry-modal').classList.add('hidden');
+            loadPartnerDashboard();
+            alert("Success! Existing Buyer claimed and added to your list.");
+        }
+
+        function smpSubmitEditName() {
+            const mobile = document.getElementById('smp-edit-mobile').value;
+            const oldName = document.getElementById('smp-edit-oldname').value;
+            const newName = document.getElementById('smp-edit-name').value;
+
+            if (!mobile || !newName || !oldName) return alert("Please enter Mobile, Old Name, and New Name.");
+
+            // Update History
+            let history = JSON.parse(localStorage.getItem('ssb_paid_history') || '[]');
+            let found = false;
+            history = history.map(h => {
+                if (h.phone === mobile) { h.name = newName; found = true; }
+                return h;
+            });
+            localStorage.setItem('ssb_paid_history', JSON.stringify(history));
+
+            // Update Partner Stats (Global Search basic)
+            let stats = JSON.parse(localStorage.getItem('ssb_partner_stats') || '{}');
+            Object.keys(stats).forEach(k => {
+                if (stats[k].buyers) {
+                    stats[k].buyers.forEach(b => {
+                        if (b.mobile === mobile) { b.name = newName; found = true; }
+                    });
+                }
+            });
+            localStorage.setItem('ssb_partner_stats', JSON.stringify(stats));
+
+            // Update Authorized Sellers (Crucial for Seller Names)
+            let sellers = JSON.parse(localStorage.getItem('ssb_authorized_sellers') || '{}');
+            if (sellers[mobile]) {
+                sellers[mobile].name = newName;
+                found = true;
+                localStorage.setItem('ssb_authorized_sellers', JSON.stringify(sellers));
+            }
+
+            document.getElementById('smp-edit-modal').classList.add('hidden');
+            loadPartnerDashboard();
+            alert(found ? "Name Updated!" : "User key not found, but Name updated for future ref.");
+        }
+
+        function startDemoSession() {
+            // CONFIRMATION CHECK
+            if (localStorage.getItem('ssb_partner_session')) {
+                if (!confirm("⚠️ Active Session Found!\n\nThis will OVERWRITE your current session with the Demo User (Poonam Sharma).\n\nAre you sure?")) {
+                    return;
+                }
+            }
+
+            const demoMobile = '8851168290';
+            const demoName = 'Poonam Sharma';
+
+            // 1. Create Session
+            localStorage.setItem('ssb_partner_session', JSON.stringify({
+                mobile: demoMobile,
+                name: demoName,
+                pin: '1234'
+            }));
+
+            // 2. Create Dummy Sales Data
+            const pastDate = new Date();
+            pastDate.setDate(pastDate.getDate() - 2);
+
+            // 3. ALSO Create Consumer Session (so she can 'Play')
+            const consumerSession = {
+                phone: demoMobile,
+                name: demoName,
+                kitId: 'KIT1',
+                isPaid: true,
+                wallet: 1780,
+                consumed: 0,
+                slots: [],
+                deviceId: 'DEMO_DEVICE_POONAM',
+                date: Date.now(),
+                mixColor: 'radial-gradient(circle, #00f0ff, #000)',
+                allowedDevices: 1
+            };
+            localStorage.setItem('ssb_session', JSON.stringify(consumerSession));
+            localStorage.setItem('ssb_smp_list', JSON.stringify({})); // Clear SMP for pure start
+
+            let buyers = [];
+            for (let i = 0; i < 12; i++) {
+                buyers.push({
+                    mobile: '90000000' + (10 + i),
+                    name: 'Customer ' + (i + 1),
+                    date: pastDate.toISOString(),
+                    kitId: 'KIT' + ((i % 3) + 1),
+                    pin: '1234' // Dummy PIN for visibility
+                });
+            }
+
+            const stats = {
+                sales: 12,
+                earnings: 12 * 500, // Dummy calc
+                buyers: buyers
+            };
+
+            let allStats = JSON.parse(localStorage.getItem('ssb_partner_stats') || '{}');
+            allStats[demoMobile] = stats;
+            localStorage.setItem('ssb_partner_stats', JSON.stringify(allStats));
+
+            // 3. Set SMP Status (Logic Updated: NOT 'ACTIVE' yet, so she can Apply)
+            // We want to simulate a "Qualified Seller" who has not yet Upgraded.
+            let smpList = JSON.parse(localStorage.getItem('ssb_smp_list') || '{}');
+
+            // CLEAN START for Poonam: Remove any existing SMP status so the Upgrade Logic triggers
+            if (smpList[demoMobile]) delete smpList[demoMobile];
+
+            localStorage.setItem('ssb_smp_list', JSON.stringify(smpList));
+
+            // 4. Ensure she is in Authorized list (With PIN to fix "N/A" issue in Admin)
+            let sellers = JSON.parse(localStorage.getItem('ssb_authorized_sellers') || '{}');
+            sellers[demoMobile] = { mobile: demoMobile, name: demoName, pin: '1234', date: Date.now(), status: 'ACTIVE' };
+            localStorage.setItem('ssb_authorized_sellers', JSON.stringify(sellers));
+
+            location.reload();
+        }
+
+        // --- UI OPENERS ---
+        // Legacy UI Openers handlers (Clean up if needed, ensuring no conflicts)
+        // openSMPForm is now redefined above near line 860. 
+        // We should remove the duplicate definition at bottom if it exists or ensure it calls the main one.
+        // Checking file... the previous tool call might have left the bottom one?
+        // Let's replace the bottom one with a comment or remove it to avoid overriding.
+
+        // function openSMPForm() { ... } -> Removed/Commented to favor the detailed one above.
+        function openManualEntry() {
+            document.getElementById('man-mobile').value = '';
+            document.getElementById('man-name').value = '';
+            document.getElementById('smp-manual-entry-modal').classList.remove('hidden');
+        }
+        function openSMPEditName() {
+            document.getElementById('smp-edit-mobile').value = '';
+            document.getElementById('smp-edit-oldname').value = '';
+            document.getElementById('smp-edit-name').value = '';
+            document.getElementById('smp-edit-modal').classList.remove('hidden');
+
+            // Attach Lookup Listener
+            const mobInput = document.getElementById('smp-edit-mobile');
+            mobInput.oninput = function () {
+                if (this.value.length === 10) {
+                    lookupOldName(this.value);
+                }
+            }
+        }
+
+        function lookupOldName(mobile) {
+            // 1. Check Sesssion/Auth Sellers
+            let sellers = JSON.parse(localStorage.getItem('ssb_authorized_sellers') || '{}');
+            if (sellers[mobile]) {
+                document.getElementById('smp-edit-oldname').value = sellers[mobile].name;
+                return;
+            }
+
+            // 2. Check Buyers in Partner Stats
+            let stats = JSON.parse(localStorage.getItem('ssb_partner_stats') || '{}');
+            let foundName = '';
+            Object.values(stats).forEach(s => {
+                if (s.buyers) {
+                    s.buyers.forEach(b => {
+                        if (b.mobile === mobile) foundName = b.name;
+                    });
+                }
+            });
+
+            if (foundName) {
+                document.getElementById('smp-edit-oldname').value = foundName;
+            } else {
+                // 3. Check History
+                let history = JSON.parse(localStorage.getItem('ssb_paid_history') || '[]');
+                let hEntry = history.find(h => h.phone === mobile);
+                if (hEntry && hEntry.name) document.getElementById('smp-edit-oldname').value = hEntry.name;
+            }
+        }
+
+        // --- UTILS ---
+        function validateName(el) { el.value = el.value.replace(/[^a-zA-Z\s]/g, '').replace(/\b\w/g, l => l.toUpperCase()); }
+
+        function toggleButtonState() {
+            const chk = document.getElementById('reg-toggle').checked;
+            const btn = document.getElementById('btn-activate');
+            if (chk) btn.classList.remove('btn-disabled'); else btn.classList.add('btn-disabled');
+        }
+
+        function showTerms() { document.getElementById('terms-modal').classList.remove('hidden'); }
+        function closeTerms() { document.getElementById('terms-modal').classList.add('hidden'); }
+
+        function sendSupportMessage() {
+            const msg = document.getElementById('support-msg').value.trim();
+            // const lang = localStorage.getItem('ssb_lang') || 'en'; // Assuming global 'lang' or fetch
+
+            if (!msg) return alert("Please enter a message.");
+
+            // Mock Send
+            const btn = document.getElementById('support-feedback');
+            btn.style.display = 'block';
+
+            setTimeout(() => {
+                document.getElementById('support-msg').value = '';
+                btn.style.display = 'none';
+            }, 2000);
+        }
+
+        function logoutPartner() {
+            if (confirm('Logout?')) {
+                localStorage.removeItem('ssb_partner_session');
+                window.location.href = 'index.html';
+            }
+        }
+
+        function copyReferralLink() {
+            const mobile = document.getElementById('seller-id').textContent.trim();
+            if (!mobile || mobile === '-') return alert("Seller ID not loaded");
+
+            const baseURL = window.location.href.split('/').slice(0, -1).join('/');
+            // UPDATED: Direct link to CALIBRATION page (course.html)
+            const link = `${baseURL}/course.html?ref=${mobile}`;
+
+            navigator.clipboard.writeText(link).then(() => {
+                alert("Link Copied! Share this with buyers:\n\n" + link);
+            }, (err) => {
+                prompt("Copy this link:", link);
+            });
+        }
+    </script>
+</body>
+
+</html>

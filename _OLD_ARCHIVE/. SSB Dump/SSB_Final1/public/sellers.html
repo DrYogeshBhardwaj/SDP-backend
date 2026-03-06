@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSB | Sellers List</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            background-color: #0d1117;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .title {
+            font-size: 1.5rem;
+            color: #ffd700;
+        }
+
+        .btn-back {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #555;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+
+        .btn-back:hover {
+            background: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.05);
+            color: #aaa;
+        }
+
+        .status-badge {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        .status-active {
+            background: rgba(0, 255, 0, 0.1);
+            color: #00ff00;
+            border: 1px solid #00ff00;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <div class="title">👥 Authorized Sellers</div>
+        <a href="admin.html" class="btn-back">← Back to Admin Panel</a>
+    </div>
+
+    <div id="loading" style="text-align:center;">Loading Data...</div>
+    <div id="error-msg" style="color:red; display:none; text-align:center;"></div>
+
+    <table id="sellers-table" style="display:none;">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Mobile</th>
+                <th>PIN</th>
+                <th>Status</th>
+                <th>Joined</th>
+            </tr>
+        </thead>
+        <tbody id="sellers-body"></tbody>
+    </table>
+
+    <script src="js/ssb.js"></script>
+    <script>
+        // AUTH CHECK
+        if (!sessionStorage.getItem('ssb_admin_logged_in')) {
+            window.location.href = 'admin.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                // Ensure IDs
+                if (window.SSBLogic && window.SSBLogic.ensureSellerIds) {
+                    window.SSBLogic.ensureSellerIds();
+                }
+
+                const sellers = JSON.parse(localStorage.getItem('ssb_authorized_sellers') || '{}');
+                const tbody = document.getElementById('sellers-body');
+                const table = document.getElementById('sellers-table');
+                const loading = document.getElementById('loading');
+
+                // Self-Healing
+                if (!sellers['8851168290']) sellers['8851168290'] = { name: 'Poonam Sharma', joined: Date.now(), status: 'ACTIVE', pin: '1234', sellerId: 'S1001' };
+                if (!sellers['9999999991']) sellers['9999999991'] = { name: 'Demo User', joined: Date.now(), status: 'ACTIVE', pin: '1234', sellerId: 'S1002' };
+
+                if (Object.keys(sellers).length === 0) {
+                    loading.textContent = "No authorized sellers found.";
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                Object.values(sellers).forEach(s => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="color:#00ff99; font-weight:bold;">${s.sellerId || '-'}</td>
+                        <td>${s.name || 'Unknown'}</td>
+                        <td>${s.mobile || Object.keys(sellers).find(k => sellers[k] === s)}</td>
+                        <td style="color:#ffd700; font-family:monospace;">${s.pin || '-'}</td>
+                        <td><span class="status-badge ${s.status === 'ACTIVE' ? 'status-active' : ''}">${s.status || '-'}</span></td>
+                        <td>${new Date(s.joined).toLocaleDateString()}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                loading.style.display = 'none';
+                table.style.display = 'table';
+
+            } catch (e) {
+                document.getElementById('loading').style.display = 'none';
+                const err = document.getElementById('error-msg');
+                err.textContent = "Error: " + e.message;
+                err.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Wellness Session</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+            overflow: hidden;
+            transition: background 1s ease;
+        }
+
+        /* Breathing Animation */
+        @keyframes breathe {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+
+            50% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+        }
+
+        .breathe-circle {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: breathe 8s infinite ease-in-out;
+            box-shadow: 0 0 50px rgba(0, 240, 255, 0.3);
+            position: relative;
+        }
+
+        .freq-label {
+            position: absolute;
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+        }
+
+        .left-label {
+            left: -60px;
+            top: 50%;
+        }
+
+        .right-label {
+            right: -60px;
+            top: 50%;
+        }
+
+        #timer {
+            font-size: 3rem;
+            font-family: 'Outfit', sans-serif;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 50px;
+            display: flex;
+            gap: 20px;
+            z-index: 10;
+        }
+
+        .btn-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid var(--color-primary);
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="visual-container" class="breathe-circle">
+        <div id="timer">05:00</div>
+
+        <div class="freq-label left-label">L: <span id="lbl-left">-</span> Hz</div>
+        <div class="freq-label right-label">R: <span id="lbl-right">-</span> Hz</div>
+    </div>
+
+    <div class="controls">
+        <button class="btn-circle" onclick="toggleAudio()" id="btn-audio">🔊</button>
+
+        <button class="btn-circle" onclick="exitSession()"
+            style="font-size: 0.8rem; line-height: 1.2;">EXIT<br>⌂</button>
+    </div>
+
+    <!-- Instructions Overlay -->
+    <div id="start-overlay"
+        style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:20; display:flex; justify-content:center; align-items:center; flex-direction:column; padding: 20px;">
+        <h2 class="text-highlight mb-20">Digital Wellness Session</h2>
+        <div style="display:flex; gap:20px; margin-bottom:20px;">
+            <div style="text-align:center;">
+                <div style="font-size:2rem;">🎧</div>
+                <div class="text-muted" data-i18n="play_left_ear">Left Ear</div>
+                <div id="val-left" style="color:var(--color-primary)">-</div>
+            </div>
+            <div style="text-align:center;">
+                <div style="font-size:2rem;">🎧</div>
+                <div class="text-muted" data-i18n="play_right_ear">Right Ear</div>
+                <div id="val-right" style="color:var(--color-primary)">-</div>
+            </div>
+        </div>
+        <p style="font-size: 0.9rem; color: rgba(255,255,255,0.8); margin-top: 10px; animation: pulse 2s infinite;"
+            data-i18n="sess_prog">
+            Session in progress…<br>Relax your eyes and mind.
+        </p>
+        <p style="font-size: 0.7rem; color: rgba(255,255,255,0.5); margin-top: 30px;" data-i18n="play_stay_msg">
+            Please stay on this screen until the session completes.
+        </p>
+        <p class="text-muted mb-20 text-center" style="font-size:0.9rem; color: #fff;">
+            🎧 <strong>Use Earphones for Best Results</strong><br>
+            <span style="font-size:0.8rem; opacity:0.7;">Ensure Left/Right channels are correct.</span>
+        </p>
+        <button class="btn-primary" style="width:auto;" onclick="startSession()" data-i18n="play_initiate">Initiate
+            Session</button>
+
+        <button class="btn-secondary" style="width:auto; margin-top:10px; border:1px solid #666;"
+            onclick="window.location.href='course.html'">
+            Back to Dashboard
+        </button>
+    </div>
+
+    <script src="js/lang.js"></script>
+    <script src="js/ssb.js"></script>
+    <script>
+        // Init Language
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedLang = localStorage.getItem('ssb_lang') || 'hi';
+            if (window.setLanguage) setLanguage(savedLang);
+        });
+
+        let audioCtx, oscLeft, oscRight, gainNode;
+        let isPlaying = false;
+        let timerInterval;
+        let timeLeft = 60; // Default 1 min
+
+        // Load Session
+        const session = SSBLogic.getSession();
+
+        // Get Duration from URL
+        const params = new URLSearchParams(window.location.search);
+        const duration = parseInt(params.get('d')) || 1;
+        timeLeft = duration * 60;
+
+        if (session) {
+            // Apply Gradient Mix
+            document.querySelector('.breathe-circle').style.background = session.mixColor;
+            let durationMinutes = 1; // Default
+
+            // Parse Duration from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('d')) {
+                durationMinutes = parseInt(urlParams.get('d'));
+            }
+
+            timeLeft = durationMinutes * 60; // Update global timeLeft
+
+
+            // Theme Colors
+            const profile = SSBLogic.getSession();
+            let colorL = "#00f0ff";
+            let colorR = "#ff0099";
+
+            if (profile && profile.left) {
+                colorL = profile.left.color;
+                colorR = profile.right.color;
+            }
+
+            // Update UI Labels
+            const fL = (profile && profile.left) ? profile.left.note : 417;
+            const fR = (profile && profile.right) ? profile.right.note : 528;
+
+            if (document.getElementById('lbl-left')) document.getElementById('lbl-left').textContent = fL;
+            if (document.getElementById('lbl-right')) document.getElementById('lbl-right').textContent = fR;
+            if (document.getElementById('val-left')) document.getElementById('val-left').textContent = fL + ' Hz';
+            if (document.getElementById('val-left')) document.getElementById('val-left').textContent = fL + ' Hz';
+            if (document.getElementById('val-right')) document.getElementById('val-right').textContent = fR + ' Hz';
+
+            // INITIALIZE TIMER DISPLAY IMMEDIATELY
+            setTimeout(updateTimerDisplay, 100);
+
+            // Expose Start Function globally
+            window.startSession = function () {
+                // 1. Initialize Audio Context IMPERATIVELY on user gesture
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                // Auto Fullscreen on Start
+                if (!document.fullscreenElement) {
+                    try { document.documentElement.requestFullscreen(); } catch (e) { console.log("Fullscreen blocked", e); }
+                }
+
+                const overlay = document.getElementById('start-overlay');
+                overlay.style.opacity = '0';
+
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    initAudio();
+                    startTimer();
+                }, 500);
+            };
+
+            // Exit Function
+            window.exitSession = function () {
+                if (confirm("End session?")) {
+                    stopAudio();
+                    window.location.href = 'course.html';
+                }
+            };
+
+            // Toggle Audio: High (1.0) -> Med (0.5) -> Low (0.2) -> High
+            window.toggleAudio = function () {
+                if (gainNode) {
+                    const currentVal = gainNode.gain.value;
+                    // Logic: 
+                    // If > 0.6 (High) -> go Med (0.5)
+                    // If > 0.3 (Med) -> go Low (0.2)
+                    // If <= 0.3 (Low) -> go High (1.0)
+
+                    if (currentVal > 0.6) {
+                        gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+                        document.getElementById('btn-audio').textContent = "🔉"; // Med
+                    } else if (currentVal > 0.3) {
+                        gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                        document.getElementById('btn-audio').textContent = "🔈"; // Low
+                    } else {
+                        gainNode.gain.setValueAtTime(1.0, audioCtx.currentTime);
+                        document.getElementById('btn-audio').textContent = "🔊"; // High
+                    }
+                }
+            };
+
+
+
+
+            function initAudio() {
+                // Context should already be created by startSession
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+                // Frequencies based on Numerology
+                const freqL = (profile && profile.left) ? profile.left.note : 417;
+                const freqR = (profile && profile.right) ? profile.right.note : 528;
+
+                oscillatorL = audioCtx.createOscillator();
+                oscillatorR = audioCtx.createOscillator();
+                gainNode = audioCtx.createGain();
+
+                oscillatorL.type = 'sine';
+                oscillatorL.frequency.setValueAtTime(freqL, audioCtx.currentTime);
+
+                oscillatorR.type = 'sine';
+                oscillatorR.frequency.setValueAtTime(freqR, audioCtx.currentTime);
+
+                // Binaural Beat Setup (Pan)
+                const pannerL = audioCtx.createStereoPanner();
+                pannerL.pan.value = -1;
+                const pannerR = audioCtx.createStereoPanner();
+                pannerR.pan.value = 1;
+
+                oscillatorL.connect(pannerL).connect(gainNode);
+                oscillatorR.connect(pannerR).connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+
+                oscillatorL.start();
+                oscillatorR.start();
+                isPlaying = true; // Set playing state
+            }
+
+            function startTimer() {
+                updateTimerDisplay();
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    updateTimerDisplay();
+                    if (timeLeft <= 0) {
+                        stopAudio();
+                    }
+                }, 1000);
+            }
+
+            function updateTimerDisplay() {
+                const m = Math.floor(timeLeft / 60);
+                const s = timeLeft % 60;
+                const display = document.getElementById('timer');
+                if (display) display.textContent = `${m}:${s < 10 ? '0' : ''}${s}`;
+            }
+
+            function stopAudio() {
+                if (oscillatorL) { try { oscillatorL.stop(); oscillatorL.disconnect(); } catch (e) { console.error("Error stopping oscL:", e); } }
+                if (oscillatorR) { try { oscillatorR.stop(); oscillatorR.disconnect(); } catch (e) { console.error("Error stopping oscR:", e); } }
+                if (audioCtx) { try { audioCtx.close(); } catch (e) { console.error("Error closing audioCtx:", e); } }
+                clearInterval(timerInterval);
+                isPlaying = false;
+                // Redirect to Screen B (Complete)
+                window.location.href = `session-complete.html?m=${durationMinutes}`;
+            }
+
+            // Auto Start handled by User Click now to be safe
+            // window.onload... we removed auto-play to rely on button click for audio policy
+
+            // Prevent Back Navigation (History Push)
+            history.pushState(null, null, location.href);
+            window.onpopstate = function () {
+                history.go(1);
+            };
+
+            // Disable Refresh (Right click context menu)
+            document.addEventListener('contextmenu', event => event.preventDefault());
+
+        } // Closing if(session)
+
+        // Fallback or Redirect if no session
+        else {
+            alert('No valid session found. Redirecting...');
+            window.location.href = 'course.html';
+        }
+    </script>
+</body>
+
+</html>

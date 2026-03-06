@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Partner Registration - Sinaank Digital Pause</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="assets/logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8fafc;
+            min-height: 100vh;
+        }
+
+        /* Business Layout */
+        .business-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        @media (max-width: 900px) {
+            .business-container {
+                grid-template-columns: 1fr;
+            }
+
+            .sticky-panel {
+                position: static !important;
+                margin-top: 2rem;
+            }
+        }
+
+        /* Form side */
+        .form-section {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Sticky Info Panel */
+        .sticky-panel {
+            position: sticky;
+            top: 2rem;
+            background: linear-gradient(145deg, #ffffff, #f1f5f9);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Steps */
+        .step-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--color-primary);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .step-header {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        /* Inputs */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            outline: none;
+        }
+
+        .form-text {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+        }
+
+        /* Checkboxes */
+        .checkbox-wrapper {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .checkbox-wrapper:hover {
+            border-color: #cbd5e1;
+        }
+
+        .custom-checkbox {
+            width: 1.25rem;
+            height: 1.25rem;
+            margin-top: 0.15rem;
+            cursor: pointer;
+        }
+
+        /* Visual Split */
+        .split-visual {
+            margin-top: 1rem;
+        }
+
+        .split-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.9rem;
+        }
+
+        .split-item:last-child {
+            border-bottom: none;
+        }
+
+        .split-label {
+            color: #64748b;
+        }
+
+        .split-val {
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .split-highlight {
+            color: var(--color-primary);
+        }
+
+        /* Business Rules */
+        .rules-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .rules-list li {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.9rem;
+            color: #334155;
+        }
+
+        .rules-list li::before {
+            content: "✔";
+            position: absolute;
+            left: 0;
+            color: var(--color-success);
+            font-weight: bold;
+        }
+
+        /* Submit Button */
+        .btn-activate {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+            color: white;
+            font-weight: 700;
+            padding: 1rem;
+            width: 100%;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 6px rgba(59, 130, 246, 0.25);
+            transition: all 0.3s;
+        }
+
+        .btn-activate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-activate:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .profile-img-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            object-fit: cover;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-2">
+                    <img src="assets/logo.png" alt="Sinaank" class="h-8 w-auto">
+                    <span class="font-bold text-lg text-slate-800 hidden sm:block">Sinaank Digital Pause</span>
+                </div>
+                <!-- Back Link -->
+                <a href="#" onclick="history.back()"
+                    class="text-sm font-medium text-slate-600 hover:text-primary transition">
+                    ← Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Content -->
+    <div class="business-container">
+
+        <!-- LEFT: Form -->
+        <main class="form-section">
+            <div class="mb-8">
+                <h1 class="text-2xl font-bold text-slate-800 mb-2">Partner Registration</h1>
+                <p class="text-slate-500">You are entering the business side of SDP. Complete your profile to activate
+                    your Partner ID.</p>
+            </div>
+
+            <form id="seederForm" onsubmit="handleSeederSubmit(event)">
+
+                <!-- STEP 1: Profile -->
+                <div class="mb-8">
+                    <span class="step-title">STEP 1 OF 3</span>
+                    <h2 class="step-header">Your Identity</h2>
+
+                    <!-- NEW: Profile Image Upload -->
+                    <div class="flex items-center gap-4 mb-6 p-4 bg-slate-50 rounded-lg border border-slate-100">
+                        <div class="relative">
+                            <img id="profilePreview" src="assets/logo.png" alt="Profile" class="profile-img-preview">
+                        </div>
+                        <div class="flex-1">
+                            <label class="form-label mb-1">Business Profile Photo</label>
+                            <input type="file" id="profileImg" accept="image/*"
+                                class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition cursor-pointer"
+                                onchange="previewImage(this)">
+                            <div class="form-text text-xs mt-1">Default is SDP Logo. Upload to customize.</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" id="fullName" class="form-input" placeholder="Enter your official name"
+                                required>
+                            <div class="form-text">As per your Bank/PAN Card.</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Mobile Number</label>
+                            <input type="text" id="mobile" class="form-input bg-slate-50" readonly>
+                            <div class="form-text">Your unique SDP Identity.</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">UPI ID (For Payouts)</label>
+                        <input type="text" id="upiId" class="form-input font-mono text-slate-700"
+                            placeholder="e.g. mobile@upi" required>
+                        <div class="form-text">Earnings will be sent here manually. Auto-filled for convenience.</div>
+                    </div>
+                </div>
+
+                <!-- STEP 2: Address -->
+                <div class="mb-8">
+                    <span class="step-title">STEP 2 OF 3</span>
+                    <h2 class="step-header">Business Location</h2>
+
+                    <!-- NEW: Flexible Address Section -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="form-group">
+                            <label class="form-label">Pincode / Zip Code</label>
+                            <input type="text" id="pincode" class="form-input" placeholder="Enter Pincode or Zip"
+                                maxlength="10" required oninput="handlePincodeInput(this)">
+                            <div id="pincodeMsg" class="form-text text-primary hidden">Fetching location details...
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">City</label>
+                            <input type="text" id="city" class="form-input" placeholder="City" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Country</label>
+                            <input type="text" id="country" class="form-input" value="India" placeholder="Country"
+                                required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 3: Agreement -->
+                <div class="mb-8">
+                    <span class="step-title">STEP 3 OF 3</span>
+                    <h2 class="step-header">Understanding & Terms</h2>
+
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="check_price" class="custom-checkbox" required>
+                        <div>
+                            <label for="check_price" class="font-bold text-sm block mb-1">I understand earnings are only
+                                from ₹580 referrals.</label>
+                            <p class="text-xs text-slate-500">The Family Kit costs ₹580. This is a one-time purchase. No
+                                hidden fees.</p>
+                        </div>
+                    </div>
+
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="check_mlm" class="custom-checkbox" required>
+                        <div>
+                            <label for="check_mlm" class="font-bold text-sm block mb-1">Not an MLM Scheme</label>
+                            <p class="text-xs text-slate-500">I understand SDP is a direct sales program, not an endless
+                                chain or pyramid scheme. Earnings come from direct product sales.</p>
+                        </div>
+                    </div>
+
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="check_terms" class="custom-checkbox" required>
+                        <div>
+                            <label for="check_terms" class="font-bold text-sm block mb-1">Merchant Terms</label>
+                            <p class="text-xs text-slate-500">I agree to the <a href="#" onclick="showTerms(event)"
+                                    class="text-primary hover:underline">Partner Terms & Conditions</a>.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action -->
+                <button type="submit" class="btn-activate">🚀 Activate My Partner ID</button>
+                <p class="text-center text-xs text-slate-400 mt-4">By clicking Activate, you officially join the SDP
+                    Partner Program.</p>
+
+            </form>
+        </main>
+
+        <!-- RIGHT: Info Panel -->
+        <aside class="sticky-panel">
+            <h3 class="font-bold text-lg text-slate-800 mb-4 pb-2 border-b border-slate-200">Business Snapshot</h3>
+
+            <div class="mb-6">
+                <h4 class="text-xs font-bold text-slate-500 uppercase mb-2">Key Rules</h4>
+                <ul class="rules-list">
+                    <li>Single Product: Family Kit (₹580)</li>
+                    <li>5-Level Depth Commission</li>
+                    <li>No Automatic Withdrawals</li>
+                    <li>Admin Verified Payouts</li>
+                    <li>100% Transparency</li>
+                </ul>
+            </div>
+
+            <div class="bg-white p-4 rounded-lg border border-slate-200">
+                <h4 class="text-xs font-bold text-slate-500 uppercase mb-3">Income Structure (₹580 split)</h4>
+
+                <div class="split-visual">
+                    <div class="split-item">
+                        <span class="split-label">Direct Sale (You)</span>
+                        <span class="split-val split-highlight">₹140</span>
+                    </div>
+                    <div class="split-item">
+                        <span class="split-label">Level 2</span>
+                        <span class="split-val">₹100</span>
+                    </div>
+                    <div class="split-item">
+                        <span class="split-label">Level 3</span>
+                        <span class="split-val">₹70</span>
+                    </div>
+                    <div class="split-item">
+                        <span class="split-label">Level 4</span>
+                        <span class="split-val">₹50</span>
+                    </div>
+                    <div class="split-item">
+                        <span class="split-label">Level 5</span>
+                        <span class="split-val">₹40</span>
+                    </div>
+                    <div class="split-item bg-slate-50 mt-2 pt-2 border-t border-dashed border-slate-300">
+                        <span class="split-label font-bold text-slate-700">Total Distribution</span>
+                        <span class="split-val">₹400 / ₹580</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 text-center">
+                <img src="assets/logo.png" class="h-12 w-auto mx-auto opacity-50 mb-2 grayscale">
+                <p class="text-[10px] text-slate-400">Verified Business Partner Program<br>Sinaank Digital Pause</p>
+            </div>
+        </aside>
+
+    </div>
+
+    <!-- MAIN FOOTER -->
+    <footer class="bg-white border-t border-slate-200 mt-12 py-8">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-sm text-slate-500 mb-2">This is a non-medical digital wellness experience.</p>
+            <p class="text-xs text-slate-400">© 2026 SINAANK. All rights reserved.</p>
+            <div class="mt-4 flex justify-center gap-6 text-xs text-slate-400">
+                <a href="#" class="hover:text-primary">Partner Access</a>
+                <a href="#" class="hover:text-primary">Terms of Service</a>
+                <a href="#" class="hover:text-primary">Privacy Policy</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- T&C Modal (Hidden) -->
+    <div id="terms-modal"
+        class="demo-overlay hidden fixed inset-0 bg-slate-900 bg-opacity-90 z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-lg w-full max-h-[80vh] overflow-y-auto p-6 relative">
+            <h2 class="text-xl font-bold mb-4">Partner Terms & Conditions</h2>
+            <div class="text-sm space-y-4 text-slate-600 text-justify mb-6">
+                <p><strong>1. Voluntary Participation:</strong> Becoming a Seeder is completely voluntary.</p>
+                <p><strong>2. Not an Employment:</strong> This is a direct sales partnership, not a job offer.</p>
+                <p><strong>3. Correct Representation:</strong> You agree to present SDP truthfully as a digital wellness
+                    product, not a medical cure.</p>
+                <p><strong>4. Anti-Spam:</strong> You will not spam or harass individuals to join.</p>
+                <p><strong>5. Termination:</strong> Admin reserves the right to revoke partner status for misconduct.
+                </p>
+            </div>
+            <button onclick="closeTerms()" class="w-full btn btn-secondary py-3 rounded-lg font-bold">Close</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/store.js"></script>
+    <script>
+        // Init
+        window.addEventListener('load', () => {
+            const session = store.getSession();
+            if (!session) {
+                alert("Please login first.");
+                window.location.href = 'login.html';
+                return;
+            }
+            // Auto-fill
+            const mobile = session.mobile || '';
+            document.getElementById('mobile').value = mobile;
+
+            // Pre-fill Name (Allow editing)
+            const currentName = session.name || '';
+            const nameInput = document.getElementById('fullName');
+
+            if (currentName && currentName !== 'Member' && currentName !== 'User') {
+                nameInput.value = currentName;
+            } else {
+                nameInput.value = ''; // clear generic names to encourage typing
+            }
+
+            // Auto UPI
+            if (mobile) {
+                document.getElementById('upiId').value = `${mobile}@upi`;
+            }
+        });
+
+        // Image Preview
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById('profilePreview').src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Pincode
+        async function handlePincodeInput(input) {
+            // Pincode Logic (India + US)
+            async function handlePincodeInput(input) {
+                // Allow numbers and spaces/hyphens (for international)
+                const val = input.value.replace(/[^0-9]/g, '');
+                // input.value = val; // Don't force replace, let them type
+
+                const msg = document.getElementById('pincodeMsg');
+                const cityInput = document.getElementById('city');
+                const countryInput = document.getElementById('country');
+
+                // Reset msg
+                msg.classList.add('hidden');
+                msg.textContent = "";
+                msg.className = "form-text text-primary hidden";
+
+                if (val.length >= 5) {
+                    // Try Lookup
+                    msg.classList.remove('hidden');
+                    msg.textContent = "Checking...";
+                    msg.classList.replace('text-danger', 'text-primary');
+                    msg.classList.replace('text-green-600', 'text-primary');
+
+                    try {
+                        // 1. Try India (6 digits)
+                        if (val.length === 6) {
+                            const res = await fetch(`https://api.postalpincode.in/pincode/${val}`);
+                            const data = await res.json();
+                            if (data && data[0].Status === 'Success') {
+                                const d = data[0].PostOffice[0];
+                                cityInput.value = d.District;
+                                countryInput.value = "India";
+                                msg.textContent = "India Location Verified ✔";
+                                msg.className = "form-text text-green-600";
+                                return;
+                            }
+                        }
+
+                        // 2. Try US (5 digits)
+                        if (val.length === 5) {
+                            const res = await fetch(`https://api.zippopotam.us/us/${val}`);
+                            if (res.ok) {
+                                const data = await res.json();
+                                if (data.places && data.places.length > 0) {
+                                    cityInput.value = data.places[0]['place name'];
+                                    countryInput.value = "United States";
+                                    msg.textContent = "US Location Verified ✔";
+                                    msg.className = "form-text text-green-600";
+                                    return;
+                                }
+                            }
+                        }
+
+                        // Fallback
+                        msg.textContent = "Location not found. Please enter manually.";
+                        msg.className = "form-text text-slate-500";
+
+                    } catch (e) {
+                        console.error(e);
+                        msg.textContent = "Manual entry required.";
+                    }
+                }
+            }
+
+            // Terms
+            function showTerms(e) {
+                e.preventDefault();
+                document.getElementById('terms-modal').classList.remove('hidden');
+            }
+            function closeTerms() {
+                document.getElementById('terms-modal').classList.add('hidden');
+            }
+
+            // Submit
+            async function handleSeederSubmit(e) {
+                e.preventDefault();
+
+                const btn = document.querySelector('.btn-activate');
+                btn.innerHTML = "Processing...";
+                btn.disabled = true;
+
+                const user = store.getSession();
+                const upi = document.getElementById('upiId').value;
+                const city = document.getElementById('city').value;
+                const pincode = document.getElementById('pincode').value;
+                const fileInput = document.getElementById('profileImg');
+
+                try {
+                    // Image Processing
+                    let profileImageBase64 = 'assets/logo.png'; // Default
+                    if (fileInput.files && fileInput.files[0]) {
+                        const toBase64 = file => new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.readAsDataURL(file);
+                            reader.onload = () => resolve(reader.result);
+                            reader.onerror = error => reject(error);
+                        });
+                        profileImageBase64 = await toBase64(fileInput.files[0]);
+                    }
+
+                    // Fetch fresh user obj
+                    const users = store.getUsers();
+                    const userIdx = users.findIndex(u => u.id === user.id);
+
+                    if (userIdx === -1) throw new Error("User not found");
+
+                    const currentUser = users[userIdx];
+
+                    // Create SID
+                    const mobileSuffix = currentUser.mobile.slice(-4);
+                    const newSid = 'S' + mobileSuffix + Math.floor(Math.random() * 100);
+
+                    const newIdentity = {
+                        id: newSid,
+                        type: 'SID',
+                        walletBalance: 0,
+                        minutesBalance: 0,
+                        units: [],
+                        image: profileImageBase64
+                    };
+
+                    // Root Unit
+                    if (store.generateSCode) {
+                        newIdentity.units.push({
+                            sCode: store.generateSCode(null),
+                            parentSCode: null,
+                            createdAt: new Date().toISOString()
+                        });
+                    }
+
+                    // Update User
+                    if (!currentUser.identities) currentUser.identities = [];
+                    currentUser.identities.push(newIdentity);
+                    currentUser.role = 'SEEDER';
+                    currentUser.familySlots = 3;
+
+                    // Store Profile Data
+                    currentUser.name = document.getElementById('fullName').value.trim(); // Update Name
+                    currentUser.upiId = upi;
+
+                    // Get values dynamically as they might be edited
+                    const finalCity = document.getElementById('city').value;
+                    const finalCountry = document.getElementById('country').value;
+
+                    currentUser.address = { city: finalCity, pincode, country: finalCountry };
+
+                    store.saveUsers(users);
+
+                    // Update Session
+                    localStorage.setItem('ssb_session', JSON.stringify(currentUser));
+
+                    // Success
+                    alert(`🎉 Partner Activated!\n\nYour Partner ID: ${newSid}\nWelcome to the team.`);
+                    window.location.href = 'dashboard_580.html'; // Redirect to Main Dashboard (Seeder View)
+
+                } catch (err) {
+                    console.error(err);
+                    alert("Error: " + err.message);
+                    btn.disabled = false;
+                    btn.innerHTML = "🚀 Activate My Partner ID";
+                }
+            }
+    </script>
+</body>
+
+</html>

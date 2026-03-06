@@ -1,0 +1,47 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      // Read: Own doc or Admin
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      
+      // Write: Admin can write anything.
+      // Owner can ONLY create/update if it's their own doc AND they are not blocking admin fields inappropriately.
+      // For simplicity in this v1:
+      // - Allow create (registration)
+      // - Allow update (Seeder onboarding, minutes usage)
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      
+      // Ideally we'd lock down specific fields, but 'allow update' is needed for Client-side logic (Minutes deduction, Onboarding).
+      // Risk accepted for v1 as per "Trust + Safety" model where Admin checks payouts.
+    }
+
+    // Payout Requests
+    match /payout_requests/{requestId} {
+      // Create: Authenticated users can request
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      
+      // Read: Own requests or Admin
+      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin());
+      
+      // Update: ONLY Admin (to Approve/Pay/Reject). Users cannot edit once submitted.
+      allow update: if isAdmin();
+      
+      // Delete: NO ONE (Audit trail)
+      allow delete: if false;
+    }
+
+    // Default: Deny all else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

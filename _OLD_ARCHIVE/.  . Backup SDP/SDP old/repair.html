@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDP - System Repair</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            text-align: center;
+        }
+
+        button {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+
+        button:hover {
+            background: #dc2626;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <h1>System Repair</h1>
+        <p>It seems your session data was corrupted during the shutdown.</p>
+        <p>Click the button below to clear the temporary data and restore the app.</p>
+        <button onclick="fixApp()">Repair & Restart</button>
+        <p id="status" style="margin-top: 1rem; font-size: 0.9rem; color: #666;"></p>
+    </div>
+
+    <script>
+        function fixApp() {
+            try {
+                // Clear session causing the crash
+                localStorage.removeItem('ssb_session');
+                localStorage.removeItem('ssb_admin_logged_in');
+
+                // If deep corruption, might need full clear, but let's try session first
+                // localStorage.clear(); 
+
+                document.getElementById('status').textContent = "Data cleared. Restarting...";
+
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+            } catch (e) {
+                alert("Error clearing data: " + e.message);
+            }
+        }
+    </script>
+</body>
+
+</html>

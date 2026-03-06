@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PROTECTED - Seed Data</title>
+    <!-- Add strict check immediately -->
+    <script>
+        // Simple client-side gate (Not secure, but obscure)
+        if (!window.location.search.includes('admin=true')) {
+            // window.location.href = 'index.html'; 
+            // Commented out for now to allow dev access, but in prod this should be deleted or protected.
+        }
+    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-danger text-white">
+    <div class="container mt-5">
+        <h1>⚠️ ADMIN ONLY - SEED TOOL ⚠️</h1>
+        <p>This tool creates users. DELETE IN PRODUCTION.</p>
+        <div class="mb-3">
+            <label>Email</label>
+            <input type="email" id="email" class="form-control" value="admin@sdp.com">
+        </div>
+        <div class="mb-3">
+            <label>Password</label>
+            <input type="text" id="password" class="form-control" value="password123">
+        </div>
+        <div class="mb-3">
+            <label>Role</label>
+            <select id="role" class="form-select">
+                <option value="admin">Admin</option>
+                <option value="buyer178">Buyer 178</option>
+                <option value="buyer580">Buyer 580</option>
+                <option value="visitor">Visitor</option>
+            </select>
+        </div>
+        <button id="create-btn" class="btn btn-primary">Create User</button>
+        <div id="output" class="mt-3 alert alert-info" style="display:none;"></div>
+    </div>
+
+    <!-- Firebase -->
+    <script src="/__/firebase/9.6.1/firebase-app-compat.js"></script>
+    <script src="/__/firebase/9.6.1/firebase-auth-compat.js"></script>
+    <script src="/__/firebase/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="/__/firebase/init.js"></script>
+
+    <script>
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Admin Security Check
+        auth.onAuthStateChanged(user => {
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+            db.collection('users').doc(user.uid).get().then(doc => {
+                if (!doc.exists || doc.data().role !== 'admin') {
+                    alert("Unauthorized!");
+                    window.location.href = 'index.html';
+                }
+            });
+        });
+
+        document.getElementById('create-btn').addEventListener('click', async () => {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const role = document.getElementById('role').value;
+            const output = document.getElementById('output');
+
+            output.style.display = 'block';
+            output.textContent = 'Creating...';
+
+            try {
+                // Check if user exists (simple check by trying to sign in, or just try create)
+                // Actually createUser fails if exists.
+                let user;
+                try {
+                    const cred = await auth.createUserWithEmailAndPassword(email, password);
+                    user = cred.user;
+                    output.textContent += ' Auth created.';
+                } catch (e) {
+                    if (e.code === 'auth/email-already-in-use') {
+                        // If exists, we can't get UID easily without login.
+                        // So let's try login.
+                        const cred = await auth.signInWithEmailAndPassword(email, password);
+                        user = cred.user;
+                        output.textContent += ' Auth logged in.';
+                    } else {
+                        throw e;
+                    }
+                }
+
+                // Set Role
+                await db.collection('users').doc(user.uid).set({
+                    email: email,
+                    role: role,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+
+                output.textContent += ` Role '${role}' assigned to ${email}. DONE.`;
+                output.className = 'mt-3 alert alert-success';
+
+            } catch (error) {
+                console.error(error);
+                output.textContent = 'Error: ' + error.message;
+                output.className = 'mt-3 alert alert-danger';
+            }
+        });
+    </script>
+</body>
+
+</html>

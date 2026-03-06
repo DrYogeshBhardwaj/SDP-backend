@@ -8,13 +8,16 @@ const sendMessage = async (req, res) => {
         const senderId = req.user.id;
         const senderRole = req.user.role;
 
-        if (!receiverId || !content) {
-            return errorResponse(res, 400, 'Receiver ID and content are required');
+        let actualReceiverId = receiverId;
+        if (!actualReceiverId) {
+            const admin = await prisma.user.findFirst({ where: { role: 'ADMIN' }, select: { id: true } });
+            if (!admin) return errorResponse(res, 500, 'No administrator found in the system');
+            actualReceiverId = admin.id;
         }
 
         // Validate receiver
         const receiver = await prisma.user.findUnique({
-            where: { id: receiverId }
+            where: { id: actualReceiverId }
         });
 
         if (!receiver) {
@@ -31,7 +34,7 @@ const sendMessage = async (req, res) => {
         const message = await prisma.message.create({
             data: {
                 senderId,
-                receiverId,
+                receiverId: actualReceiverId,
                 content,
                 status: 'UNREAD'
             }
@@ -47,9 +50,16 @@ const sendMessage = async (req, res) => {
 
 const getThread = async (req, res) => {
     try {
-        const targetUserId = req.params.userId;
+        let targetUserId = req.params.userId;
         const currentUserId = req.user.id;
         const currentUserRole = req.user.role;
+
+        // Magic route mapping for non-admins to fetch their thread with the first available Admin
+        if (!targetUserId || targetUserId === 'thread') {
+            const admin = await prisma.user.findFirst({ where: { role: 'ADMIN' }, select: { id: true } });
+            if (!admin) return errorResponse(res, 500, 'Administration account not found');
+            targetUserId = admin.id;
+        }
 
         // Pagination logic explicitly required
         const page = parseInt(req.query.page) || 1;
@@ -126,8 +136,54 @@ const markAsRead = async (req, res) => {
     }
 };
 
+const getInbox = async (req, res) => {
+    try {
+        const adminId = req.user.id;
+        if (req.user.role !== 'ADMIN') return errorResponse(res, 403, 'Unauthorized');
+
+        // Note: SQLite/Postgres compatibility. Get unique users where active messaging occurred.
+        const conversationsRaw = await prisma.$queryRaw`
+            SELECT 
+                u.id as "userId",
+                u.name,
+                u.mobile,
+                (SELECT status FROM "Message" m WHERE (m."senderId" = u.id AND m."receiverId" = ${adminId}) OR (m."receiverId" = u.id AND m."senderId" = ${adminId}) ORDER BY m."createdAt" DESC LIMIT 1) as "lastStatus",
+                (SELECT content FROM "Message" m WHERE (m."senderId" = u.id AND m."receiverId" = ${adminId}) OR (m."receiverId" = u.id AND m."senderId" = ${adminId}) ORDER BY m."createdAt" DESC LIMIT 1) as "lastMessage",
+                (SELECT "createdAt" FROM "Message" m WHERE (m."senderId" = u.id AND m."receiverId" = ${adminId}) OR (m."receiverId" = u.id AND m."senderId" = ${adminId}) ORDER BY m."createdAt" DESC LIMIT 1) as "lastActivity",
+                (SELECT COUNT(*) FROM "Message" m WHERE m."senderId" = u.id AND m."receiverId" = ${adminId} AND m."status" = 'UNREAD') as "unreadCount"
+            FROM "User" u
+            WHERE EXISTS (
+                SELECT 1 FROM "Message" m 
+                WHERE (m."senderId" = u.id AND m."receiverId" = ${adminId}) 
+                   OR (m."receiverId" = u.id AND m."senderId" = ${adminId})
+            )
+            ORDER BY "lastActivity" DESC
+        `;
+
+        // Normalize BigInts from Raw Queries if any (Prisma returns BigInt for COUNT)
+        const normalize = (val) => typeof val === 'bigint' ? Number(val) : val;
+
+        const inbox = (Array.isArray(conversationsRaw) ? conversationsRaw : []).map(row => ({
+            userId: row.userId,
+            name: row.name,
+            mobile: row.mobile,
+            lastMessage: row.lastMessage,
+            lastStatus: row.lastStatus,
+            lastActivity: row.lastActivity,
+            unreadCount: normalize(row.unreadCount)
+        }));
+
+        return successResponse(res, 200, 'Inbox retrieved successfully', { inbox });
+
+    } catch (error) {
+        console.error("Get Inbox Error:", error);
+        return errorResponse(res, 500, 'Failed to retrieve inbox', error.message);
+    }
+};
+
 module.exports = {
     sendMessage,
     getThread,
-    markAsRead
+    markAsRead,
+    getInbox
 };

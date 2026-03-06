@@ -62,6 +62,33 @@ const startSession = async (req, res) => {
     }
 };
 
+const getHistory = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const transactions = await prisma.transaction.findMany({
+            where: {
+                userId,
+                type: 'MINUTE_DEDUCT'
+            },
+            orderBy: {
+                transactionDate: 'desc'
+            },
+            take: 10
+        });
+
+        // map transactions to history objects expected by frontend
+        const history = transactions.map(tx => ({
+            createdAt: tx.transactionDate,
+            duration: tx.amount,
+            status: tx.status
+        }));
+
+        return successResponse(res, 200, 'History fetched successfully', { history });
+    } catch (error) {
+        return errorResponse(res, 500, 'Failed to fetch history', error);
+    }
+};
+
 const getBalance = async (req, res) => {
     try {
         const userId = req.user.id;
@@ -100,5 +127,6 @@ const getBalance = async (req, res) => {
 
 module.exports = {
     startSession,
-    getBalance
+    getBalance,
+    getHistory
 };

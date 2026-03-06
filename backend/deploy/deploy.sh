@@ -5,7 +5,7 @@ set -e
 # SDP VPS Deployment Script (Ubuntu 22.04 LTS)
 # ==========================================
 
-DOMAIN="api.sinaank.com"
+DOMAIN="yourdomain.com"
 DB_NAME="sdp_db"
 DB_USER="sdp_admin"
 DB_PASS=$(openssl rand -base64 12) # Generate strong random password

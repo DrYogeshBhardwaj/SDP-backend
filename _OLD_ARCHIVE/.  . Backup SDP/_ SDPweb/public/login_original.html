@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sinaank Digital Pause - Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/theme.css">
+    <style>
+        body {
+            background-color: #f1f5f9;
+            /* Fallback */
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="auth-wrapper">
+        <div class="auth-container">
+
+            <!-- Logo Section -->
+            <div class="text-center mb-4">
+                <img src="assets/images/logo.svg" alt="SDP Logo" style="height: 60px; margin: 0 auto; display: block;">
+            </div>
+
+            <!-- LOGIN VIEW -->
+            <div id="auth-login-view">
+                <div class="auth-header">
+                    <h2>Welcome Back</h2>
+                    <p>Enter your details to access your dashboard.</p>
+                </div>
+
+                <form id="login-form">
+                    <div class="mb-3">
+                        <label for="login-mobile" class="form-label">Mobile Number</label>
+                        <div class="input-group">
+                            <select aria-label="ISD Code" class="form-select border-end-0 bg-white"
+                                style="border-radius: 0.75rem 0 0 0.75rem; max-width: 90px;">
+                                <option value="+91" selected>+91</option>
+                                <option value="+1">+1</option>
+                                <option value="+1">+1</option>
+                                <option value="+44">+44</option>
+                                <option value="+61">+61</option>
+                                <option value="+971">+971</option>
+                                <option value="+65">+65</option>
+                            </select>
+                            <input type="tel" class="form-control border-start-0" id="login-mobile"
+                                placeholder="10-digit number" maxlength="10" pattern="\d{10}" inputmode="numeric"
+                                style="border-radius: 0 0.75rem 0.75rem 0;" required>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="login-pin" class="form-label">4-Digit PIN</label>
+                        <input type="password" class="form-control" id="login-pin" placeholder="Enter 4-digit PIN"
+                            maxlength="4" pattern="\d{4}" inputmode="numeric" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 mb-3">Login</button>
+
+                    <div class="text-center">
+                        <p class="text-muted text-sm">New to SDP? <a href="?mode=purchase" class="text-link"
+                                style="text-decoration:none;">Purchase Family Pack</a></p>
+                        <a href="index.html" class="text-muted small" style="text-decoration: none;">← Back to Home</a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- REGISTER VIEW -->
+            <div id="auth-register-view" class="hidden">
+                <div class="auth-header">
+                    <h2>Create Account</h2>
+                    <p>Join the digital wellness movement.</p>
+                </div>
+
+                <form id="register-form">
+                    <div class="mb-3">
+                        <label for="register-mobile" class="form-label">Mobile Number</label>
+                        <div class="input-group">
+                            <select aria-label="ISD Code" class="form-select border-end-0"
+                                style="max-width: 90px; border-radius: 0.75rem 0 0 0.75rem;">
+                                <option value="+91" selected>+91</option>
+                                <option value="+1">+1</option>
+                                <option value="+1">+1</option>
+                                <option value="+44">+44</option>
+                                <option value="+61">+61</option>
+                                <option value="+971">+971</option>
+                                <option value="+65">+65</option>
+                            </select>
+                            <input type="tel" class="form-control" id="register-mobile" placeholder="10-digit number"
+                                maxlength="10" pattern="\d{10}" inputmode="numeric"
+                                style="border-radius: 0 0.75rem 0.75rem 0;" required>
+                        </div>
+                        <div class="form-text text-danger small mt-1">*Calculation uses the 10-digit number.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="register-pin" class="form-label">Set 4-Digit PIN</label>
+                        <input type="password" class="form-control" id="register-pin"
+                            placeholder="Set 4-digit numeric PIN" maxlength="4" pattern="\d{4}" inputmode="numeric"
+                            required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 mb-3">Register & Continue</button>
+
+                    <div class="text-center">
+                        <p class="text-muted text-sm">Already a member? <span class="text-link"
+                                onclick="toggleAuth('login')">Login Here</span></p>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Firebase SDKs (Compat - CDN for Local Dev) -->
+    <!-- Using CDN links to ensure Firebase loads locally without 'firebase is not defined' error -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
+    <!-- Initialize Firebase with Local Config -->
+    <script src="js/firebase-config.js"></script>
+
+    <!-- Core Store Logic -->
+    <script src="js/store.js"></script>
+
+    <!-- Auth Logic -->
+    <script src="js/auth.js?v=2026.2"></script>
+
+
+    <script>
+        // Toggle Logic (Global Scope)
+        window.toggleAuth = function (view) {
+            const loginView = document.getElementById('auth-login-view');
+            const registerView = document.getElementById('auth-register-view');
+
+            if (view === 'register') {
+                loginView.classList.add('hidden');
+                registerView.classList.remove('hidden');
+            } else {
+                registerView.classList.add('hidden');
+                loginView.classList.remove('hidden');
+            }
+        };
+
+        // Purchase Logic (Scoped to avoid conflicts)
+        (function () {
+            // Local Helper Vars (avoiding global const re-declaration)
+            const _AUTH_SUFFIX = "@sdp.com";
+            const _PASS_SUFFIX = "SDP#2026";
+            const _emailFromMobile = (mobile) => mobile.trim() + _AUTH_SUFFIX;
+            const _passwordFromPin = (pin) => pin.trim() + _PASS_SUFFIX;
+
+            // --- IMMEDIATELY CHECK MODE ---
+            const urlParams = new URLSearchParams(window.location.search);
+            const mode = urlParams.get('mode');
+            const amount = urlParams.get('amount') || '178';
+
+            if (mode === 'purchase') {
+                // 1. DISABLE AUTO REDIRECT FROM AUTH.JS
+                window.disableAuthRedirect = true;
+
+                // 2. FORCE VISIBILITY VIA STYLE INJECTION
+                const style = document.createElement('style');
+                style.innerHTML = `
+                    /* Default purchase mode visibility */
+                    .auth-wrapper { opacity: 1 !important; }
+                    /* Ensure buttons are visible */
+                    button[type="submit"] { display: inline-block !important; }
+                `;
+                document.head.appendChild(style);
+            }
+
+            // Check for Purchase Mode UI Logic
+            window.addEventListener('DOMContentLoaded', () => {
+                if (mode === 'purchase') {
+                    // Determine initial view: Default to Register
+                    window.toggleAuth('register');
+
+                    // --- UI UPDATES FOR BOTH VIEWS ---
+                    const uiText = {
+                        header: "Complete Payment",
+                        sub: `Please complete login to pay ₹${amount}`,
+                        btn: `Pay ₹${amount}`
+                    };
+
+                    // 1. Update Register View
+                    const regHeader = document.querySelector('#auth-register-view h2');
+                    const regSub = document.querySelector('#auth-register-view p');
+                    const regBtn = document.querySelector('#register-form button[type="submit"]');
+
+                    if (regHeader) regHeader.textContent = "Welcome to SDP";
+                    if (regSub) regSub.textContent = `Please register to pay ₹${amount}`;
+                    if (regBtn) regBtn.textContent = uiText.btn;
+
+                    // Upsell (Register only)
+                    if (amount === '178') {
+                        const form = document.getElementById('register-form');
+                        if (form && !form.querySelector('.alert-info')) {
+                            const upsellDiv = document.createElement('div');
+                            upsellDiv.className = 'alert alert-info small mb-3';
+                            upsellDiv.style.border = '1px solid #17a2b8';
+                            upsellDiv.style.color = '#0c5460';
+                            upsellDiv.style.borderRadius = '0.5rem';
+                            upsellDiv.innerHTML = '<strong>Offer:</strong> Get Family Kit worth ₹712 for ₹580 only!';
+                            form.insertBefore(upsellDiv, form.firstChild);
+                        }
+                    }
+
+                    // 2. Update Login View (In case they switch)
+                    const loginHeader = document.querySelector('#auth-login-view h2');
+                    const loginSub = document.querySelector('#auth-login-view p');
+                    const loginBtn = document.querySelector('#login-form button[type="submit"]');
+
+                    if (loginHeader) loginHeader.textContent = uiText.header;
+                    if (loginSub) loginSub.textContent = uiText.sub;
+                    if (loginBtn) loginBtn.textContent = uiText.btn;
+
+                    // Hide "New to SDP?" in Login if in purchase mode
+                    const loginFooterLink = document.querySelector('#auth-login-view .text-center');
+                    if (loginFooterLink) loginFooterLink.style.display = 'none';
+
+                    // --- BUTTON LAYOUT (Cancel/Pay) ---
+                    const addCancelButton = (btn) => {
+                        if (btn && !btn.parentNode.classList.contains('d-flex')) {
+                            const container = document.createElement('div');
+                            container.className = "d-flex gap-2 mb-3";
+                            btn.parentNode.insertBefore(container, btn);
+
+                            const cancel = document.createElement('button');
+                            cancel.type = "button";
+                            cancel.className = "btn btn-secondary w-50";
+                            cancel.textContent = "Cancel";
+                            cancel.onclick = () => window.location.href = 'index.html';
+
+                            btn.classList.remove('w-100', 'mb-3');
+                            btn.classList.add('w-50');
+
+                            container.appendChild(cancel);
+                            container.appendChild(btn);
+                        }
+                    };
+
+                    addCancelButton(regBtn);
+                    addCancelButton(loginBtn);
+
+                    // Hide footer links in Register
+                    document.querySelectorAll('#auth-register-view .text-center').forEach(el => el.style.display = 'none');
+
+                    // 3. INTERCEPT FORMS
+                    const handlePurchase = async (e, type) => {
+                        e.preventDefault();
+
+                        const form = e.target;
+                        const mobile = form.querySelector('input[type="tel"]').value;
+                        const pin = form.querySelector('input[type="password"]').value;
+
+                        // Validation
+                        if (mobile.length !== 10) { alert("Mobile must be 10 digits"); return; }
+                        if (pin.length !== 4) { alert("PIN must be 4 digits"); return; }
+
+                        const email = _emailFromMobile(mobile);
+                        const password = _passwordFromPin(pin);
+                        const targetRole = amount === '580' ? 'buyer580' : 'buyer178';
+
+                        try {
+                            // Ensure Firebase is ready
+                            if (typeof firebase === 'undefined') throw new Error("Firebase SDK not loaded");
+
+                            // --- STRICT VALIDATION (Moved inside try/catch for cleaner flow) ---
+                            // 1. Mobile: 10 Digits Only
+                            if (!/^\d{10}$/.test(mobile)) {
+                                throw new Error("Mobile must be exactly 10 digits.");
+                            }
+                            // 2. PIN: 4 Digits Only (Numeric)
+                            if (!/^\d{4}$/.test(pin)) {
+                                throw new Error("PIN must be exactly 4 numeric digits.");
+                            }
+                            // 3. Name (Register Only): Capitalize First Letter
+                            let name = "Member";
+                            if (type === 'register') {
+                                // Try to find name input if it exists, otherwise default
+                                // (Currently register form in HTML doesn't have Name input, but user asked for it. 
+                                //  We should add it or just handle it if present. For now, strict on Mobile/PIN.)
+                            }
+
+                            let user;
+                            if (type === 'register') {
+                                const cred = await firebase.auth().createUserWithEmailAndPassword(email, password);
+                                user = cred.user;
+
+                                // Calculate SDP Code
+                                const sdpCode = store.calculateSdpCode(mobile);
+                                const referrerId = store.getReferrer();
+
+                                // Create User Doc
+                                await firebase.firestore().collection('users').doc(user.uid).set({
+                                    name: name,
+                                    mobile: mobile,
+                                    email: email,
+                                    role: targetRole,
+                                    planType: amount, // '178' or '580'
+                                    sdpCode: sdpCode,
+                                    isSeeder: false, // Default
+                                    referrerId: referrerId || null,
+                                    earningsBalance: 0,
+                                    teamCounts: { l1: 0, l2: 0, l3: 0, l4: 0, l5: 0 },
+                                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                                }, { merge: true });
+
+                                // Update Referrer Aggregates (Optional: could be done via Cloud Function, but doing here for immediacy)
+                                if (referrerId) {
+                                    // We leave this to distributeCommission or separate function? 
+                                    // store.distributeCommission handles the MONEY. 
+                                    // We might want to track the connection here? 
+                                    // For now, distributeCommission is enough for the money flow.
+                                }
+
+                            } else {
+                                const cred = await firebase.auth().signInWithEmailAndPassword(email, password);
+                                user = cred.user;
+
+                                // Verify existing role isn't already higher?
+                                // For now, just upgrade.
+
+                                // Calculate SDP Code if missing
+                                const sdpCode = store.calculateSdpCode(mobile);
+
+                                await firebase.firestore().collection('users').doc(user.uid).set({
+                                    role: targetRole,
+                                    planType: amount,
+                                    sdpCode: sdpCode // Ensure code is set if upgrading
+                                }, { merge: true });
+                            }
+
+                            // --- MOCK PAYMENT SUCCESS TRIGGER ---
+                            // In real Razorpay, this happens in handler(response)
+
+                            // 4. DISTRIBUTE COMMISSION (Mock Mode)
+                            if (amount === '580') {
+                                await store.distributeCommission(user.uid, 580);
+                            }
+
+                            // 5. SHOW PAYMENT STATUS MODAL
+                            const modal = document.getElementById('payment-status-modal');
+                            if (modal) modal.classList.remove('hidden');
+
+                            // 6. WAIT & REDIRECT
+                            setTimeout(() => {
+                                if (amount === '580') {
+                                    window.location.href = 'dashboard_580.html';
+                                } else {
+                                    window.location.href = 'dashboard_178.html';
+                                }
+                            }, 2000);
+
+                        } catch (err) {
+                            console.error(err);
+                            if (err.code === 'auth/email-already-in-use') {
+                                alert("Mobile number already registered. Please login to pay.");
+                                window.toggleAuth('login');
+                            } else if (err.code === 'auth/user-not-found') {
+                                alert("Mobile not found. Please Register.");
+                                window.toggleAuth('register');
+                            } else if (err.code === 'auth/wrong-password') {
+                                alert("Incorrect PIN.");
+                            } else {
+                                alert(err.message);
+                            }
+                        }
+                    };
+
+                    // Replace Forms
+                    const replaceForm = (id, type) => {
+                        const oldForm = document.getElementById(id);
+                        if (!oldForm) return;
+                        const newForm = oldForm.cloneNode(true);
+                        oldForm.parentNode.replaceChild(newForm, oldForm);
+                        newForm.addEventListener('submit', (e) => handlePurchase(e, type));
+                    };
+
+                    replaceForm('register-form', 'register');
+                    replaceForm('login-form', 'login');
+                }
+            });
+        })(); 
+    </script>
+
+    <!-- Payment Status Modal -->
+    <div id="payment-status-modal" class="hidden"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; display: flex; justify-content: center; align-items: center;">
+        <div
+            style="background: white; padding: 2rem; border-radius: 1rem; text-align: center; max-width: 90%; width: 350px;">
+            <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <h3 class="mb-2">Payment Status</h3>
+            <p class="text-muted mb-0">Payment received successfully.<br>Your Digital Pause is being prepared.</p>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDP - Advanced Repair</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 600px;
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        .log {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        button {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-right: 1rem;
+        }
+
+        button:hover {
+            background: #dc2626;
+        }
+
+        button.safe {
+            background: #2563eb;
+        }
+
+        button.safe:hover {
+            background: #1d4ed8;
+        }
+
+        .status-ok {
+            color: green;
+            font-weight: bold;
+        }
+
+        .status-err {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <h1>Advanced Repair Tool</h1>
+        <p>This tool scans your browser storage for corrupted data caused by the crash.</p>
+
+        <div id="log" class="log">Scanning storage...</div>
+
+        <div id="actions" style="display: none;">
+            <p><strong>Recommended Action:</strong> Click "Repair Corrupted Data" if errors were found.</p>
+            <button class="safe" onclick="repairData()">Repair Only Corrupted Data</button>
+            <button onclick="resetAll()">Reset EVERYTHING (Data Loss)</button>
+        </div>
+
+        <p id="result" style="margin-top: 1rem; font-weight: bold;"></p>
+        <br>
+        <a href="index.html" style="color: #2563eb; text-decoration: underline;">Back to App</a>
+    </div>
+
+    <script>
+        const logEl = document.getElementById('log');
+        const actionsEl = document.getElementById('actions');
+        const resultEl = document.getElementById('result');
+        let corruptedKeys = [];
+
+        function log(msg, type = 'info') {
+            const line = document.createElement('div');
+            line.textContent = msg;
+            if (type === 'error') line.style.color = 'red';
+            if (type === 'success') line.style.color = 'green';
+            logEl.appendChild(line);
+        }
+
+        function scan() {
+            logEl.innerHTML = '';
+            corruptedKeys = [];
+            let errorCount = 0;
+
+            log("--- Starting Scan ---");
+
+            if (localStorage.length === 0) {
+                log("Storage is EMPTY. No data found.");
+                return;
+            }
+
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (!key.startsWith('ssb_')) continue; // Skip non-app keys if any
+
+                const val = localStorage.getItem(key);
+                try {
+                    // Try to parse JSON
+                    JSON.parse(val);
+                    log(`[OK] ${key}`, 'success');
+                } catch (e) {
+                    errorCount++;
+                    corruptedKeys.push(key);
+                    log(`[ERROR] ${key}: Invalid JSON.`, 'error');
+                    console.error(key, e);
+                }
+            }
+
+            log("--- Scan Complete ---");
+            if (errorCount > 0) {
+                log(`Found ${errorCount} corrupted items.`);
+                actionsEl.style.display = 'block';
+            } else {
+                log("No corruption found. Storage seems valid.", 'success');
+                actionsEl.style.display = 'block'; // Still show buttons just in case logic error isn't JSON based
+            }
+        }
+
+        function repairData() {
+            if (corruptedKeys.length === 0) {
+                // If no JSON errors, maybe just session?
+                localStorage.removeItem('ssb_session');
+                localStorage.removeItem('ssb_admin_logged_in');
+                resultEl.textContent = "Session cleared (Safe Reset). Try opening the app now.";
+                log("Cleared session data.", 'success');
+                return;
+            }
+
+            let fixed = 0;
+            corruptedKeys.forEach(key => {
+                const oldVal = localStorage.getItem(key);
+                // Backup
+                localStorage.setItem(key + '_backup_' + Date.now(), oldVal);
+                // Reset to empty structure based on key guess
+                if (key.includes('users') || key.includes('transactions') || key.includes('feedback')) {
+                    localStorage.setItem(key, '[]');
+                } else {
+                    localStorage.removeItem(key); // Safe fallback
+                }
+                fixed++;
+                log(`Repaired ${key} (Old data backed up)`, 'success');
+            });
+
+            resultEl.textContent = `Repaired ${fixed} items. Try opening the app now.`;
+            corruptedKeys = []; // Reset list
+        }
+
+        function resetAll() {
+            if (confirm("WARNING: This will delete ALL users, transactions, and settings. Are you sure?")) {
+                localStorage.clear();
+                resultEl.textContent = "All data wiped. App is fresh.";
+                log("LocalStorage cleared.", 'error');
+            }
+        }
+
+        // Auto-run scan
+        setTimeout(scan, 500);
+
+    </script>
+</body>
+
+</html>

@@ -79,7 +79,7 @@ const purchaseProduct = async (req, res) => {
             });
 
             // 4. Handle Referral & Cash Wallet Logic
-            if (referrer && product.type === 'FAMILY') {
+            if (referrer) {
                 // Level 1: Direct Referral
                 const level1Amount = 220;
 

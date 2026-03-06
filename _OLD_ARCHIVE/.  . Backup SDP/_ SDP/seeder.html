@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seeder Panel - Sinaank Digital Pause</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="assets/logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body class="bg-surface">
+
+    <header>
+        <div class="container flex justify-between items-center">
+            <div class="flex items-center gap-sm">
+                <a href="index.html" onclick="store.logout()"><img src="assets/logo.png"
+                        class="logo-img logo-style"></a>
+                <span class="badge badge-primary">Seeder</span>
+            </div>
+            <button class="btn btn-text" onclick="seederApp.logout()">Logout</button>
+        </div>
+    </header>
+
+    <main class="container py-4">
+
+        <div class="glass-card text-center p-2 mb-2 border-primary">
+            <h2 class="text-primary-dark mb-0_5">Partner Dashboard</h2>
+            <p class="text-muted">Grow your network and earn rewards.</p>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Profile Section -->
+            <div class="glass-card flex items-center gap-2 p-2 mb-2">
+                <div
+                    style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 2px solid var(--color-primary); flex-shrink: 0;">
+                    <img id="seeder-img" src="assets/logo.png" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <div>
+                    <h3 id="seeder-name" class="text-primary-dark font-bold">Seeder</h3>
+                    <div class="text-sm text-muted">UPI: <span id="seeder-upi">Loading...</span> <button
+                            class="btn btn-text btn-xs" onclick="seederApp.editUpi()">✏️</button></div>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="flex flex-col gap-1">
+                <div class="card p-2 text-center">
+                    <div class="text-muted text-sm">Wallet Balance</div>
+                    <div id="wallet-display" class="text-lg font-bold text-slate-700">₹0</div>
+                    <button class="btn btn-ai mt-1 w-full" onclick="seederApp.requestPayout()">
+                        <span>✨ Request Payout</span>
+                    </button>
+                    <!-- Estimated Total Earnings could go here -->
+                </div>
+
+                <div class="card p-2">
+                    <label class="form-label text-xs">Referral Link</label>
+                    <div class="flex gap-0_5 mb-0_5">
+                        <input type="text" id="ref-link" class="form-input text-xs" readonly>
+                        <button class="btn btn-secondary btn-sm" onclick="seederApp.copyLink()">Copy</button>
+                    </div>
+                    <p class="text-xs text-info italic">You will earn income on purchase of ₹580 from this link.</p>
+                </div>
+            </div>
+
+            <!-- 5-Depth Stats -->
+            <div class="card p-2">
+                <h3 class="text-sm font-bold text-primary-dark mb-1">Network Earnings</h3>
+                <div id="depth-stats" class="text-xs space-y-1">
+                    <div class="flex justify-between border-b border-gray-100 pb-0_5">
+                        <span>Loading...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Price & Split (Transparency) -->
+            <div class="card p-2 bg-slate-50 border border-slate-200">
+                <h3 class="text-sm font-bold text-slate-700 mb-1">💰 Price & Split (₹580 Kit)</h3>
+                <div class="text-xs space-y-1 text-slate-600">
+                    <div class="flex justify-between"><span>Depth 1 (Direct)</span> <span class="font-bold">₹140</span>
+                    </div>
+                    <div class="flex justify-between"><span>Depth 2</span> <span class="font-bold">₹100</span></div>
+                    <div class="flex justify-between"><span>Depth 3</span> <span class="font-bold">₹70</span></div>
+                    <div class="flex justify-between"><span>Depth 4</span> <span class="font-bold">₹50</span></div>
+                    <div class="flex justify-between"><span>Depth 5</span> <span class="font-bold">₹40</span></div>
+                </div>
+            </div>
+
+            <!-- Network / Activity -->
+            <div class="main-content">
+                <div class="card p-2 mb-2">
+                    <h3 class="mb-1">Recent Activity</h3>
+                    <ul id="activity-list" class="list-none text-sm text-muted">
+                        <li>Loading...</li>
+                    </ul>
+                </div>
+
+                <!-- Motivation / Notice Box -->
+                <div class="card p-2 mb-2 bg-primary-light border-primary">
+                    <h3 class="mb-0_5 text-primary-dark">📢 Notice Board</h3>
+                    <p id="motivation-box" class="text-sm italic">Loading updates...</p>
+                </div>
+
+                <!-- Contact Admin Section -->
+                <div class="card p-2">
+                    <h3 class="mb-1">Contact Admin</h3>
+                    <div id="feedback-history" class="mb-1 p-1 bg-surface rounded text-sm"
+                        style="max-height: 150px; overflow-y: auto;">
+                        <!-- Messages go here -->
+                        <div class="text-muted italic">No messages yet.</div>
+                    </div>
+                    <form onsubmit="seederApp.sendFeedback(event)">
+                        <div class="flex gap-0_5">
+                            <input type="text" id="feedback-msg" class="form-input text-sm"
+                                placeholder="Ask for help..." required>
+                            <button type="submit" class="btn btn-primary btn-sm">Send</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/store.js"></script>
+    <script src="js/seeder.js"></script>
+    <script src="js/validator.js"></script>
+</body>
+
+</html>

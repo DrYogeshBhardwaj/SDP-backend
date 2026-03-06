@@ -4,8 +4,8 @@ const Auth = {
     // Check if user is logged in (calls backend /me endpoint)
     async checkAuth() {
         try {
-            const data = await ApiClient.get('/auth/me');
-            return data.user || data.data; // Return user object if authenticated (depending on backend standard response)
+            const res = await ApiClient.get('/auth/me');
+            return res.data?.user || res.user || res.data; // Return user object if authenticated (depending on backend standard response)
         } catch (error) {
             return null; // Return null if not authenticated or error
         }
@@ -30,7 +30,7 @@ const Auth = {
             console.error('Logout error', e);
         } finally {
             // Always redirect to login on logout
-            window.location.href = '/public/login.html';
+            window.location.href = '/login';
         }
     },
 
@@ -38,21 +38,25 @@ const Auth = {
     async protectPage(requiredRole = null) {
         const user = await this.checkAuth();
         if (!user) {
-            window.location.href = '/public/login.html';
+            window.location.href = '/login';
             return null;
         }
 
-        if (requiredRole && user.role !== requiredRole) {
+        if (requiredRole && user.role !== requiredRole && user.role !== 'SUPERADMIN' && user.role !== 'ADMIN_A' && user.role !== 'ADMIN_B') {
             // Not authorized for this page, redirect to appropriate dashboard
-            if (user.role === 'ADMIN') window.location.href = '/dashboard/admin.html';
-            else if (user.role === 'SEEDER') window.location.href = '/dashboard/seeder.html';
-            else window.location.href = '/dashboard/user.html';
+            if (user.role === 'ADMIN' || user.role === 'ADMIN_A' || user.role === 'ADMIN_B') window.location.href = '/admin';
+            else if (user.role === 'SEEDER') window.location.href = '/seeder';
+            else window.location.href = '/dashboard';
             return null;
         }
 
         // Add user info to UI if elements exist
         const userNameEl = document.getElementById('user-name-display');
-        if (userNameEl) userNameEl.textContent = user.name || user.mobile;
+        if (userNameEl) {
+            let displayName = user.name || user.mobile;
+            if (displayName === 'New Member') displayName = user.mobile; // Better fallback
+            userNameEl.textContent = displayName;
+        }
 
         return user;
     }

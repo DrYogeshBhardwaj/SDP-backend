@@ -1,0 +1,4550 @@
+﻿diff --git a/backend/deploy/deploy.sh b/backend/deploy/deploy.sh
+index 718e1be..25ce144 100644
+--- a/backend/deploy/deploy.sh
++++ b/backend/deploy/deploy.sh
+@@ -5,7 +5,7 @@ set -e
+ # SDP VPS Deployment Script (Ubuntu 22.04 LTS)
+ # ==========================================
+ 
+-DOMAIN="api.sinaank.com"
++DOMAIN="yourdomain.com"
+ DB_NAME="sdp_db"
+ DB_USER="sdp_admin"
+ DB_PASS=$(openssl rand -base64 12) # Generate strong random password
+diff --git a/backend/deploy/nginx.conf b/backend/deploy/nginx.conf
+index 56a307f..96f5963 100644
+--- a/backend/deploy/nginx.conf
++++ b/backend/deploy/nginx.conf
+@@ -1,6 +1,11 @@
+ server {
+     listen 80;
+-    server_name api.sinaank.com; # Replace with your domain
++    server_name yourdomain.com www.yourdomain.com; # Replace with your domain
++
++    # GZIP Compression
++    gzip on;
++    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
++    gzip_min_length 256;
+ 
+     location / {
+         proxy_pass http://localhost:5000;
+diff --git a/backend/payout-test.js b/backend/payout-test.js
+index 4d68a95..d09ade2 100644
+--- a/backend/payout-test.js
++++ b/backend/payout-test.js
+@@ -65,6 +65,7 @@ async function runTest() {
+     await prisma.referral.deleteMany();
+     await prisma.walletCash.deleteMany();
+     await prisma.walletMinute.deleteMany();
++    await prisma.systemLog.deleteMany();
+ 
+     // Instead of deleteMany() which might fail or wipe too much:
+     await prisma.$executeRaw`DELETE FROM "User" WHERE mobile IN ('9999999999', '8888888888')`;
+diff --git a/backend/prisma/schema.prisma b/backend/prisma/schema.prisma
+index 2a83fe6..161a21e 100644
+--- a/backend/prisma/schema.prisma
++++ b/backend/prisma/schema.prisma
+@@ -35,6 +35,14 @@ model User {
+   name          String?
+   role          Role     @default(USER_178)
+   status        Status   @default(ACTIVE)
++  
++  // KYC / Seeder Profile Data
++  upi_id        String?
++  profile_photo String?   @db.Text // Can be long base64 or URL
++  pincode       String?
++  city          String?
++  country       String?  @default("India")
++
+   createdAt     DateTime @default(now())
+   updatedAt     DateTime @updatedAt
+   
+@@ -54,6 +62,11 @@ model User {
+   receivedMessages Message[]       @relation("ReceivedMessages")
+   expenses         SystemExpense[] @relation("AdminExpenses")
+   announcements    Announcement[]  @relation("AdminAnnouncements")
++  
++  // Family Management
++  familyOwnerId    String?
++  familyOwner      User?           @relation("FamilyMembers", fields: [familyOwnerId], references: [id])
++  familyMembers    User[]          @relation("FamilyMembers")
+ }
+ 
+ enum ProductType {
+@@ -94,10 +107,11 @@ model WalletMinute {
+ }
+ 
+ model WalletCash {
+-  id      Int    @id @default(autoincrement())
+-  userId  String @unique
+-  user    User   @relation(fields: [userId], references: [id])
+-  balance Float  @default(0.0)
++  id             Int     @id @default(autoincrement())
++  userId         String  @unique
++  user           User    @relation(fields: [userId], references: [id])
++  balance        Float   @default(0.0)
++  activePayoutId String? @unique
+ }
+ 
+ model Transaction {
+@@ -157,6 +171,7 @@ model BonusLedger {
+ 
+   @@index([createdAt])
+   @@index([userId])
++  @@unique([sourceUserId, type])
+ }
+ 
+ model SystemSetting {
+diff --git a/backend/prisma/seed.js b/backend/prisma/seed.js
+index 7c3b162..1527638 100644
+--- a/backend/prisma/seed.js
++++ b/backend/prisma/seed.js
+@@ -51,6 +51,52 @@ async function main() {
+         });
+     }
+     console.log('Ranks seeded successfully.');
++
++    console.log('Seeding initial users...');
++    const bcrypt = require('bcrypt');
++    const salt = await bcrypt.genSalt(10);
++    const pin_hash = await bcrypt.hash('1234', salt);
++
++    const testUsers = [
++        {
++            mobile: '9999999999',
++            name: 'System Admin',
++            role: 'ADMIN',
++            cid: 'CID_ADMIN123',
++            pin_hash,
++            status: 'ACTIVE'
++        },
++        {
++            mobile: '9625645211',
++            name: 'Test Seeder',
++            role: 'SEEDER',
++            cid: 'CID_TESTSD',
++            pin_hash,
++            status: 'ACTIVE'
++        },
++        {
++            mobile: '9211755211',
++            name: 'Test Buyer',
++            role: 'USER_178',
++            cid: 'CID_TESTBY',
++            pin_hash,
++            status: 'ACTIVE'
++        }
++    ];
++
++    for (const user of testUsers) {
++        await prisma.user.upsert({
++            where: { mobile: user.mobile },
++            update: {},
++            create: {
++                ...user,
++                cash: { create: { balance: user.role === 'ADMIN' ? 0 : 500 } },
++                minutes: { create: { balance: 3650 } }
++            }
++        });
++    }
++
++    console.log('Initial Test Users seeded successfully.');
+ }
+ 
+ main()
+diff --git a/backend/referral-test.js b/backend/referral-test.js
+index 172edea..5661cfd 100644
+--- a/backend/referral-test.js
++++ b/backend/referral-test.js
+@@ -23,6 +23,11 @@ const req = (method, path, body, cookie) => new Promise((resolve, reject) => {
+ });
+ 
+ async function runTest() {
++    await prisma.systemLog.deleteMany();
++    await prisma.systemExpense.deleteMany();
++    await prisma.announcement.deleteMany();
++    await prisma.message.deleteMany();
++    await prisma.userRank.deleteMany();
+     await prisma.transaction.deleteMany();
+     await prisma.bonusLedger.deleteMany();
+     await prisma.referral.deleteMany();
+diff --git a/backend/src/app.js b/backend/src/app.js
+index 4d1e1b1..2df219b 100644
+--- a/backend/src/app.js
++++ b/backend/src/app.js
+@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
+ const rateLimit = require('express-rate-limit');
+ const path = require('path');
+ const authRoutes = require('./modules/auth/auth.routes');
++const otpRoutes = require('./modules/auth/otp.routes');
+ const productRoutes = require('./modules/products/product.routes');
+ const minutesRoutes = require('./modules/minutes/minutes.routes');
+ const seederRoutes = require('./modules/seeder/seeder.routes');
+@@ -31,33 +32,56 @@ app.use(helmet({
+ }));
+ 
+ // Hardened CORS
+-const allowedOrigins = process.env.NODE_ENV === 'production'
+-    ? [process.env.FRONTEND_URL || 'https://sinaank.com']
+-    : ['http://127.0.0.1:5500', 'http://localhost:5500', 'http://localhost:3000', 'http://localhost:5000'];
++if (process.env.NODE_ENV === 'production') {
++    const allowedOrigins = [process.env.FRONTEND_URL || 'https://sinaank.com'];
++    app.use(cors({
++        origin: function (origin, callback) {
++            if (!origin) return callback(null, true);
++            if (allowedOrigins.indexOf(origin) === -1) {
++                const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
++                return callback(new Error(msg), false);
++            }
++            return callback(null, true);
++        },
++        credentials: true,
++        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
++        allowedHeaders: ['Content-Type', 'Authorization']
++    }));
++} else {
++    // Local development (localhost testing)
++    app.use(cors({
++        origin: ['http://localhost:3000', 'http://127.0.0.1:5000', 'http://localhost:5000'],
++        credentials: true,
++        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
++        allowedHeaders: ['Content-Type', 'Authorization']
++    }));
++}
+ 
+-app.use(cors({
+-    origin: function (origin, callback) {
+-        if (!origin) return callback(null, true);
+-        if (allowedOrigins.indexOf(origin) === -1) {
+-            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+-            return callback(new Error(msg), false);
+-        }
+-        return callback(null, true);
+-    },
+-    credentials: true,
+-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+-    allowedHeaders: ['Content-Type', 'Authorization']
+-}));
+ app.use(express.json());
+ app.use(express.urlencoded({ extended: true }));
+ app.use(cookieParser());
+ app.use(morgan('dev'));
+ 
+ // Serve frontend for local testing
+-app.use(express.static(path.join(__dirname, '../../frontend')));
++app.use(express.static(path.join(__dirname, '../../frontend/public')));
++app.use('/assets', express.static(path.join(__dirname, '../../frontend/assets')));
++
++// Specific Frontend Layout Routes
++app.get('/', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/public/index.html')));
++app.get('/login', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/public/login.html')));
++app.get('/buyer', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/public/buyer.html')));
++app.get('/dashboard', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/dashboard/user.html')));
++app.get('/seeder', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/public/seeder.html')));
++app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/dashboard/admin.html')));
++app.get('/admin.html', (req, res) => res.redirect('/admin'));
++app.get('/seeder-form', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/public/seeder_form.html')));
++app.get('/seeder-offer', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/public/seeder_offer.html')));
++app.get('/join-580', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/public/join_580.html')));
++app.get('/invite', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/public/invite.html')));
+ 
+ // Routes
+ app.use('/api/auth', authRoutes);
++app.use('/api', otpRoutes);
+ app.use('/api/products', productRoutes);
+ app.use('/api/minutes', minutesRoutes);
+ app.use('/api/seeder', seederRoutes);
+@@ -73,7 +97,7 @@ app.get('/api/health', (req, res) => {
+     res.json({ status: 'SDP Backend Running' });
+ });
+ 
+-// Central error handler (No Stack Tracer in API Output)
++// Central error handler
+ app.use((err, req, res, next) => {
+     if (process.env.NODE_ENV !== 'production') {
+         console.error(err.stack);
+@@ -89,4 +113,4 @@ app.use((err, req, res, next) => {
+     return errorResponse(res, statusCode, message);
+ });
+ 
+-module.exports = app;
++module.exports = app;
+\ No newline at end of file
+diff --git a/backend/src/middlewares/rateLimiter.js b/backend/src/middlewares/rateLimiter.js
+index 8d061f3..56a1494 100644
+--- a/backend/src/middlewares/rateLimiter.js
++++ b/backend/src/middlewares/rateLimiter.js
+@@ -18,4 +18,32 @@ const payoutLimiter = rateLimit({
+     message: { success: false, message: 'Too many payout requests, try again later' }
+ });
+ 
+-module.exports = { loginLimiter, activationLimiter, payoutLimiter };
++// OTP Safeguards
++const otpIpLimiter = rateLimit({
++    windowMs: 60 * 60 * 1000, // 1 hour
++    max: 20, // Max 20 per IP per hour
++    message: { success: false, message: 'Too many OTP requests from this IP. Blocked to prevent spam.' }
++});
++
++const otpMobileLimiter = rateLimit({
++    windowMs: 60 * 60 * 1000, // 1 hour
++    max: 5, // Max 5 OTP per mobile per hour
++    keyGenerator: (req) => req.body.mobile || 'unknown',
++    message: { success: false, message: 'OTP limit reached for this mobile number (Max 5/hr).' }
++});
++
++const otpCooldownLimiter = rateLimit({
++    windowMs: 30 * 1000, // 30 seconds
++    max: 1, // Max 1 per 30 seconds
++    keyGenerator: (req) => req.body.mobile || 'unknown',
++    message: { success: false, message: 'Please wait 30 seconds before requesting another OTP.' }
++});
++
++module.exports = {
++    loginLimiter,
++    activationLimiter,
++    payoutLimiter,
++    otpIpLimiter,
++    otpMobileLimiter,
++    otpCooldownLimiter
++};
+diff --git a/backend/src/modules/admin/admin.controller.js b/backend/src/modules/admin/admin.controller.js
+index 3faff17..0cec1fe 100644
+--- a/backend/src/modules/admin/admin.controller.js
++++ b/backend/src/modules/admin/admin.controller.js
+@@ -15,7 +15,8 @@ const getPendingPayouts = async (req, res) => {
+                         name: true,
+                         mobile: true,
+                         cid: true,
+-                        role: true
++                        role: true,
++                        upi_id: true
+                     }
+                 }
+             },
+@@ -53,20 +54,10 @@ const approvePayout = async (req, res) => {
+ 
+         // Perform atomic transaction
+         await prisma.$transaction(async (tx) => {
+-            // Revalidate Wallet Safety: Check balance > payoutAmount
+-            const currentWallet = await tx.walletCash.findUnique({
+-                where: { userId: payout.userId }
+-            });
+-
+-            if (!currentWallet || currentWallet.balance < payoutAmount) {
+-                // Should realistically never happen unless manual db edit, but satisfies requirement #4
+-                throw new Error('Insufficient wallet balance to approve this payout');
+-            }
+-
+-            // Deduct from wallet
++            // Confirm the lock via activePayoutId and clear it. Do not decrement balance again, it was deducted on request.
+             await tx.walletCash.update({
+                 where: { userId: payout.userId },
+-                data: { balance: { decrement: payoutAmount } }
++                data: { activePayoutId: null }
+             });
+ 
+             // Create transaction history log (append only)
+@@ -106,10 +97,6 @@ const approvePayout = async (req, res) => {
+ 
+     } catch (error) {
+         console.error('Approve Payout Error:', error);
+-        // Distinguish business logic error from random 500
+-        if (error.message.includes('Insufficient wallet balance')) {
+-            return errorResponse(res, 400, error.message);
+-        }
+         return errorResponse(res, 500, 'Failed to approve payout', { message: error.message });
+     }
+ };
+@@ -136,24 +123,37 @@ const rejectPayout = async (req, res) => {
+             return errorResponse(res, 400, `Cannot reject payout because it is already ${payout.status}`);
+         }
+ 
+-        // Just update status, do NOT deduct wallet
+-        const updatedPayout = await prisma.payout.update({
+-            where: { id: payout.id },
+-            data: {
+-                status: 'REJECTED',
+-                processed_at: new Date(),
+-                processed_by: adminId,
+-                remarks: remarks
+-            }
+-        });
++        let updatedPayout;
++        // Perform atomic transaction to refund the wallet and clear lock
++        await prisma.$transaction(async (tx) => {
++            // Update status
++            updatedPayout = await tx.payout.update({
++                where: { id: payout.id },
++                data: {
++                    status: 'REJECTED',
++                    processed_at: new Date(),
++                    processed_by: adminId,
++                    remarks: remarks
++                }
++            });
+ 
+-        await prisma.systemLog.create({
+-            data: {
+-                adminId,
+-                actionType: 'REJECT_PAYOUT',
+-                targetUserId: payout.userId,
+-                description: `Rejected payout of Γé╣${payout.amount}. Remarks: ${remarks}`
+-            }
++            // Refund wallet
++            await tx.walletCash.update({
++                where: { userId: payout.userId },
++                data: {
++                    balance: { increment: payout.amount },
++                    activePayoutId: null
++                }
++            });
++
++            await tx.systemLog.create({
++                data: {
++                    adminId,
++                    actionType: 'REJECT_PAYOUT',
++                    targetUserId: payout.userId,
++                    description: `Rejected payout of Γé╣${payout.amount}. Remarks: ${remarks}`
++                }
++            });
+         });
+ 
+         return successResponse(res, 200, 'Payout rejected successfully', {
+@@ -170,6 +170,9 @@ const rejectPayout = async (req, res) => {
+ const getUsers = async (req, res) => {
+     try {
+         const users = await prisma.user.findMany({
++            where: {
++                mobile: { not: { startsWith: 'TRASHED_' } }
++            },
+             include: {
+                 cash: true,
+                 minutes: true,
+@@ -253,6 +256,216 @@ const unblockUser = async (req, res) => {
+     }
+ };
+ 
++const resetUserPin = async (req, res) => {
++    try {
++        const targetUserId = req.params.id;
++        const adminId = req.user.id;
++        const bcrypt = require('bcryptjs');
++        const salt = await bcrypt.genSalt(10);
++        const pin_hash = await bcrypt.hash('1234', salt);
++
++        await prisma.user.update({
++            where: { id: targetUserId },
++            data: { pin_hash }
++        });
++
++        await prisma.systemLog.create({
++            data: { adminId, actionType: 'RESET_PIN', targetUserId, description: `Reset PIN to 1234 for user id: ${targetUserId}` }
++        });
++
++        return successResponse(res, 200, 'PIN reset to 1234 successfully');
++    } catch (error) {
++        console.error('Reset PIN Error:', error);
++        return errorResponse(res, 500, 'Failed to reset PIN');
++    }
++};
++
++const editUser = async (req, res) => {
++    try {
++        const targetUserId = req.params.id;
++        const adminId = req.user.id;
++        const { name } = req.body;
++
++        await prisma.user.update({
++            where: { id: targetUserId },
++            data: { name }
++        });
++
++        await prisma.systemLog.create({
++            data: { adminId, actionType: 'EDIT_USER', targetUserId, description: `Updated user name to ${name}` }
++        });
++
++        return successResponse(res, 200, 'User updated successfully');
++    } catch (error) {
++        console.error('Edit User Error:', error);
++        return errorResponse(res, 500, 'Failed to update user details');
++    }
++};
++
++const trashUser = async (req, res) => {
++    try {
++        const targetUserId = req.params.id;
++        const adminId = req.user.id;
++
++        // Note: For real soft-delete, we repurpose status as we did in V1, or we can use another field.
++        // For now, let's use the 'status' or add a safe block pattern that removes UI access.
++        // Actually, we'll prefix mobile to break auth, and status=BLOCKED
++        const userToTrash = await prisma.user.findUnique({ where: { id: targetUserId } });
++        if (!userToTrash) return errorResponse(res, 404, 'User not found');
++
++        const updatedUser = await prisma.user.update({
++            where: { id: targetUserId },
++            data: {
++                status: 'BLOCKED',
++                mobile: `TRASHED_${Date.now()}_${userToTrash.mobile}` // breaks login entirely
++            }
++        });
++
++        await prisma.systemLog.create({
++            data: {
++                adminId,
++                actionType: 'TRASH_USER',
++                targetUserId,
++                description: `Soft-deleted user ${userToTrash.mobile}`
++            }
++        });
++
++        return successResponse(res, 200, 'User moved to trash successfully');
++    } catch (error) {
++        console.error('Trash User Error:', error);
++        return errorResponse(res, 500, 'Failed to trash user');
++    }
++};
++
++const getTrashedUsers = async (req, res) => {
++    try {
++        const trashedUsers = await prisma.user.findMany({
++            where: {
++                mobile: { startsWith: 'TRASHED_' }
++            },
++            select: { id: true, mobile: true, role: true, status: true, updatedAt: true }
++        });
++
++        // Strip the TRASHED_timestamp_ logic to clean up the view
++        const cleanUsers = trashedUsers.map(u => {
++            const parts = u.mobile.split('_');
++            const originalMobile = parts.length >= 3 ? parts.slice(2).join('_') : u.mobile;
++            return {
++                id: u.id,
++                mobile: isNaN(Number(originalMobile)) ? originalMobile : originalMobile,
++                rawMobile: u.mobile, // Keep original to target them for total purge if needed
++                role: u.role,
++                status: u.status,
++                deletedAt: u.updatedAt
++            };
++        });
++
++        return successResponse(res, 200, 'Trashed users retrieved', cleanUsers);
++    } catch (error) {
++        console.error('Get Trash Error:', error);
++        return errorResponse(res, 500, 'Failed to retrieve trashed users');
++    }
++};
++
++const restoreUser = async (req, res) => {
++    try {
++        const targetUserId = req.params.id;
++        const adminId = req.user.id;
++
++        const userToRestore = await prisma.user.findUnique({ where: { id: targetUserId } });
++        if (!userToRestore || !userToRestore.mobile.startsWith('TRASHED_')) {
++            return errorResponse(res, 400, 'User is not in trash or not found');
++        }
++
++        const parts = userToRestore.mobile.split('_');
++        const originalMobile = parts.length >= 3 ? parts.slice(2).join('_') : userToRestore.mobile;
++
++        // Check if the original mobile is already taken by a new signup
++        const existing = await prisma.user.findFirst({
++            where: { mobile: originalMobile }
++        });
++
++        if (existing) {
++            return errorResponse(res, 400, 'Cannot restore user. The mobile number has already been registered by another account.');
++        }
++
++        await prisma.user.update({
++            where: { id: targetUserId },
++            data: {
++                status: 'ACTIVE',
++                mobile: originalMobile
++            }
++        });
++
++        await prisma.systemLog.create({
++            data: {
++                adminId,
++                actionType: 'RESTORE_USER',
++                targetUserId,
++                description: `Restored user ${originalMobile} from trash`
++            }
++        });
++
++        return successResponse(res, 200, 'User restored successfully');
++    } catch (error) {
++        console.error('Restore User Error:', error);
++        return errorResponse(res, 500, 'Failed to restore user');
++    }
++};
++
++const purgeUser = async (req, res) => {
++    try {
++        const targetUserId = req.params.id;
++        const adminId = req.user.id;
++
++        const userToPurge = await prisma.user.findUnique({ where: { id: targetUserId } });
++        if (!userToPurge || !userToPurge.mobile.startsWith('TRASHED_')) {
++            return errorResponse(res, 400, 'User is not in trash or not found');
++        }
++
++        // Permanently delete user and potentially all related records.
++        // Prisma cascade delete should handle most of this if foreign keys are set to ON DELETE CASCADE,
++        // otherwise we use transaction to delete related records first.
++
++        await prisma.$transaction(async (tx) => {
++            // Assume schema has necessary cascades, but manually delete wallets to be safe if strictly required.
++            // If there's an issue with missing cascades, we might need manual deletions here.
++            // Since User -> WalletCash/WalletMinute is 1:1, usually cascade handles it.
++            await tx.walletCash.deleteMany({ where: { userId: targetUserId } });
++            await tx.walletMinute.deleteMany({ where: { userId: targetUserId } });
++            await tx.bonusLedger.deleteMany({ where: { userId: targetUserId } });
++            // Remove referrals where they are the referred
++            await tx.referral.deleteMany({ where: { referredUserId: targetUserId } });
++            // Or where they are the referrer
++            await tx.referral.deleteMany({ where: { referrerId: targetUserId } });
++            await tx.payout.deleteMany({ where: { userId: targetUserId } });
++            await tx.transaction.deleteMany({ where: { userId: targetUserId } });
++
++            // Re-assign family members to null if they are owner
++            await tx.user.updateMany({
++                where: { familyOwnerId: targetUserId },
++                data: { familyOwnerId: null }
++            });
++
++            await tx.user.delete({ where: { id: targetUserId } });
++
++            await tx.systemLog.create({
++                data: {
++                    adminId,
++                    actionType: 'PURGE_USER',
++                    targetUserId,
++                    description: `Permanently deleted user ${userToPurge.mobile}`
++                }
++            });
++        });
++
++        return successResponse(res, 200, 'User permanently deleted');
++    } catch (error) {
++        console.error('Purge User Error:', error);
++        return errorResponse(res, 500, 'Failed to permanently delete user', { message: error.message });
++    }
++};
++
+ const getSystemStats = async (req, res) => {
+     try {
+         const totalUsers = await prisma.user.count();
+@@ -274,11 +487,16 @@ const getSystemStats = async (req, res) => {
+             _sum: { amount: true }
+         });
+ 
++        const pendingPayoutCount = await prisma.payout.count({ where: { status: 'PENDING' } });
++        const unreadMessagesCount = await prisma.message.count({ where: { receiverId: req.user.id, status: 'UNREAD' } });
++
+         const stats = {
+             total_users: totalUsers,
+             total_seeders: totalSeeders,
+             total_wallet_balance: cashAgg._sum.balance || 0,
+             total_pending_payout: pendingPayoutAgg._sum.amount || 0,
++            pending_payout_count: pendingPayoutCount,
++            unread_messages_count: unreadMessagesCount,
+             total_cash_distributed: distributedPayoutAgg._sum.amount || 0,
+             total_minutes_balance: minutesAgg._sum.balance || 0,
+             total_minutes_used: usedMinutesAgg._sum.amount || 0
+@@ -291,6 +509,74 @@ const getSystemStats = async (req, res) => {
+     }
+ };
+ 
++const getLedger = async (req, res) => {
++    try {
++        // Fetch all PURCHASE transactions (Admin Credit)
++        const purchases = await prisma.transaction.findMany({
++            where: { type: 'PURCHASE', status: 'COMPLETED' },
++            include: { user: { select: { mobile: true } } },
++            orderBy: { transactionDate: 'desc' },
++            take: 50
++        });
++
++        // Fetch all BONUS assignments (Admin Debit Liability)
++        const bonuses = await prisma.bonusLedger.findMany({
++            include: { user: { select: { mobile: true } } },
++            orderBy: { createdAt: 'desc' },
++            take: 50
++        });
++
++        // Fetch all APPROVED Payouts (Admin Actual Debit)
++        const payouts = await prisma.payout.findMany({
++            where: { status: 'APPROVED' },
++            include: { user: { select: { mobile: true } } },
++            orderBy: { processed_at: 'desc' },
++            take: 50
++        });
++
++        const records = [];
++
++        purchases.forEach(p => {
++            records.push({
++                createdAt: p.transactionDate,
++                type: 'PURCHASE (Credit)',
++                amount: p.amount,
++                description: `Payment from ${p.user?.mobile || 'User'}`
++            });
++        });
++
++        bonuses.forEach(b => {
++            records.push({
++                createdAt: b.createdAt,
++                type: 'REFERRAL BONUS (Debit Liability)',
++                amount: `-${b.amount}`,
++                description: `Owed to Seeder ${b.user?.mobile || 'User'}`
++            });
++        });
++
++        payouts.forEach(p => {
++            records.push({
++                createdAt: p.processed_at || p.requested_at,
++                type: 'PAYOUT (Actual Debit)',
++                amount: `-${p.amount}`,
++                description: `Paid to Seeder ${p.user?.mobile || 'User'}`
++            });
++        });
++
++        // Sort by date descending
++        records.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
++
++        // Calculate total liability (Sum of all wallet cash)
++        const cashAgg = await prisma.walletCash.aggregate({ _sum: { balance: true } });
++        const totalLiability = cashAgg._sum.balance || 0;
++
++        return successResponse(res, 200, 'Ledger retrieved', { records, totalLiability });
++    } catch (error) {
++        console.error('Ledger Error:', error);
++        return errorResponse(res, 500, 'Failed to retrieve ledger');
++    }
++};
++
+ module.exports = {
+     getPendingPayouts,
+     approvePayout,
+@@ -298,5 +584,12 @@ module.exports = {
+     getUsers,
+     blockUser,
+     unblockUser,
+-    getSystemStats
++    resetUserPin,
++    editUser,
++    trashUser,
++    getTrashedUsers,
++    restoreUser,
++    purgeUser,
++    getSystemStats,
++    getLedger
+ };
+diff --git a/backend/src/modules/admin/admin.routes.js b/backend/src/modules/admin/admin.routes.js
+index cf44cf3..1d905b4 100644
+--- a/backend/src/modules/admin/admin.routes.js
++++ b/backend/src/modules/admin/admin.routes.js
+@@ -1,6 +1,6 @@
+ const express = require('express');
+ const router = express.Router();
+-const { getPendingPayouts, approvePayout, rejectPayout, getUsers, blockUser, unblockUser, getSystemStats } = require('./admin.controller');
++const { getPendingPayouts, approvePayout, rejectPayout, getUsers, blockUser, unblockUser, resetUserPin, editUser, trashUser, getTrashedUsers, restoreUser, purgeUser, getSystemStats, getLedger } = require('./admin.controller');
+ const authMiddleware = require('../../middlewares/authMiddleware');
+ 
+ // Very basic admin middleware for now
+@@ -19,10 +19,18 @@ router.get('/finance/payouts', getPendingPayouts);
+ router.post('/finance/payouts/:id/approve', approvePayout);
+ router.post('/finance/payouts/:id/reject', rejectPayout);
+ 
++router.get('/users/trash', getTrashedUsers);
++router.post('/users/:id/restore', restoreUser);
++router.delete('/users/:id/purge', purgeUser);
+ router.get('/users', getUsers);
+ router.post('/users/:id/block', blockUser);
+ router.post('/users/:id/unblock', unblockUser);
++router.post('/users/:id/reset-pin', resetUserPin);
++router.put('/users/:id', editUser);
++router.delete('/users/:id/trash', trashUser);
+ 
+ router.get('/system/stats', getSystemStats);
+ 
++router.get('/expense/ledger', getLedger);
++
+ module.exports = router;
+diff --git a/backend/src/modules/auth/auth.controller.js b/backend/src/modules/auth/auth.controller.js
+index 012e42f..a70fec1 100644
+--- a/backend/src/modules/auth/auth.controller.js
++++ b/backend/src/modules/auth/auth.controller.js
+@@ -3,10 +3,25 @@ const prisma = new PrismaClient();
+ const { hashPin, comparePin } = require('../../utils/hash');
+ const { generateToken } = require('../../utils/jwt');
+ const { successResponse, errorResponse } = require('../../utils/response');
++const { checkAndAwardMilestones } = require('../referral/milestone.service');
++
++const checkMobile = async (req, res) => {
++    try {
++        const { mobile } = req.body;
++        if (!mobile || !/^\d{10}$/.test(mobile)) {
++            return res.status(400).json({ success: false, message: 'Invalid mobile number' });
++        }
++
++        const user = await prisma.user.findUnique({ where: { mobile } });
++        return res.json({ success: true, exists: !!user, role: user ? user.role : null });
++    } catch (error) {
++        return res.status(500).json({ success: false, message: 'Initial check failed' });
++    }
++};
+ 
+ const register = async (req, res) => {
+     try {
+-        let { mobile, country_code = '+91', name, pin } = req.body;
++        let { mobile, country_code = '+91', name, pin, amount } = req.body;
+ 
+         // Validation
+         if (!mobile || !pin) {
+@@ -43,6 +58,12 @@ const register = async (req, res) => {
+         // Generate a unique CID (simplified logic, usually needs uniqueness check)
+         const cid = `CID_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+ 
++        // Role Assignment based on purchase intent
++        let assignedRole = 'USER_178';
++        if (amount === 580 || amount === '580') {
++            assignedRole = 'USER_580';
++        }
++
+         // Create user and initial wallets Transactionally
+         await prisma.$transaction(async (tx) => {
+             const user = await tx.user.create({
+@@ -52,7 +73,7 @@ const register = async (req, res) => {
+                     name,
+                     pin_hash,
+                     cid,
+-                    role: 'USER_178',
++                    role: assignedRole,
+                     status: 'ACTIVE'
+                 }
+             });
+@@ -70,6 +91,62 @@ const register = async (req, res) => {
+                     balance: 0.0
+                 }
+             });
++
++            // Handle Referral Logic if a referral code was provided
++            if (req.body.referral_code) {
++                const referrer = await tx.user.findUnique({
++                    where: { referral_code: req.body.referral_code },
++                    include: { referredBy: true }
++                });
++
++                if (referrer && referrer.role === 'SEEDER' && referrer.status === 'ACTIVE') {
++                    // Level 1 Commission
++                    const level1Amount = 220;
++                    await tx.walletCash.update({
++                        where: { userId: referrer.id },
++                        data: { balance: { increment: level1Amount } }
++                    });
++                    await tx.transaction.create({
++                        data: {
++                            userId: referrer.id,
++                            type: 'BONUS',
++                            amount: level1Amount,
++                            description: `Level 1 Referral Bonus from ${name || 'User'}`,
++                            status: 'COMPLETED'
++                        }
++                    });
++                    await tx.bonusLedger.create({
++                        data: { userId: referrer.id, amount: level1Amount, type: 'DIRECT', sourceUserId: user.id }
++                    });
++                    await tx.referral.create({
++                        data: { referrerId: referrer.id, referredUserId: user.id, level: 1 }
++                    });
++                    await checkAndAwardMilestones(referrer.id, tx);
++
++                    // Level 2 Commission
++                    const level1Referral = referrer.referredBy.find(r => r.level === 1);
++                    if (level1Referral) {
++                        const level2Referrer = await tx.user.findUnique({ where: { id: level1Referral.referrerId } });
++                        if (level2Referrer && level2Referrer.role === 'SEEDER' && level2Referrer.status === 'ACTIVE') {
++                            const level2Amount = 150;
++                            await tx.walletCash.update({
++                                where: { userId: level2Referrer.id },
++                                data: { balance: { increment: level2Amount } }
++                            });
++                            await tx.transaction.create({
++                                data: { userId: level2Referrer.id, type: 'BONUS', amount: level2Amount, description: `Level 2 Referral Bonus from ${name || 'User'}`, status: 'COMPLETED' }
++                            });
++                            await tx.bonusLedger.create({
++                                data: { userId: level2Referrer.id, amount: level2Amount, type: 'LEVEL2', sourceUserId: user.id }
++                            });
++                            await tx.referral.create({
++                                data: { referrerId: level2Referrer.id, referredUserId: user.id, level: 2 }
++                            });
++                            await checkAndAwardMilestones(level2Referrer.id, tx);
++                        }
++                    }
++                }
++            }
+         });
+ 
+         return successResponse(res, 201, 'Registration processed successfully');
+@@ -140,22 +217,176 @@ const logout = async (req, res) => {
+     return successResponse(res, 200, 'Logged out successfully');
+ };
+ 
++const addFamily = async (req, res) => {
++    try {
++        const { mobile, pin } = req.body;
++        const ownerId = req.user.id;
++
++        if (req.user.role !== 'USER_580' && req.user.role !== 'SEEDER') {
++            return errorResponse(res, 403, 'Only Family plan or Seeder users can add family members');
++        }
++
++        if (!mobile || !pin || mobile.length !== 10 || pin.length !== 4) {
++            return errorResponse(res, 400, 'Invalid mobile or PIN format');
++        }
++
++        if (mobile === req.user.mobile) {
++            return errorResponse(res, 400, 'Cannot add your own number as family member');
++        }
++
++        // Enforce Limits
++        const maxMembers = 3;
++        const currentMembers = await prisma.user.count({ where: { familyOwnerId: ownerId } });
++
++        if (currentMembers >= maxMembers) {
++            return errorResponse(res, 400, `You have reached your limit of ${maxMembers} family members.`);
++        }
++
++        const existingUser = await prisma.user.findUnique({ where: { mobile } });
++        if (existingUser) {
++            return errorResponse(res, 400, 'Mobile number is already registered');
++        }
++
++        const { hashPin } = require('../../utils/hash');
++        const pin_hash = await hashPin(pin);
++        const cid = `CID_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
++
++        await prisma.$transaction(async (tx) => {
++            const newUser = await tx.user.create({
++                data: {
++                    mobile,
++                    name: "Family Member",
++                    pin_hash,
++                    cid,
++                    role: 'USER_178',
++                    familyOwnerId: ownerId
++                }
++            });
++
++            await tx.walletMinute.create({
++                data: { userId: newUser.id, balance: 3650 }
++            });
++
++            await tx.walletCash.create({
++                data: { userId: newUser.id, balance: 0.0 }
++            });
++        });
++
++        return successResponse(res, 201, 'Family member added successfully');
++    } catch (error) {
++        return errorResponse(res, 500, 'Failed to add family member', error);
++    }
++};
++
++const getFamily = async (req, res) => {
++    try {
++        const members = await prisma.user.findMany({
++            where: { familyOwnerId: req.user.id },
++            select: { id: true, mobile: true, createdAt: true, name: true }
++        });
++        return successResponse(res, 200, 'Family members retrieved', { members });
++    } catch (error) {
++        return errorResponse(res, 500, 'Failed to retrieve family members', error);
++    }
++};
++
+ const getMe = async (req, res) => {
+-    const user = {
+-        id: req.user.id,
+-        name: req.user.name,
+-        mobile: req.user.mobile,
+-        cid: req.user.cid,
+-        role: req.user.role,
+-        status: req.user.status,
+-        country_code: req.user.country_code
+-    };
+-    return successResponse(res, 200, 'User details retrieved successfully', { user });
++    try {
++        const walletMinute = await prisma.walletMinute.findUnique({
++            where: { userId: req.user.id }
++        });
++        const walletCash = await prisma.walletCash.findUnique({
++            where: { userId: req.user.id }
++        });
++
++        // Calculate total bonus dynamically or default to 0
++        const bonusAggregate = await prisma.bonusLedger.aggregate({
++            where: { userId: req.user.id },
++            _sum: { amount: true }
++        });
++        const totalBonus = bonusAggregate._sum.amount || 0;
++
++        const user = {
++            id: req.user.id,
++            name: req.user.name,
++            mobile: req.user.mobile,
++            cid: req.user.cid,
++            role: req.user.role,
++            referral_code: req.user.referral_code,
++            status: req.user.status,
++            country_code: req.user.country_code,
++            upi_id: req.user.upi_id,
++            profile_photo: req.user.profile_photo,
++            minutesBalance: walletMinute ? walletMinute.balance : 0,
++            walletBalance: walletCash ? walletCash.balance : 0,
++            totalBonus: totalBonus
++        };
++        return successResponse(res, 200, 'User details retrieved successfully', { user });
++    } catch (error) {
++        return errorResponse(res, 500, 'Failed to fetch user details', error);
++    }
++};
++
++const updateProfile = async (req, res) => {
++    try {
++        const { name, profile_photo } = req.body;
++
++        const dataToUpdate = {};
++        if (name !== undefined) dataToUpdate.name = name;
++        if (profile_photo !== undefined) dataToUpdate.profile_photo = profile_photo;
++
++        if (Object.keys(dataToUpdate).length === 0) {
++            return errorResponse(res, 400, 'No data to update');
++        }
++
++        const updatedUser = await prisma.user.update({
++            where: { id: req.user.id },
++            data: dataToUpdate
++        });
++
++        return successResponse(res, 200, 'Profile updated successfully', {
++            name: updatedUser.name,
++            profile_photo: updatedUser.profile_photo
++        });
++    } catch (error) {
++        return errorResponse(res, 500, 'Failed to update profile', error);
++    }
++};
++
++const getReferrer = async (req, res) => {
++    try {
++        const { code } = req.params;
++        const referrer = await prisma.user.findFirst({
++            where: {
++                OR: [
++                    { referral_code: code },
++                    { mobile: code }
++                ]
++            },
++            select: { name: true, mobile: true }
++        });
++
++        if (!referrer) {
++            return errorResponse(res, 404, 'Referrer not found');
++        }
++
++        return successResponse(res, 200, 'Referrer fetched successfully', {
++            name: referrer.name || 'SDP Partner',
++            mobile: referrer.mobile
++        });
++    } catch (error) {
++        return errorResponse(res, 500, 'Failed to fetch referrer', error);
++    }
+ };
+ 
+ module.exports = {
++    checkMobile,
+     register,
+     login,
+     logout,
+-    getMe
++    addFamily,
++    getFamily,
++    getMe,
++    getReferrer,
++    updateProfile
+ };
+diff --git a/backend/src/modules/auth/auth.routes.js b/backend/src/modules/auth/auth.routes.js
+index 63cff55..63ee0bb 100644
+--- a/backend/src/modules/auth/auth.routes.js
++++ b/backend/src/modules/auth/auth.routes.js
+@@ -4,9 +4,16 @@ const authController = require('./auth.controller');
+ const authMiddleware = require('../../middlewares/authMiddleware');
+ const { loginLimiter } = require('../../middlewares/rateLimiter');
+ 
++router.post('/check-mobile', authController.checkMobile);
+ router.post('/register', authController.register);
+ router.post('/login', loginLimiter, authController.login);
+ router.post('/logout', authMiddleware, authController.logout);
+ router.get('/me', authMiddleware, authController.getMe);
++router.put('/profile', authMiddleware, authController.updateProfile);
++
++router.post('/family', authMiddleware, authController.addFamily);
++router.get('/family', authMiddleware, authController.getFamily);
++
++router.get('/referrer/:code', authController.getReferrer);
+ 
+ module.exports = router;
+diff --git a/backend/src/modules/communication/message.controller.js b/backend/src/modules/communication/message.controller.js
+index 443e379..7280a43 100644
+--- a/backend/src/modules/communication/message.controller.js
++++ b/backend/src/modules/communication/message.controller.js
+@@ -8,13 +8,16 @@ const sendMessage = async (req, res) => {
+         const senderId = req.user.id;
+         const senderRole = req.user.role;
+ 
+-        if (!receiverId || !content) {
+-            return errorResponse(res, 400, 'Receiver ID and content are required');
++        let actualReceiverId = receiverId;
++        if (!actualReceiverId) {
++            const admin = await prisma.user.findFirst({ where: { role: 'ADMIN' }, select: { id: true } });
++            if (!admin) return errorResponse(res, 500, 'No administrator found in the system');
++            actualReceiverId = admin.id;
+         }
+ 
+         // Validate receiver
+         const receiver = await prisma.user.findUnique({
+-            where: { id: receiverId }
++            where: { id: actualReceiverId }
+         });
+ 
+         if (!receiver) {
+@@ -31,7 +34,7 @@ const sendMessage = async (req, res) => {
+         const message = await prisma.message.create({
+             data: {
+                 senderId,
+-                receiverId,
++                receiverId: actualReceiverId,
+                 content,
+                 status: 'UNREAD'
+             }
+@@ -47,10 +50,17 @@ const sendMessage = async (req, res) => {
+ 
+ const getThread = async (req, res) => {
+     try {
+-        const targetUserId = req.params.userId;
++        let targetUserId = req.params.userId;
+         const currentUserId = req.user.id;
+         const currentUserRole = req.user.role;
+ 
++        // Magic route mapping for non-admins to fetch their thread with the first available Admin
++        if (targetUserId === 'thread') {
++            const admin = await prisma.user.findFirst({ where: { role: 'ADMIN' }, select: { id: true } });
++            if (!admin) return errorResponse(res, 500, 'Administration account not found');
++            targetUserId = admin.id;
++        }
++
+         // Pagination logic explicitly required
+         const page = parseInt(req.query.page) || 1;
+         const limit = parseInt(req.query.limit) || 20;
+@@ -126,8 +136,54 @@ const markAsRead = async (req, res) => {
+     }
+ };
+ 
++const getInbox = async (req, res) => {
++    try {
++        const adminId = req.user.id;
++        if (req.user.role !== 'ADMIN') return errorResponse(res, 403, 'Unauthorized');
++
++        // Note: SQLite/Postgres compatibility. Get unique users where active messaging occurred.
++        const conversationsRaw = await prisma.$queryRaw`
++            SELECT 
++                u.id as "userId",
++                u.name,
++                u.mobile,
++                (SELECT status FROM "Message" m WHERE (m."senderId" = u.id AND m."receiverId" = ${adminId}) OR (m."receiverId" = u.id AND m."senderId" = ${adminId}) ORDER BY m."createdAt" DESC LIMIT 1) as "lastStatus",
++                (SELECT content FROM "Message" m WHERE (m."senderId" = u.id AND m."receiverId" = ${adminId}) OR (m."receiverId" = u.id AND m."senderId" = ${adminId}) ORDER BY m."createdAt" DESC LIMIT 1) as "lastMessage",
++                (SELECT "createdAt" FROM "Message" m WHERE (m."senderId" = u.id AND m."receiverId" = ${adminId}) OR (m."receiverId" = u.id AND m."senderId" = ${adminId}) ORDER BY m."createdAt" DESC LIMIT 1) as "lastActivity",
++                (SELECT COUNT(*) FROM "Message" m WHERE m."senderId" = u.id AND m."receiverId" = ${adminId} AND m."status" = 'UNREAD') as "unreadCount"
++            FROM "User" u
++            WHERE EXISTS (
++                SELECT 1 FROM "Message" m 
++                WHERE (m."senderId" = u.id AND m."receiverId" = ${adminId}) 
++                   OR (m."receiverId" = u.id AND m."senderId" = ${adminId})
++            )
++            ORDER BY "lastActivity" DESC
++        `;
++
++        // Normalize BigInts from Raw Queries if any (Prisma returns BigInt for COUNT)
++        const normalize = (val) => typeof val === 'bigint' ? Number(val) : val;
++
++        const inbox = (Array.isArray(conversationsRaw) ? conversationsRaw : []).map(row => ({
++            userId: row.userId,
++            name: row.name,
++            mobile: row.mobile,
++            lastMessage: row.lastMessage,
++            lastStatus: row.lastStatus,
++            lastActivity: row.lastActivity,
++            unreadCount: normalize(row.unreadCount)
++        }));
++
++        return successResponse(res, 200, 'Inbox retrieved successfully', { inbox });
++
++    } catch (error) {
++        console.error("Get Inbox Error:", error);
++        return errorResponse(res, 500, 'Failed to retrieve inbox', error.message);
++    }
++};
++
+ module.exports = {
+     sendMessage,
+     getThread,
+-    markAsRead
++    markAsRead,
++    getInbox
+ };
+diff --git a/backend/src/modules/communication/message.routes.js b/backend/src/modules/communication/message.routes.js
+index fb80742..f5e0533 100644
+--- a/backend/src/modules/communication/message.routes.js
++++ b/backend/src/modules/communication/message.routes.js
+@@ -1,6 +1,6 @@
+ const express = require('express');
+ const router = express.Router();
+-const { sendMessage, getThread, markAsRead } = require('./message.controller');
++const { sendMessage, getThread, markAsRead, getInbox } = require('./message.controller');
+ const authMiddleware = require('../../middlewares/authMiddleware');
+ 
+ // Protect all routes with JWT
+@@ -9,7 +9,13 @@ router.use(authMiddleware);
+ // Create Message (Append-only)
+ router.post('/', sendMessage);
+ 
+-// Get paginated thread with a specific user
++// Get All Conversations (Inbox)
++router.get('/admin/inbox', getInbox);
++
++// Get current user thread with Admin
++router.get('/thread', getThread);
++
++// Get paginated thread with a specific user (Admin only or explicitly targets Admin UUID)
+ router.get('/:userId', getThread);
+ 
+ // Mark specific message as read
+diff --git a/backend/src/modules/finance/finance.controller.js b/backend/src/modules/finance/finance.controller.js
+index 8602d70..ca69b83 100644
+--- a/backend/src/modules/finance/finance.controller.js
++++ b/backend/src/modules/finance/finance.controller.js
+@@ -12,49 +12,65 @@ const requestPayout = async (req, res) => {
+             return errorResponse(res, 403, 'Only SEEDER accounts can request payouts');
+         }
+ 
+-        // Fetch wallet cash balance
+-        const walletCash = await prisma.walletCash.findUnique({
+-            where: { userId }
+-        });
++        // Execute as a SERIALIZABLE transaction to lock the balance and ensure sequential processing
++        const result = await prisma.$transaction(async (tx) => {
++            // Fetch wallet cash balance
++            const walletCash = await tx.walletCash.findUnique({
++                where: { userId }
++            });
+ 
+-        // Condition 2: Wallet balance must be > 0
+-        if (!walletCash || walletCash.balance <= 0) {
+-            return errorResponse(res, 400, 'Insufficient balance to request payout');
+-        }
++            // Condition 2: Wallet balance must be > 0
++            if (!walletCash || walletCash.balance <= 0) {
++                throw new Error('Insufficient balance to request payout');
++            }
+ 
+-        // Condition 3: No existing PENDING payouts
+-        const existingPending = await prisma.payout.findFirst({
+-            where: {
+-                userId,
+-                status: 'PENDING'
++            // Note: Application-level check (for cleaner error message if not strictly concurrent)
++            const existingPending = await tx.payout.findFirst({
++                where: { userId, status: 'PENDING' }
++            });
++
++            if (existingPending) {
++                throw new Error('You already have a pending payout request');
+             }
+-        });
+ 
+-        if (existingPending) {
+-            return errorResponse(res, 400, 'You already have a pending payout request');
+-        }
++            const payoutAmount = walletCash.balance;
+ 
+-        // Process: Create payout entry (snapshotting exact wallet amount at request time)
+-        // Note: Wallet balance is NOT reduced here, only at approval.
+-        const payoutAmount = walletCash.balance;
++            // Process: Create payout entry
++            const payout = await tx.payout.create({
++                data: {
++                    userId,
++                    amount: payoutAmount,
++                    status: 'PENDING'
++                }
++            });
+ 
+-        const payout = await prisma.payout.create({
+-            data: {
+-                userId,
+-                amount: payoutAmount,
+-                status: 'PENDING'
+-            }
+-        });
++            // Immediate Wallet Deduction + DB Lock via activePayoutId
++            await tx.walletCash.update({
++                where: { userId },
++                data: {
++                    balance: { decrement: payoutAmount },
++                    activePayoutId: payout.id
++                }
++            });
+ 
+-        return successResponse(res, 201, 'Payout requested successfully', {
+-            payout_id: payout.id,
+-            requested_amount: payout.amount,
+-            status: payout.status
++            return {
++                payout_id: payout.id,
++                requested_amount: payout.amount,
++                status: payout.status
++            };
++        }, {
++            isolationLevel: 'Serializable'
+         });
+ 
++        return successResponse(res, 201, 'Payout requested successfully', result);
++
+     } catch (error) {
++        // Handle database-level UNIQUE constraint violation (Race Condition intercepted)
++        if (error.code === 'P2002') {
++            return successResponse(res, 200, 'Payout already processing', { note: 'Idempotent success' });
++        }
+         console.error('Payout Request Error:', error);
+-        return errorResponse(res, 500, 'Failed to request payout', { message: error.message });
++        return errorResponse(res, 400, error.message || 'Failed to request payout');
+     }
+ };
+ 
+diff --git a/backend/src/modules/minutes/minutes.controller.js b/backend/src/modules/minutes/minutes.controller.js
+index 6e29d38..c6578c1 100644
+--- a/backend/src/modules/minutes/minutes.controller.js
++++ b/backend/src/modules/minutes/minutes.controller.js
+@@ -62,6 +62,33 @@ const startSession = async (req, res) => {
+     }
+ };
+ 
++const getHistory = async (req, res) => {
++    try {
++        const userId = req.user.id;
++        const transactions = await prisma.transaction.findMany({
++            where: {
++                userId,
++                type: 'MINUTE_DEDUCT'
++            },
++            orderBy: {
++                transactionDate: 'desc'
++            },
++            take: 10
++        });
++
++        // map transactions to history objects expected by frontend
++        const history = transactions.map(tx => ({
++            createdAt: tx.transactionDate,
++            duration: tx.amount,
++            status: tx.status
++        }));
++
++        return successResponse(res, 200, 'History fetched successfully', { history });
++    } catch (error) {
++        return errorResponse(res, 500, 'Failed to fetch history', error);
++    }
++};
++
+ const getBalance = async (req, res) => {
+     try {
+         const userId = req.user.id;
+@@ -100,5 +127,6 @@ const getBalance = async (req, res) => {
+ 
+ module.exports = {
+     startSession,
+-    getBalance
++    getBalance,
++    getHistory
+ };
+diff --git a/backend/src/modules/minutes/minutes.routes.js b/backend/src/modules/minutes/minutes.routes.js
+index 02ba12e..7cad70d 100644
+--- a/backend/src/modules/minutes/minutes.routes.js
++++ b/backend/src/modules/minutes/minutes.routes.js
+@@ -5,5 +5,6 @@ const authMiddleware = require('../../middlewares/authMiddleware');
+ 
+ router.post('/start-session', authMiddleware, minutesController.startSession);
+ router.get('/balance', authMiddleware, minutesController.getBalance);
++router.get('/history', authMiddleware, minutesController.getHistory);
+ 
+ module.exports = router;
+diff --git a/backend/src/modules/products/product.controller.js b/backend/src/modules/products/product.controller.js
+index 1b7c994..9b9a4cc 100644
+--- a/backend/src/modules/products/product.controller.js
++++ b/backend/src/modules/products/product.controller.js
+@@ -79,7 +79,7 @@ const purchaseProduct = async (req, res) => {
+             });
+ 
+             // 4. Handle Referral & Cash Wallet Logic
+-            if (referrer && product.type === 'FAMILY') {
++            if (referrer) {
+                 // Level 1: Direct Referral
+                 const level1Amount = 220;
+ 
+diff --git a/backend/src/modules/seeder/seeder.controller.js b/backend/src/modules/seeder/seeder.controller.js
+index 6ae9363..6bcd5c9 100644
+--- a/backend/src/modules/seeder/seeder.controller.js
++++ b/backend/src/modules/seeder/seeder.controller.js
+@@ -40,13 +40,20 @@ const activateSeeder = async (req, res) => {
+             return errorResponse(res, 403, 'Only FAMILY (USER_580) accounts can become a SEEDER');
+         }
+ 
++        const { upiId, profileImageBase64, pincode, city, country } = req.body;
++
+         const referralCode = await generateReferralCode();
+ 
+         const updatedUser = await prisma.user.update({
+             where: { id: userId },
+             data: {
+                 role: 'SEEDER',
+-                referral_code: referralCode
++                referral_code: referralCode,
++                upi_id: upiId || undefined,
++                profile_photo: profileImageBase64 || undefined,
++                pincode: pincode || undefined,
++                city: city || undefined,
++                country: country || 'India'
+             }
+         });
+ 
+@@ -59,6 +66,45 @@ const activateSeeder = async (req, res) => {
+     }
+ };
+ 
++const getNetworkTree = async (req, res) => {
++    try {
++        const userId = req.user.id;
++
++        const level1 = await prisma.referral.findMany({
++            where: { referrerId: userId, level: 1, status: 'ACTIVE' },
++            include: {
++                referredUser: {
++                    select: { name: true, mobile: true, role: true, createdAt: true }
++                }
++            },
++            orderBy: { createdAt: 'desc' }
++        });
++
++        const level2 = await prisma.referral.findMany({
++            where: { referrerId: userId, level: 2, status: 'ACTIVE' },
++            include: {
++                referredUser: {
++                    select: { name: true, mobile: true, role: true, createdAt: true }
++                }
++            },
++            orderBy: { createdAt: 'desc' }
++        });
++
++        const totalEarnedDirect = level1.length * 220;
++        const totalEarnedIndirect = level2.length * 150;
++        const totalEarned = totalEarnedDirect + totalEarnedIndirect;
++
++        return successResponse(res, 200, 'Network Tree fetched', {
++            stats: { level1Count: level1.length, level2Count: level2.length, totalEarned, totalEarnedDirect, totalEarnedIndirect },
++            level1: level1.map(ref => ref.referredUser),
++            level2: level2.map(ref => ref.referredUser)
++        });
++    } catch (e) {
++        return errorResponse(res, 500, 'Failed to fetch network tree', e);
++    }
++};
++
+ module.exports = {
+-    activateSeeder
++    activateSeeder,
++    getNetworkTree
+ };
+diff --git a/backend/src/modules/seeder/seeder.routes.js b/backend/src/modules/seeder/seeder.routes.js
+index dd1e4c3..8228f40 100644
+--- a/backend/src/modules/seeder/seeder.routes.js
++++ b/backend/src/modules/seeder/seeder.routes.js
+@@ -5,5 +5,6 @@ const authMiddleware = require('../../middlewares/authMiddleware');
+ const { activationLimiter } = require('../../middlewares/rateLimiter');
+ 
+ router.post('/activate', authMiddleware, seederController.activateSeeder);
++router.get('/network-tree', authMiddleware, seederController.getNetworkTree);
+ 
+ module.exports = router;
+diff --git a/backend/src/server.js b/backend/src/server.js
+index 2bad94a..b185d54 100644
+--- a/backend/src/server.js
++++ b/backend/src/server.js
+@@ -1,3 +1,4 @@
++require('dotenv').config();
+ const app = require('./app');
+ 
+ const PORT = process.env.PORT || 5000;
+diff --git a/backend/test_results.json b/backend/test_results.json
+index 8eed438..e2f38bd 100644
+--- a/backend/test_results.json
++++ b/backend/test_results.json
+@@ -12,11 +12,11 @@
+   },
+   {
+     "msg": "Created Admin:",
+-    "data": "3149e2af-a03d-418c-8a87-9abcbc6dea01"
++    "data": "d4cd0d19-ea58-4a19-9500-2308de50ae45"
+   },
+   {
+     "msg": "Created Seeder:",
+-    "data": "ab52a828-99f8-4b4e-bce7-f279ad171adf with Γé╣500 balance"
++    "data": "4e18f4bf-1ee4-463f-97ba-0b8762b15a0c with Γé╣500 balance"
+   },
+   {
+     "msg": "\n[Test 1] Requesting Payout of Γé╣500 for SEEDER...",
+@@ -28,14 +28,14 @@
+       "success": true,
+       "message": "Payout requested successfully",
+       "data": {
+-        "payout_id": "ee73bb9e-06f2-4ca3-bb73-a0155631b031",
++        "payout_id": "e7fee52b-b5f4-46dc-be10-6aa60c304a7d",
+         "requested_amount": 500,
+         "status": "PENDING"
+       }
+     }
+   },
+   {
+-    "msg": "Expected Wallet Balance (Not Deducted Yet): Γé╣500, Actual: Γé╣500",
++    "msg": "Expected Wallet Balance (Not Deducted Yet): Γé╣500, Actual: Γé╣0",
+     "data": null
+   },
+   {
+@@ -46,7 +46,7 @@
+     "msg": "Double Request Response:",
+     "data": {
+       "success": false,
+-      "message": "You already have a pending payout request"
++      "message": "Insufficient balance to request payout"
+     }
+   },
+   {
+@@ -58,7 +58,7 @@
+     "data": 1
+   },
+   {
+-    "msg": "\n[Test 4] Admin Rejecting Payout ID: ee73bb9e-06f2-4ca3-bb73-a0155631b031",
++    "msg": "\n[Test 4] Admin Rejecting Payout ID: e7fee52b-b5f4-46dc-be10-6aa60c304a7d",
+     "data": null
+   },
+   {
+@@ -81,11 +81,11 @@
+     "data": null
+   },
+   {
+-    "msg": "New Payout Created ID: 4b8b42d5-6aa2-4279-8d35-aea7999132f9",
++    "msg": "New Payout Created ID: 4ef5008a-5341-4ecd-9da7-55e3b3ad4932",
+     "data": null
+   },
+   {
+-    "msg": "\n[Test 6] Admin Approving Payout ID: 4b8b42d5-6aa2-4279-8d35-aea7999132f9",
++    "msg": "\n[Test 6] Admin Approving Payout ID: 4ef5008a-5341-4ecd-9da7-55e3b3ad4932",
+     "data": null
+   },
+   {
+diff --git a/frontend/assets/css/theme.css b/frontend/assets/css/theme.css
+index 3a660e8..1650ccb 100644
+--- a/frontend/assets/css/theme.css
++++ b/frontend/assets/css/theme.css
+@@ -23,7 +23,7 @@
+ 
+     /* Border Radius */
+     --border-radius: 8px;
+-    
++
+     /* Typography */
+     --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+ }
+@@ -51,7 +51,12 @@ body {
+ }
+ 
+ /* Typography */
+-h1, h2, h3, h4, h5, h6 {
++h1,
++h2,
++h3,
++h4,
++h5,
++h6 {
+     margin-bottom: var(--spacing-md);
+     font-weight: 600;
+ }
+@@ -61,7 +66,7 @@ h1, h2, h3, h4, h5, h6 {
+     background-color: var(--surface-color);
+     border-radius: var(--border-radius);
+     padding: var(--spacing-lg);
+-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
++    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+     margin-bottom: var(--spacing-lg);
+ }
+ 
+@@ -102,12 +107,14 @@ label {
+     cursor: pointer;
+     text-align: center;
+     transition: background-color 0.2s ease, transform 0.1s ease;
+-    width: 100%; /* Mobile first: full width buttons */
++    width: 100%;
++    /* Mobile first: full width buttons */
+ }
+ 
+ @media (min-width: 768px) {
+     .btn {
+-        width: auto; /* Tablet and up: auto width */
++        width: auto;
++        /* Tablet and up: auto width */
+     }
+ }
+ 
+@@ -138,16 +145,20 @@ label {
+     padding: 1rem;
+     border-radius: var(--border-radius);
+     margin-bottom: var(--spacing-md);
+-    display: none; /* Hidden by default */
++    display: none;
++    /* Hidden by default */
+ }
++
+ .alert.show {
+     display: block;
+ }
++
+ .alert-error {
+     background-color: #f8d7da;
+     color: #721c24;
+     border: 1px solid #f5c6cb;
+ }
++
+ .alert-success {
+     background-color: #d4edda;
+     color: #155724;
+@@ -155,13 +166,398 @@ label {
+ }
+ 
+ /* Layout Utilities */
+-.text-center { text-align: center; }
+-.mt-1 { margin-top: var(--spacing-sm); }
+-.mt-2 { margin-top: var(--spacing-md); }
+-.mt-3 { margin-top: var(--spacing-lg); }
+-.mb-1 { margin-bottom: var(--spacing-sm); }
+-.mb-2 { margin-bottom: var(--spacing-md); }
+-.mb-3 { margin-bottom: var(--spacing-lg); }
++.text-center {
++    text-align: center;
++}
++
++.mt-1 {
++    margin-top: var(--spacing-sm);
++}
++
++.mt-2 {
++    margin-top: var(--spacing-md);
++}
++
++.mt-3 {
++    margin-top: var(--spacing-lg);
++}
++
++/* assets/css/theme.css */
++
++:root {
++    /* Colors */
++    --primary-color: #007bff;
++    --primary-hover: #0056b3;
++    --secondary-color: #6c757d;
++    --background-color: #f8f9fa;
++    --surface-color: #ffffff;
++    --text-primary: #212529;
++    --text-secondary: #6c757d;
++    --success-color: #28a745;
++    --danger-color: #dc3545;
++    --warning-color: #ffc107;
++    --border-color: #dee2e6;
++
++    /* Spacing */
++    --spacing-xs: 0.25rem;
++    --spacing-sm: 0.5rem;
++    --spacing-md: 1rem;
++    --spacing-lg: 1.5rem;
++    --spacing-xl: 2rem;
++
++    /* Border Radius */
++    --border-radius: 8px;
++
++    /* Typography */
++    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
++}
++
++* {
++    box-sizing: border-box;
++    margin: 0;
++    padding: 0;
++}
++
++body {
++    font-family: var(--font-family);
++    background-color: var(--background-color);
++    color: var(--text-primary);
++    line-height: 1.6;
++    -webkit-font-smoothing: antialiased;
++}
++
++/* Container for Mobile First */
++.container {
++    width: 100%;
++    max-width: 1200px;
++    margin: 0 auto;
++    padding: 0 var(--spacing-md);
++}
++
++/* Typography */
++h1,
++h2,
++h3,
++h4,
++h5,
++h6 {
++    margin-bottom: var(--spacing-md);
++    font-weight: 600;
++}
++
++/* Cards */
++.card {
++    background-color: var(--surface-color);
++    border-radius: var(--border-radius);
++    padding: var(--spacing-lg);
++    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
++    margin-bottom: var(--spacing-lg);
++}
++
++/* Forms */
++.form-group {
++    margin-bottom: var(--spacing-md);
++}
++
++label {
++    display: block;
++    margin-bottom: var(--spacing-sm);
++    font-weight: 500;
++}
++
++.form-control {
++    width: 100%;
++    padding: 0.75rem;
++    border: 1px solid var(--border-color);
++    border-radius: var(--border-radius);
++    font-size: 1rem;
++    font-family: var(--font-family);
++    transition: border-color 0.2s ease;
++}
++
++.form-control:focus {
++    outline: none;
++    border-color: var(--primary-color);
++}
++
++/* Buttons */
++.btn {
++    display: inline-block;
++    padding: 0.75rem 1.5rem;
++    border: none;
++    border-radius: var(--border-radius);
++    font-size: 1rem;
++    font-weight: 500;
++    cursor: pointer;
++    text-align: center;
++    transition: background-color 0.2s ease, transform 0.1s ease;
++    width: 100%;
++    /* Mobile first: full width buttons */
++}
++
++@media (min-width: 768px) {
++    .btn {
++        width: auto;
++        /* Tablet and up: auto width */
++    }
++}
++
++.btn:active {
++    transform: scale(0.98);
++}
++
++.btn-primary {
++    background-color: var(--primary-color);
++    color: white;
++}
++
++.btn-primary:hover {
++    background-color: var(--primary-hover);
++}
++
++.btn-secondary {
++    background-color: var(--secondary-color);
++    color: white;
++}
++
++.btn-secondary:hover {
++    background-color: #5a6268;
++}
++
++/* Alerts */
++.alert {
++    padding: 1rem;
++    border-radius: var(--border-radius);
++    margin-bottom: var(--spacing-md);
++    display: none;
++    /* Hidden by default */
++}
++
++.alert.show {
++    display: block;
++}
++
++.alert-error {
++    background-color: #f8d7da;
++    color: #721c24;
++    border: 1px solid #f5c6cb;
++}
++
++.alert-success {
++    background-color: #d4edda;
++    color: #155724;
++    border: 1px solid #c3e6cb;
++}
++
++/* Layout Utilities */
++.text-center {
++    text-align: center;
++}
++
++.mt-1 {
++    margin-top: var(--spacing-sm);
++}
++
++.mt-2 {
++    margin-top: var(--spacing-md);
++}
++
++.mt-3 {
++    margin-top: var(--spacing-lg);
++}
++
++.mb-1 {
++    margin-bottom: var(--spacing-sm);
++}
++
++.mb-2 {
++    margin-bottom: var(--spacing-md);
++}
++
++.mb-3 {
++    margin-bottom: var(--spacing-lg);
++}
+ 
+ /* Hide functionality */
+-.hidden { display: none !important; }
++.hidden {
++    display: none !important;
++}
++
++/* ========================================================================================================================
++   PURE PAUSE EXPERIENCE - FULLSCREEN OVERLAY & ANIMATIONS
++   ======================================================================================================================== */
++
++#active-break-ui {
++    position: fixed;
++    top: 0;
++    left: 0;
++    width: 100%;
++    height: 100%;
++    z-index: 9999;
++    display: flex;
++    flex-direction: column;
++    justify-content: center;
++    align-items: center;
++    background: radial-gradient(circle at center, #1a2a6c, #b21f1f, #fdbb2d);
++    background-size: 300% 300%;
++    animation: gradientBG 15s ease infinite, fadeIn 0.5s ease-out;
++    color: #fff;
++    font-family: var(--font-family);
++    text-align: center;
++}
++
++#active-break-ui.hidden {
++    display: none !important;
++}
++
++@keyframes fadeIn {
++    from {
++        opacity: 0;
++    }
++
++    to {
++        opacity: 1;
++    }
++}
++
++@keyframes gradientBG {
++    0% {
++        background-position: 0% 50%;
++    }
++
++    50% {
++        background-position: 100% 50%;
++    }
++
++    100% {
++        background-position: 0% 50%;
++    }
++}
++
++@keyframes breathe {
++    0% {
++        transform: scale(1);
++        opacity: 0.8;
++        box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
++    }
++
++    50% {
++        transform: scale(1.1);
++        opacity: 1;
++        box-shadow: 0 0 60px rgba(0, 240, 255, 0.6);
++    }
++
++    100% {
++        transform: scale(1);
++        opacity: 0.8;
++        box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
++    }
++}
++
++.breathe-circle {
++    width: 300px;
++    height: 300px;
++    border-radius: 50%;
++    background: rgba(255, 255, 255, 0.05);
++    /* Glassmorphism */
++    -webkit-backdrop-filter: blur(10px);
++    backdrop-filter: blur(10px);
++    border: 1px solid rgba(255, 255, 255, 0.1);
++    display: flex;
++    justify-content: center;
++    align-items: center;
++    animation: breathe 8s infinite ease-in-out;
++    margin-bottom: 2rem;
++}
++
++#active-break-ui h2#session-timer-large {
++    font-size: 4.5rem;
++    font-weight: 200;
++    color: #fff;
++    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
++    margin: 0;
++}
++
++.text-highlight {
++    background: linear-gradient(90deg, #00f0ff, #00ff99);
++    -webkit-background-clip: text;
++    background-clip: text;
++    -webkit-text-fill-color: transparent;
++    font-weight: 700;
++    margin-bottom: 1rem;
++}
++
++.btn-outline-white {
++    background: transparent;
++    border: 1px solid rgba(255, 255, 255, 0.3);
++    color: rgba(255, 255, 255, 0.7);
++    padding: 0.5rem 1rem;
++    border-radius: 20px;
++    cursor: pointer;
++    font-size: 0.85rem;
++    transition: all 0.3s ease;
++    margin-top: 2rem;
++}
++
++.btn-outline-white:hover {
++    background: rgba(255, 255, 255, 0.1);
++    color: #fff;
++    border-color: #fff;
++}
++
++/* ========================================================================================================================
++   ALIGNMENT OVERLAY ANIMATION
++   ======================================================================================================================== */
++
++#alignment-overlay {
++    position: fixed;
++    top: 0;
++    left: 0;
++    width: 100vw;
++    height: 100vh;
++    z-index: 99999;
++    background: radial-gradient(circle at center, #0a1f44, #00bcd4);
++    background-size: 200% 200%;
++    color: white;
++    display: flex;
++    flex-direction: column;
++    justify-content: center;
++    align-items: center;
++    text-align: center;
++    opacity: 0;
++    pointer-events: none;
++    visibility: hidden;
++    transition: opacity 1s ease-in-out, visibility 1s ease-in-out;
++}
++
++#alignment-overlay.alignment-active {
++    opacity: 1;
++    pointer-events: all;
++    visibility: visible;
++    animation: slowBlend 5s linear forwards;
++}
++
++#alignment-overlay h2 {
++    font-size: 2rem;
++    font-weight: 300;
++    letter-spacing: 2px;
++    margin-bottom: 0.5rem;
++    color: rgba(255, 255, 255, 0.9);
++}
++
++#alignment-overlay p {
++    font-size: 1rem;
++    font-weight: 300;
++    color: rgba(255, 255, 255, 0.6);
++    letter-spacing: 1px;
++}
++
++@keyframes slowBlend {
++    0% {
++        background-position: 0% 50%;
++    }
++
++    100% {
++        background-position: 100% 50%;
++    }
++}
+\ No newline at end of file
+diff --git a/frontend/assets/js/admin.js b/frontend/assets/js/admin.js
+index 65b139f..2d32eeb 100644
+--- a/frontend/assets/js/admin.js
++++ b/frontend/assets/js/admin.js
+@@ -41,19 +41,90 @@ document.addEventListener('DOMContentLoaded', async () => {
+     });
+ 
+     // Initial Load
++    fetchSystemAlerts();
+     loadDataForSection('users-section');
++    setInterval(fetchSystemAlerts, 60000); // Update badges every minute
+ });
+ 
++async function fetchSystemAlerts() {
++    try {
++        const res = await ApiClient.get('/admin/system/stats');
++        const stats = res.data || res.stats || {};
++
++        const payoutNav = document.querySelector('[data-target="payouts-section"]');
++        if (payoutNav) {
++            payoutNav.innerHTML = `Payouts ≡ƒÆ░ ${stats.pending_payout_count > 0 ? `<span style="background:red;color:white;border-radius:50%;padding:2px 6px;font-size:0.75rem;margin-left:4px;">${stats.pending_payout_count}</span>` : ''}`;
++        }
++        const supportNav = document.querySelector('[data-target="support-section"]');
++        if (supportNav) {
++            supportNav.innerHTML = `Feedback/Support ≡ƒÆ¼ ${stats.unread_messages_count > 0 ? `<span style="background:red;color:white;border-radius:50%;padding:2px 6px;font-size:0.75rem;margin-left:4px;">${stats.unread_messages_count}</span>` : ''}`;
++        }
++    } catch (e) {
++        // fail silently for background polling
++    }
++}
++
+ function loadDataForSection(sectionId) {
+     switch (sectionId) {
+         case 'users-section': loadUsers(); break;
+         case 'payouts-section': loadPayouts(); break;
+         case 'ledger-section': loadLedger(); break;
+-        case 'announcements-section': loadAnnouncements(); break;
++        case 'support-section': loadInbox(); break;
++        case 'trash-section': loadTrashedUsers(); break;
+         // export section has static buttons triggering window.open
+     }
+ }
+ 
++async function loadInbox() {
++    try {
++        const tbody = document.querySelector('#support-section tbody');
++        if (!tbody) return;
++
++        tbody.innerHTML = '<tr><td colspan="3" class="text-center">Loading messages...</td></tr>';
++        const res = await ApiClient.get('/messages/admin/inbox');
++        const inbox = res.data?.inbox || res.inbox || [];
++
++        if (inbox.length === 0) {
++            tbody.innerHTML = '<tr><td colspan="3" class="text-center italic opacity-50">No support tickets found.</td></tr>';
++            return;
++        }
++
++        tbody.innerHTML = inbox.map(c => `
++            <tr>
++                <td>
++                    <b>${c.user?.mobile || 'Unknown'}</b><br>
++                    <small>${c.user?.name || ''}</small>
++                </td>
++                <td>
++                    ${c.unreadCount > 0 ? `<span style="background:red;color:white;border-radius:4px;padding:2px 4px;font-size:0.75rem;">${c.unreadCount} New</span><br>` : ''}
++                    <small style="color:var(--text-secondary)">${c.lastMessage?.substring(0, 40) || ''}...</small>
++                </td>
++                <td>
++                    <button class="action-btn" style="background: var(--primary-color);" onclick="replyToUser('${c.user?.id}', '${c.user?.mobile}')">Chat / Reply</button>
++                </td>
++            </tr>
++        `).join('');
++
++        // also update system alerts since we read the inbox
++        fetchSystemAlerts();
++    } catch (err) {
++        showError('Failed to load support inbox.');
++    }
++}
++
++window.replyToUser = async function (userId, mobile) {
++    const text = prompt(`Send a reply or message to User ${mobile}:\n(Note: This is a placeholder basic reply UI until the full chat feature is added)`);
++    if (!text) return;
++
++    try {
++        await ApiClient.post('/messages', { receiverId: userId, content: text });
++        showSuccess('Message sent successfully!');
++        loadInbox();
++    } catch (err) {
++        showError('Failed to send message.');
++    }
++};
++
+ async function loadUsers() {
+     try {
+         const res = await ApiClient.get('/admin/users');
+@@ -72,10 +143,15 @@ async function loadUsers() {
+                 <td><span style="color: ${u.status === 'ACTIVE' ? 'var(--success-color)' : 'var(--text-secondary)'}">${u.status || 'UNVERIFIED'}</span></td>
+                 <td>Γé╣${u.walletBalance || 0}</td>
+                 <td>
+-                    ${u.status !== 'SUSPENDED' ?
+-                `<button class="action-btn" style="background: var(--danger-color);" onclick="updateUserStatus('${u.id}', 'SUSPENDED')">Suspend</button>` :
++                    <div style="display:flex; gap:0.5rem; flex-wrap:wrap">
++                        ${u.status !== 'BLOCKED' && u.status !== 'SUSPENDED' ?
++                `<button class="action-btn" style="background: var(--danger-color);" onclick="updateUserStatus('${u.id}', 'BLOCKED')">Suspend</button>` :
+                 `<button class="action-btn" style="background: var(--success-color);" onclick="updateUserStatus('${u.id}', 'ACTIVE')">Activate</button>`
+             }
++                        <button class="action-btn" style="background: #3b82f6;" onclick="editUser('${u.id}', '${u.name || ''}')">Edit</button>
++                        <button class="action-btn" style="background: #eab308; color:#000;" onclick="resetPin('${u.id}')">Reset PIN</button>
++                        <button class="action-btn" style="background: #1e293b;" onclick="trashUser('${u.id}')">Trash</button>
++                    </div>
+                 </td>
+             </tr>
+         `).join('');
+@@ -87,7 +163,8 @@ async function loadUsers() {
+ // Ensure global access for inline onclick handlers
+ window.updateUserStatus = async function (userId, status) {
+     try {
+-        await ApiClient.put(`/admin/users/${userId}/status`, { status });
++        const route = status === 'SUSPENDED' || status === 'BLOCKED' ? `/admin/users/${userId}/block` : `/admin/users/${userId}/unblock`;
++        await ApiClient.post(route, {});
+         showSuccess('User status updated');
+         loadUsers();
+     } catch (err) {
+@@ -95,25 +172,112 @@ window.updateUserStatus = async function (userId, status) {
+     }
+ };
+ 
++window.resetPin = async function (userId) {
++    if (!confirm('Are you sure you want to reset this users PIN to 1234?')) return;
++    try {
++        await ApiClient.post(`/admin/users/${userId}/reset-pin`, {});
++        showSuccess('PIN successfully reset to 1234');
++    } catch (err) {
++        showError('Failed to reset PIN.');
++    }
++};
++
++window.editUser = async function (userId, currentName) {
++    const newName = prompt('Enter new name for the user:', currentName || '');
++    if (newName === null) return;
++    try {
++        await ApiClient.put(`/admin/users/${userId}`, { name: newName });
++        showSuccess('User updated successfully.');
++        loadUsers();
++    } catch (err) {
++        showError('Failed to update user.');
++    }
++};
++
++window.trashUser = async function (userId) {
++    if (!confirm('Are you sure you want to move this user to Trash? They will lose access immediately.')) return;
++    try {
++        await ApiClient.delete(`/admin/users/${userId}/trash`);
++        showSuccess('User moved to trash successfully.');
++        loadUsers();
++    } catch (err) {
++        showError('Failed to trash user.');
++    }
++};
++
++async function loadTrashedUsers() {
++    try {
++        const res = await ApiClient.get('/admin/users/trash');
++        const users = res.data || res.users || [];
++        const tbody = document.querySelector('#trash-section tbody');
++
++        if (users.length === 0) {
++            tbody.innerHTML = '<tr><td colspan="3" class="text-center italic opacity-50">Trash is empty.</td></tr>';
++            return;
++        }
++
++        tbody.innerHTML = users.map(u => `
++            <tr>
++                <td><span style="color:var(--danger-color)">${u.mobile}</span></td>
++                <td>${u.role}</td>
++                <td>
++                    <button class="action-btn" style="background: var(--success-color);" onclick="restoreUser('${u.id}')">Restore</button>
++                    <button class="action-btn" style="background: var(--danger-color);" onclick="purgeUser('${u.id}')">Purge</button>
++                </td>
++            </tr>
++        `).join('');
++    } catch (err) {
++        showError('Failed to load trashed users.');
++    }
++}
++
++window.restoreUser = async function (userId) {
++    if (!confirm('Are you sure you want to RESTORE this user? They will regain access.')) return;
++    try {
++        await ApiClient.post(`/admin/users/${userId}/restore`);
++        showSuccess('User restored successfully.');
++        loadTrashedUsers();
++        loadUsers();
++    } catch (err) {
++        showError(err.message || 'Failed to restore user.');
++    }
++};
++
++window.purgeUser = async function (userId) {
++    if (!confirm('WARNING: Are you sure you want to PERMANENTLY PURGE this user? This action cannot be undone and will delete all their data.')) return;
++    if (!confirm('FINAL WARNING: Type OK to proceed.') && prompt('Type PURGE to confirm') !== 'PURGE') return;
++    try {
++        await ApiClient.delete(`/admin/users/${userId}/purge`);
++        showSuccess('User permanently deleted.');
++        loadTrashedUsers();
++    } catch (err) {
++        showError(err.message || 'Failed to purge user.');
++    }
++};
++
+ async function loadPayouts() {
+     try {
+-        const res = await ApiClient.get('/finance/payout/admin/list?status=PENDING');
++        const res = await ApiClient.get('/admin/finance/payouts');
+         const payouts = res.data || res.payouts || [];
+         const tbody = document.getElementById('payouts-table-body');
+ 
+         if (payouts.length === 0) {
+-            tbody.innerHTML = '<tr><td colspan="4" class="text-center">No pending payouts.</td></tr>';
++            tbody.innerHTML = '<tr><td colspan="5" class="text-center">No pending payouts.</td></tr>';
+             return;
+         }
+ 
+         tbody.innerHTML = payouts.map(p => `
+             <tr>
+-                <td>${p.user?.mobile || 'Unknown'}</td>
++                <td>
++                    ${p.user?.mobile || 'Unknown'}<br>
++                    <small style="color:var(--text-secondary)">${p.user?.name || ''}</small>
++                </td>
++                <td><strong style="color:var(--primary-color)">${p.user?.upi_id || 'Not Provided'}</strong></td>
+                 <td>Γé╣${p.amount}</td>
+-                <td>${new Date(p.createdAt).toLocaleDateString()}</td>
++                <td>${new Date(p.requested_at || p.createdAt || Date.now()).toLocaleDateString()}</td>
+                 <td>
+-                    <button class="action-btn" style="background: var(--success-color);" onclick="processPayout('${p.id}', 'APPROVED')">Approve</button>
+-                    <button class="action-btn" style="background: var(--danger-color);" onclick="processPayout('${p.id}', 'REJECTED')">Reject</button>
++                    <button class="action-btn" style="background: var(--success-color);" onclick="processPayout('${p.id}', 'approve')">Approve</button>
++                    <button class="action-btn" style="background: var(--danger-color);" onclick="processPayout('${p.id}', 'reject')">Reject</button>
+                 </td>
+             </tr>
+         `).join('');
+@@ -125,11 +289,20 @@ async function loadPayouts() {
+ window.processPayout = async function (payoutId, action) {
+     if (!confirm(`Are you sure you want to ${action} this payout?`)) return;
+     try {
+-        await ApiClient.post(`/finance/payout/admin/${payoutId}/process`, { action });
+-        showSuccess(`Payout ${action.toLowerCase()} successfully`);
++        let body = {};
++        if (action === 'reject') {
++            const remarks = prompt('Reason for rejection:');
++            if (remarks === null) return; // User cancelled
++            body.remarks = remarks || 'Rejected by Admin';
++        } else {
++            // optional remarks for approval
++            body.remarks = 'Approved and Paid out successfully';
++        }
++        await ApiClient.post(`/admin/finance/payouts/${payoutId}/${action}`, body);
++        showSuccess(`Payout ${action}d successfully`);
+         loadPayouts();
+     } catch (err) {
+-        showError('Failed to process payout.');
++        showError(err.message || 'Failed to process payout.');
+     }
+ };
+ 
+diff --git a/frontend/assets/js/auth.js b/frontend/assets/js/auth.js
+index 1e83d91..9bc198d 100644
+--- a/frontend/assets/js/auth.js
++++ b/frontend/assets/js/auth.js
+@@ -4,8 +4,8 @@ const Auth = {
+     // Check if user is logged in (calls backend /me endpoint)
+     async checkAuth() {
+         try {
+-            const data = await ApiClient.get('/auth/me');
+-            return data.user || data.data; // Return user object if authenticated (depending on backend standard response)
++            const res = await ApiClient.get('/auth/me');
++            return res.data?.user || res.user || res.data; // Return user object if authenticated (depending on backend standard response)
+         } catch (error) {
+             return null; // Return null if not authenticated or error
+         }
+@@ -30,7 +30,7 @@ const Auth = {
+             console.error('Logout error', e);
+         } finally {
+             // Always redirect to login on logout
+-            window.location.href = '/public/login.html';
++            window.location.href = '/login';
+         }
+     },
+ 
+@@ -38,21 +38,25 @@ const Auth = {
+     async protectPage(requiredRole = null) {
+         const user = await this.checkAuth();
+         if (!user) {
+-            window.location.href = '/public/login.html';
++            window.location.href = '/login';
+             return null;
+         }
+ 
+-        if (requiredRole && user.role !== requiredRole) {
++        if (requiredRole && user.role !== requiredRole && user.role !== 'SUPERADMIN' && user.role !== 'ADMIN_A' && user.role !== 'ADMIN_B') {
+             // Not authorized for this page, redirect to appropriate dashboard
+-            if (user.role === 'ADMIN') window.location.href = '/dashboard/admin.html';
+-            else if (user.role === 'SEEDER') window.location.href = '/dashboard/seeder.html';
+-            else window.location.href = '/dashboard/user.html';
++            if (user.role === 'ADMIN' || user.role === 'ADMIN_A' || user.role === 'ADMIN_B') window.location.href = '/admin';
++            else if (user.role === 'SEEDER') window.location.href = '/seeder';
++            else window.location.href = '/dashboard';
+             return null;
+         }
+ 
+         // Add user info to UI if elements exist
+         const userNameEl = document.getElementById('user-name-display');
+-        if (userNameEl) userNameEl.textContent = user.name || user.mobile;
++        if (userNameEl) {
++            let displayName = user.name || user.mobile;
++            if (displayName === 'New Member') displayName = user.mobile; // Better fallback
++            userNameEl.textContent = displayName;
++        }
+ 
+         return user;
+     }
+diff --git a/frontend/assets/js/config.js b/frontend/assets/js/config.js
+index d320f50..49f7d66 100644
+--- a/frontend/assets/js/config.js
++++ b/frontend/assets/js/config.js
+@@ -1,9 +1,6 @@
+ const CONFIG = {
+-    // Determine automatically if we're on local or production
+-    API_BASE_URL: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+-        ? '/api'
+-        : 'https://api.sinaank.com/api'
++    // Dynamically route to backend using relative path pattern for VPS
++    API_BASE_URL: window.location.origin + '/api'
+ };
+ 
+-// Prevent modification
+-Object.freeze(CONFIG);
++Object.freeze(CONFIG);
+\ No newline at end of file
+diff --git a/frontend/assets/js/seeder.js b/frontend/assets/js/seeder.js
+index 6620fc6..4754353 100644
+--- a/frontend/assets/js/seeder.js
++++ b/frontend/assets/js/seeder.js
+@@ -9,6 +9,9 @@ document.addEventListener('DOMContentLoaded', async () => {
+     const refLink = `${window.location.origin}/public/register.html?ref=${user.mobile}`;
+     document.getElementById('referral-link').value = refLink;
+ 
++    // Save user.mobile globally for AudioDB
++    window.currentUserMobile = user.mobile;
++
+     // Handle Copy
+     document.getElementById('copy-link-btn').addEventListener('click', () => {
+         const linkInput = document.getElementById('referral-link');
+@@ -18,12 +21,278 @@ document.addEventListener('DOMContentLoaded', async () => {
+     });
+ 
+     // 2. Load Dashboard Data
++    window.currentUserId = user.id;
+     await loadSeederData();
++    fetchSupportThread();
+ 
+     // 3. Bind Payout Form
+     document.getElementById('payout-form').addEventListener('submit', handlePayoutRequest);
++
++    // 4. Bind Session Buttons
++    document.querySelectorAll('.session-btn').forEach(btn => {
++        btn.addEventListener('click', () => startSession(parseInt(btn.getAttribute('data-minutes'))));
++    });
++
++    // 5. Bind Early Exit
++    const earlyExitBtn = document.getElementById('end-session-early-btn');
++    if (earlyExitBtn) {
++        earlyExitBtn.addEventListener('click', processEarlyExit);
++    }
++
++    // 6. Initialize AudioDB UI
++    if (window.AudioDB) {
++        try {
++            const savedAudio = await window.AudioDB.getAudio(window.currentUserMobile);
++            if (savedAudio && savedAudio.file) {
++                document.getElementById('custom-audio').classList.add('hidden');
++                document.getElementById('saved-audio-container').classList.remove('hidden');
++                document.getElementById('saved-audio-name').textContent = "≡ƒÄ╡ " + savedAudio.name;
++            }
++        } catch (e) { console.warn('AudioDB load error', e); }
++
++        const audioInput = document.getElementById('custom-audio');
++        if (audioInput) {
++            audioInput.addEventListener('change', async (e) => {
++                if (e.target.files && e.target.files.length > 0) {
++                    try {
++                        await window.AudioDB.saveAudio(e.target.files[0], window.currentUserMobile);
++                        document.getElementById('custom-audio').classList.add('hidden');
++                        document.getElementById('saved-audio-container').classList.remove('hidden');
++                        document.getElementById('saved-audio-name').textContent = "≡ƒÄ╡ " + e.target.files[0].name;
++                    } catch (e) { console.warn('AudioDB save error', e); }
++                }
++            });
++        }
++
++        const removeAudioBtn = document.getElementById('remove-audio-btn');
++        if (removeAudioBtn) {
++            removeAudioBtn.addEventListener('click', async () => {
++                try {
++                    await window.AudioDB.clearAudio(window.currentUserMobile);
++                    const audioInp = document.getElementById('custom-audio');
++                    if (audioInp) audioInp.value = ""; // clear
++                    document.getElementById('custom-audio').classList.remove('hidden');
++                    document.getElementById('saved-audio-container').classList.add('hidden');
++                } catch (e) { console.warn('AudioDB clear error', e); }
++            });
++        }
++    }
++
++    // 7. Bind Edit Profile Form
++    const profileImgInput = document.getElementById('edit-profile-img');
++    const profileImgPreview = document.getElementById('edit-profile-img-preview');
++    if (profileImgInput) {
++        profileImgInput.addEventListener('change', (e) => {
++            if (e.target.files && e.target.files[0]) {
++                const reader = new FileReader();
++                reader.onload = (ev) => {
++                    profileImgPreview.src = ev.target.result;
++                }
++                reader.readAsDataURL(e.target.files[0]);
++            }
++        });
++    }
++
++    const editProfileForm = document.getElementById('edit-profile-form');
++    if (editProfileForm) {
++        editProfileForm.addEventListener('submit', async (e) => {
++            e.preventDefault();
++            const btn = document.getElementById('btn-save-profile');
++            const msg = document.getElementById('profile-msg');
++            const nameField = document.getElementById('edit-profile-name').value.trim();
++            const originalText = btn.textContent;
++
++            btn.disabled = true;
++            btn.textContent = 'Saving...';
++            msg.textContent = '';
++
++            try {
++                let profileImageBase64 = undefined;
++                if (profileImgInput.files && profileImgInput.files[0]) {
++                    profileImageBase64 = profileImgPreview.src;
++                }
++
++                const res = await ApiClient.put('/auth/profile', {
++                    name: nameField || undefined,
++                    profile_photo: profileImageBase64
++                });
++
++                msg.innerHTML = '<span style="color: green;">Γ£ö Profile updated!</span>';
++
++                // Refresh Top display name
++                if (res.data && res.data.name) {
++                    const userNameEl = document.getElementById('user-name-display');
++                    if (userNameEl) userNameEl.textContent = res.data.name;
++                }
++            } catch (err) {
++                msg.innerHTML = `<span style="color: red;">${err.message || 'Failed to update'}</span>`;
++            } finally {
++                btn.disabled = false;
++                btn.textContent = originalText;
++                setTimeout(() => { if (msg.textContent.includes('updated')) msg.textContent = ''; }, 3000);
++            }
++        });
++    }
+ });
+ 
++let activeSessionInterval;
++
++async function startSession(minutes) {
++    const errorDiv = document.getElementById('error-message');
++    const successDiv = document.getElementById('success-message');
++    errorDiv.classList.remove('show');
++    successDiv.classList.remove('show');
++
++    try {
++        // Start Alignment Ritual immediately to capture user gesture for sound
++        let ritualPromise = null;
++        if (window.runAlignmentRitual) {
++            ritualPromise = window.runAlignmentRitual();
++        }
++
++        // Handle Custom Audio Input
++        let customAudioSource = null;
++        let originalFileName = null;
++        let audioFileToPlay = null;
++
++        if (window.AudioDB) {
++            try {
++                const savedAudio = await window.AudioDB.getAudio(window.currentUserMobile);
++                if (savedAudio && savedAudio.file) {
++                    audioFileToPlay = savedAudio.file;
++                    originalFileName = savedAudio.name;
++                }
++            } catch (e) { console.warn('Audio DB Get Error', e); }
++        }
++
++        const audioInput = document.getElementById('custom-audio');
++        if (!audioFileToPlay && audioInput && audioInput.files && audioInput.files.length > 0) {
++            audioFileToPlay = audioInput.files[0];
++            originalFileName = audioInput.files[0].name;
++        }
++
++        if (audioFileToPlay) {
++            // Need to pass a stable object URL to the audio player
++            customAudioSource = URL.createObjectURL(audioFileToPlay);
++
++            // Show custom file info on the dashboard
++            const audioDescText = document.getElementById('audio-desc-text');
++            if (audioDescText) {
++                audioDescText.innerHTML = `≡ƒÄ╡ Playing Custom Sound: <b>${originalFileName}</b>`;
++            }
++        } else {
++            const audioDescText = document.getElementById('audio-desc-text');
++            if (audioDescText) {
++                audioDescText.innerHTML = `≡ƒöè 108 Hz (Deep Bass) ΓÇó 162 Hz (Perfect Fifth)`;
++            }
++        }
++
++        // START AMBIENT SOUND SYNCHRONOUSLY to bypass autoplay policies
++        // We pass 5 seconds delay so it fades in exactly when the visual ritual ends.
++        if (window.playSessionAmbientAudio) {
++            window.playSessionAmbientAudio(5, customAudioSource);
++        }
++
++        // START FULLSCREEN SYNCHRONOUSLY to bypass fullscreen policies
++        try {
++            const docEl = document.documentElement;
++            const requestFS = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
++            if (requestFS && !document.fullscreenElement && !document.webkitFullscreenElement) {
++                requestFS.call(docEl);
++            }
++        } catch (e) { console.warn("Fullscreen request failed", e); }
++
++        // Validation handled entirely by backend API rate limiter, JWT validation, and balance checks
++        await ApiClient.post('/minutes/start-session', { duration: minutes });
++
++        // Wait for Ritual to complete
++        if (ritualPromise) {
++            await ritualPromise;
++        }
++
++        // Show Premium Fullscreen UI
++        const breakUI = document.getElementById('active-break-ui');
++        breakUI.classList.remove('hidden');
++
++        let timeLeft = minutes * 60;
++        const timerDisplay = document.getElementById('session-timer-large');
++
++        // Setup clearable interval
++        if (activeSessionInterval) clearInterval(activeSessionInterval);
++
++        activeSessionInterval = setInterval(async () => {
++            timeLeft--;
++            const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
++            const s = (timeLeft % 60).toString().padStart(2, '0');
++            timerDisplay.textContent = `${m}:${s}`;
++
++            if (timeLeft <= 0) {
++                endSessionUI(minutes, successDiv);
++            }
++        }, 1000);
++
++    } catch (error) {
++        if (window.stopSessionAmbientAudio) window.stopSessionAmbientAudio(true); // Stop pre-started audio
++        showError(error.message || 'Failed to start session. Ensure sufficient balance.');
++    }
++}
++
++function processEarlyExit(e) {
++    const btn = e ? e.target : document.getElementById('end-session-early-btn');
++    if (!btn) return;
++
++    if (btn.getAttribute('data-confirming') !== 'true') {
++        btn.setAttribute('data-confirming', 'true');
++        btn.textContent = 'Are you sure? Click again to end';
++        btn.style.color = '#ff6b6b';
++        btn.style.borderColor = '#ff6b6b';
++        btn.style.background = 'rgba(255, 107, 107, 0.1)';
++
++        setTimeout(() => {
++            if (btn && btn.getAttribute('data-confirming') === 'true') {
++                btn.removeAttribute('data-confirming');
++                btn.textContent = 'End Session';
++                btn.style.color = '';
++                btn.style.borderColor = '';
++                btn.style.background = '';
++            }
++        }, 3000);
++    } else {
++        btn.removeAttribute('data-confirming');
++        btn.textContent = 'End Session';
++        btn.style.color = '';
++        btn.style.borderColor = '';
++        btn.style.background = '';
++        endSessionUI();
++    }
++}
++
++function endSessionUI(minutes = 0, successDiv = null) {
++    if (activeSessionInterval) clearInterval(activeSessionInterval);
++
++    // Stop Ambient Sound for Session
++    if (window.stopSessionAmbientAudio) {
++        window.stopSessionAmbientAudio();
++    }
++
++    // Hide UI and Fullscreen
++    document.getElementById('active-break-ui').classList.add('hidden');
++    try {
++        const exitFS = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
++        if (exitFS && (document.fullscreenElement || document.webkitFullscreenElement)) {
++            exitFS.call(document);
++        }
++    } catch (e) { console.warn("Fullscreen exit failed", e); }
++
++    if (minutes > 0 && successDiv) {
++        successDiv.textContent = `Successfully completed ${minutes} minute session!`;
++        successDiv.classList.add('show');
++    }
++
++    // Reload Dashboard Data
++    loadSeederData();
++}
++
+ async function loadSeederData() {
+     try {
+         // Fetch User details for wallet & bonus
+@@ -37,6 +306,18 @@ async function loadSeederData() {
+             document.getElementById('rank-status').textContent = user.status;
+         }
+ 
++        // Populate Edit Profile fields
++        const editNameInput = document.getElementById('edit-profile-name');
++        if (editNameInput && user.name) editNameInput.value = user.name;
++
++        const editUpiInput = document.getElementById('edit-profile-upi');
++        if (editUpiInput && user.upi_id) editUpiInput.value = user.upi_id;
++
++        const editImgPreview = document.getElementById('edit-profile-img-preview');
++        if (editImgPreview && user.profile_photo) {
++            editImgPreview.src = user.profile_photo;
++        }
++
+         // Fetch Extended Network Stats (level1, level2 counts)
+         const networkData = await ApiClient.get('/referral/network').catch(() => ({}));
+         const network = networkData.data || networkData || {};
+@@ -46,7 +327,7 @@ async function loadSeederData() {
+ 
+         // Fetch Direct Team List (Level 1)
+         const teamData = await ApiClient.get('/referral/team').catch(() => ({}));
+-        const team = teamData.data || teamData.team || [];
++        const team = teamData.data?.team || teamData.team || [];
+ 
+         renderTeam(team);
+     } catch (error) {
+@@ -97,7 +378,7 @@ async function handlePayoutRequest(e) {
+     submitBtn.textContent = 'Processing...';
+ 
+     try {
+-        await ApiClient.post('/finance/payout/request', { amount });
++        await ApiClient.post('/finance/request-payout', { amount });
+         successDiv.textContent = `Γé╣${amount} payout requested successfully! Pending admin approval.`;
+         successDiv.classList.add('show');
+         document.getElementById('payout-amount').value = '';
+@@ -118,3 +399,84 @@ function showError(msg) {
+     errorDiv.classList.add('show');
+     setTimeout(() => errorDiv.classList.remove('show'), 5000);
+ }
++
++// Support Feature
++async function loadSupportThread() {
++    try {
++        const adminResp = await ApiClient.get('/messages/null'); // Hacky workaround, controller will replace null with Admin id
++        // Wait, controller tries to parse targetUserId. Wait, we should just let the backend route handle it or pass a dummy UUID. Let's pass 'admin' and fix the backend route if needed, or just let 'req.params.userId' be invalid but backend handles it?
++        // Actually, if we hit /messages/admin, the backend targetUserId = 'admin'.
++        // Wait, in message.controller.js we wrote: if targetUserId is given, it looks up the id.
++        // Let's implement /messages/admin endpoint to fetch the admin thread.
++    } catch (err) { }
++}
++
++const pf = document.getElementById('support-form');
++if (pf) {
++    pf.addEventListener('submit', async (e) => {
++        e.preventDefault();
++        const msg = document.getElementById('support-message').value;
++        const submitBtn = pf.querySelector('button');
++        submitBtn.disabled = true;
++        try {
++            await ApiClient.post('/messages', { content: msg }); // Omitting receiverId gets mapped to Admin
++            document.getElementById('support-message').value = '';
++            document.getElementById('support-status').innerHTML = '<span style="color:green">Message sent successfully!</span>';
++            setTimeout(() => document.getElementById('support-status').innerHTML = '', 3000);
++            await fetchSupportThread();
++        } catch (err) {
++            document.getElementById('support-status').innerHTML = `<span style="color:red">${err.message || 'Failed to send'}</span>`;
++        } finally {
++            submitBtn.disabled = false;
++        }
++    });
++}
++
++async function fetchSupportThread() {
++    try {
++        const threadDiv = document.getElementById('support-thread');
++        if (!threadDiv) return;
++
++        const res = await ApiClient.get('/messages/thread');
++        const messages = res.data?.messages || res.messages || [];
++
++        const unreadCount = messages.filter(m => m.receiverId === window.currentUserId && m.status === 'UNREAD').length;
++        const badge = document.getElementById('unread-messages-badge');
++        if (badge) {
++            if (unreadCount > 0) {
++                badge.style.display = 'inline-block';
++                badge.textContent = `${unreadCount} New`;
++            } else {
++                badge.style.display = 'none';
++            }
++        }
++
++        if (messages.length === 0) {
++            threadDiv.innerHTML = '<p class="text-center text-sm text-secondary">No messages yet. Send a message to start.</p>';
++            return;
++        }
++
++        threadDiv.innerHTML = messages.reverse().map(m => {
++            const isMe = m.sender?.id === window.currentUserId; // Need to ensure currentUserId is set
++
++            // Auto mark-as-read
++            if (!isMe && m.status === 'UNREAD') {
++                ApiClient.put(`/messages/${m.id}/read`).catch(console.warn);
++            }
++
++            return `
++                <div style="margin-bottom: 8px; text-align: ${isMe ? 'right' : 'left'};">
++                    <span style="display:inline-block; padding: 6px 10px; border-radius: 8px; background: ${isMe ? 'var(--primary-color)' : '#e2e8f0'}; color: ${isMe ? 'white' : 'black'}; text-align: left; max-width: 80%;">
++                        ${m.content}
++                    </span>
++                    <div style="font-size: 0.7rem; color: gray; margin-top: 2px;">
++                        ${new Date(m.createdAt).toLocaleString()} ${m.status === 'READ' && isMe ? 'Γ£ôΓ£ô' : ''}
++                    </div>
++                </div>
++            `;
++        }).join('');
++        threadDiv.scrollTop = threadDiv.scrollHeight;
++    } catch (e) {
++        console.error('Failed to fetch thread', e);
++    }
++}
+diff --git a/frontend/assets/js/user.js b/frontend/assets/js/user.js
+index 75b6036..2d8ec0c 100644
+--- a/frontend/assets/js/user.js
++++ b/frontend/assets/js/user.js
+@@ -7,15 +7,174 @@ document.addEventListener('DOMContentLoaded', async () => {
+ 
+     // Populate Profile
+     document.getElementById('profile-mobile').textContent = user.mobile || 'N/A';
+-    document.getElementById('profile-plan').textContent = user.plan || 'Standard';
++
++    // Dynamic Plan Name based on Role assigned from Checkout
++    let planName = 'Standard';
++    if (user.role === 'USER_178') {
++        planName = 'SDP Personal (Γé╣178)';
++        const upgradeOffer = document.getElementById('upgrade-offer-178');
++        if (upgradeOffer) upgradeOffer.classList.remove('hidden');
++    }
++    if (user.role === 'USER_580') {
++        planName = 'SDP Family (Γé╣580)';
++        const familySection = document.getElementById('family-section-580');
++        if (familySection) familySection.classList.remove('hidden');
++    }
++    document.getElementById('profile-plan').textContent = planName;
++
++    // Save user.mobile globally for AudioDB
++    window.currentUserMobile = user.mobile;
+ 
+     // 2. Load Dashboard Data
+     await loadDashboardData();
++    if (user.role === 'USER_580' || user.role === 'SEEDER') {
++        await loadFamilyMembers(user);
++    }
+ 
+     // 3. Bind Session Buttons
+     document.querySelectorAll('.session-btn').forEach(btn => {
+         btn.addEventListener('click', () => startSession(parseInt(btn.getAttribute('data-minutes'))));
+     });
++
++    // 4. Bind Early Exit
++    const earlyExitBtn = document.getElementById('end-session-early-btn');
++    if (earlyExitBtn) {
++        earlyExitBtn.addEventListener('click', processEarlyExit);
++    }
++
++    // 4.5 Bind Family Add Form (if exists)
++    const familyForm = document.getElementById('family-add-form');
++    if (familyForm) {
++        familyForm.addEventListener('submit', async (e) => {
++            e.preventDefault();
++            const btn = familyForm.querySelector('button');
++            const msg = document.getElementById('family-msg');
++            const fMobile = document.getElementById('new-family-mobile').value.trim();
++            const fPin = document.getElementById('new-family-pin').value.trim();
++
++            if (fMobile.length !== 10 || fPin.length !== 4) {
++                msg.textContent = "Please ensure Mobile is 10 digits and PIN is 4 digits.";
++                msg.style.color = "red";
++                return;
++            }
++
++            btn.disabled = true;
++            btn.textContent = "Adding...";
++            msg.textContent = "";
++
++            try {
++                // Wait for the backend API route if it doesn't exist yet, passing it explicitly
++                const res = await fetch('/api/auth/family', {
++                    method: 'POST',
++                    headers: {
++                        'Content-Type': 'application/json',
++                        'Authorization': `Bearer ${localStorage.getItem('sdp_token')}`
++                    },
++                    body: JSON.stringify({
++                        mobile: fMobile,
++                        pin: fPin
++                    })
++                });
++
++                const data = await res.json();
++
++                if (res.ok && data.success) {
++                    msg.innerHTML = `<span style="color: green;">Γ£ö Successfully added ${fMobile}!</span>`;
++                    familyForm.reset();
++                    await loadFamilyMembers(user);
++                } else {
++                    msg.textContent = data.message || "Failed to add family member.";
++                    msg.style.color = "red";
++                }
++            } catch (e) {
++                msg.textContent = "Network error. Please try again.";
++                msg.style.color = "red";
++            } finally {
++                btn.disabled = false;
++                btn.textContent = "Add Family Member";
++            }
++        });
++    }
++
++    async function loadFamilyMembers(user) {
++        try {
++            const res = await fetch('/api/auth/family', {
++                headers: { 'Authorization': `Bearer ${localStorage.getItem('sdp_token')}` }
++            });
++            const data = await res.json();
++
++            if (res.ok && data.success && data.data && data.data.members) {
++                const members = data.data.members;
++                const maxMembers = 3;
++
++                const countMsg = document.getElementById('family-count-msg');
++                if (countMsg) {
++                    const remaining = maxMembers - members.length;
++                    countMsg.textContent = `You can add ${remaining} more family members (out of ${maxMembers}).`;
++                }
++
++                const listContainer = document.getElementById('family-list-container');
++                const listEl = document.getElementById('family-list');
++                const formEl = document.getElementById('family-add-form');
++
++                if (members.length > 0) {
++                    listContainer.classList.remove('hidden');
++                    listEl.innerHTML = members.map(m => `<li>${m.mobile} (Added ${new Date(m.createdAt).toLocaleDateString()})</li>`).join('');
++                } else {
++                    listContainer.classList.add('hidden');
++                }
++
++                if (members.length >= maxMembers && formEl) {
++                    formEl.style.display = 'none';
++                    if (countMsg) countMsg.textContent = `You have reached your limit of ${maxMembers} family members.`;
++                } else if (formEl) {
++                    formEl.style.display = 'block';
++                }
++            }
++        } catch (e) {
++            console.error("Failed to load family members", e);
++        }
++    }
++
++    // 5. Initialize AudioDB UI
++    if (window.AudioDB) {
++        try {
++            const savedAudio = await window.AudioDB.getAudio(window.currentUserMobile);
++            if (savedAudio && savedAudio.file) {
++                document.getElementById('custom-audio').classList.add('hidden');
++                document.getElementById('saved-audio-container').classList.remove('hidden');
++                document.getElementById('saved-audio-name').textContent = "≡ƒÄ╡ " + savedAudio.name;
++            }
++        } catch (e) { console.warn('AudioDB load error', e); }
++
++        const audioInput = document.getElementById('custom-audio');
++        if (audioInput) {
++            audioInput.addEventListener('change', async (e) => {
++                if (e.target.files && e.target.files.length > 0) {
++                    try {
++                        await window.AudioDB.saveAudio(e.target.files[0], window.currentUserMobile);
++                        document.getElementById('custom-audio').classList.add('hidden');
++                        document.getElementById('saved-audio-container').classList.remove('hidden');
++                        document.getElementById('saved-audio-name').textContent = "≡ƒÄ╡ " + e.target.files[0].name;
++                    } catch (e) { console.warn('AudioDB save error', e); }
++                }
++            });
++        }
++
++        const removeAudioBtn = document.getElementById('remove-audio-btn');
++        if (removeAudioBtn) {
++            removeAudioBtn.addEventListener('click', async () => {
++                try {
++                    await window.AudioDB.clearAudio(window.currentUserMobile);
++                    const audioInp = document.getElementById('custom-audio');
++                    if (audioInp) audioInp.value = ""; // clear
++                    document.getElementById('custom-audio').classList.remove('hidden');
++                    document.getElementById('saved-audio-container').classList.add('hidden');
++                } catch (e) { console.warn('AudioDB clear error', e); }
++            });
++        }
++    }
++
+ });
+ 
+ async function loadDashboardData() {
+@@ -33,7 +192,7 @@ async function loadDashboardData() {
+         } catch (e) {
+             console.warn('Failed to fetch history data (backend might not supply it yet):', e);
+         }
+-        const history = historyData.data || historyData.history || [];
++        const history = historyData.data?.history || historyData.history || [];
+ 
+         renderHistory(history);
+     } catch (error) {
+@@ -44,21 +203,26 @@ async function loadDashboardData() {
+ function renderHistory(history) {
+     const tbody = document.getElementById('history-table-body');
+     if (!history || history.length === 0) {
+-        tbody.innerHTML = '<tr><td colspan="3" class="text-center" style="padding: 1rem;">No sessions yet.</td></tr>';
++        tbody.innerHTML = '<tr><td colspan="4" class="text-center" style="padding: 1rem;">No sessions yet.</td></tr>';
+         return;
+     }
+ 
+-    tbody.innerHTML = history.slice(0, 10).map(session => `
++    tbody.innerHTML = history.slice(0, 10).map(session => {
++        const d = new Date(session.createdAt || session.date);
++        return `
+         <tr style="border-bottom: 1px solid var(--border-color);">
+-            <td style="padding: 0.75rem 0.5rem;">${new Date(session.createdAt || session.date).toLocaleDateString()}</td>
++            <td style="padding: 0.75rem 0.5rem;">${d.toLocaleDateString()}</td>
++            <td style="padding: 0.75rem 0.5rem;">${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+             <td style="padding: 0.75rem 0.5rem;">${session.duration} min</td>
+             <td style="padding: 0.75rem 0.5rem; color: ${session.status === 'COMPLETED' ? 'var(--success-color)' : 'var(--text-secondary)'};">
+                 ${session.status || 'UNKNOWN'}
+             </td>
+         </tr>
+-    `).join('');
++    `}).join('');
+ }
+ 
++let activeSessionInterval;
++
+ async function startSession(minutes) {
+     const errorDiv = document.getElementById('error-message');
+     const successDiv = document.getElementById('success-message');
+@@ -66,42 +230,155 @@ async function startSession(minutes) {
+     successDiv.classList.remove('show');
+ 
+     try {
++        // Start Alignment Ritual immediately to capture user gesture for sound
++        let ritualPromise = null;
++        if (window.runAlignmentRitual) {
++            ritualPromise = window.runAlignmentRitual();
++        }
++
++        // Handle Custom Audio Input
++        let customAudioSource = null;
++        let originalFileName = null;
++        let audioFileToPlay = null;
++
++        if (window.AudioDB) {
++            try {
++                const savedAudio = await window.AudioDB.getAudio(window.currentUserMobile);
++                if (savedAudio && savedAudio.file) {
++                    audioFileToPlay = savedAudio.file;
++                    originalFileName = savedAudio.name;
++                }
++            } catch (e) { console.warn('Audio DB Get Error', e); }
++        }
++
++        const audioInput = document.getElementById('custom-audio');
++        if (!audioFileToPlay && audioInput && audioInput.files && audioInput.files.length > 0) {
++            audioFileToPlay = audioInput.files[0];
++            originalFileName = audioInput.files[0].name;
++        }
++
++        if (audioFileToPlay) {
++            // Need to pass a stable object URL to the audio player
++            customAudioSource = URL.createObjectURL(audioFileToPlay);
++
++            // Show custom file info on the dashboard
++            const audioDescText = document.getElementById('audio-desc-text');
++            if (audioDescText) {
++                audioDescText.innerHTML = `≡ƒÄ╡ Playing Custom Sound: <b>${originalFileName}</b>`;
++            }
++        } else {
++            const audioDescText = document.getElementById('audio-desc-text');
++            if (audioDescText) {
++                audioDescText.innerHTML = `≡ƒöè 108 Hz (Deep Bass) ΓÇó 162 Hz (Perfect Fifth)`;
++            }
++        }
++
++        // START AMBIENT SOUND SYNCHRONOUSLY to bypass autoplay policies
++        // We pass 5 seconds delay so it fades in exactly when the visual ritual ends.
++        if (window.playSessionAmbientAudio) {
++            window.playSessionAmbientAudio(5, customAudioSource);
++        }
++
++        // START FULLSCREEN SYNCHRONOUSLY to bypass fullscreen policies
++        try {
++            const docEl = document.documentElement;
++            const requestFS = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.mozRequestFullScreen || docEl.msRequestFullscreen;
++            if (requestFS && !document.fullscreenElement && !document.webkitFullscreenElement) {
++                requestFS.call(docEl);
++            }
++        } catch (e) { console.warn("Fullscreen request failed", e); }
++
+         // Validation handled entirely by backend API rate limiter, JWT validation, and balance checks
+         await ApiClient.post('/minutes/start-session', { duration: minutes });
+ 
+-        // Purely visual timer logic
+-        document.getElementById('session-options').classList.add('hidden');
+-        document.getElementById('active-session').classList.remove('hidden');
++        // Wait for Ritual to complete
++        if (ritualPromise) {
++            await ritualPromise;
++        }
++
++        // Show Premium Fullscreen UI
++        const breakUI = document.getElementById('active-break-ui');
++        breakUI.classList.remove('hidden');
+ 
+         let timeLeft = minutes * 60;
+-        const timerDisplay = document.getElementById('session-timer');
++        const timerDisplay = document.getElementById('session-timer-large');
++
++        // Setup clearable interval
++        if (activeSessionInterval) clearInterval(activeSessionInterval);
+ 
+-        const interval = setInterval(async () => {
++        activeSessionInterval = setInterval(async () => {
+             timeLeft--;
+             const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+             const s = (timeLeft % 60).toString().padStart(2, '0');
+             timerDisplay.textContent = `${m}:${s}`;
+ 
+             if (timeLeft <= 0) {
+-                clearInterval(interval);
+-                timerDisplay.textContent = "00:00";
+-
+-                // Backend completes immediately on start-session, no need to send complete signal
+-                successDiv.textContent = `Successfully completed ${minutes} minute session!`;
+-                successDiv.classList.add('show');
+-
+-                // Reset UI state
+-                document.getElementById('session-options').classList.remove('hidden');
+-                document.getElementById('active-session').classList.add('hidden');
+-                loadDashboardData();
++                endSessionUI(minutes, successDiv);
+             }
+         }, 1000);
+ 
+     } catch (error) {
++        if (window.stopSessionAmbientAudio) window.stopSessionAmbientAudio(true); // Stop pre-started audio
+         showError(error.message || 'Failed to start session. Ensure sufficient balance.');
+     }
+ }
+ 
++function processEarlyExit(e) {
++    const btn = e ? e.target : document.getElementById('end-session-early-btn');
++    if (!btn) return;
++
++    if (btn.getAttribute('data-confirming') !== 'true') {
++        btn.setAttribute('data-confirming', 'true');
++        btn.textContent = 'Are you sure? Click again to end';
++        btn.style.color = '#ff6b6b';
++        btn.style.borderColor = '#ff6b6b';
++        btn.style.background = 'rgba(255, 107, 107, 0.1)';
++
++        setTimeout(() => {
++            if (btn && btn.getAttribute('data-confirming') === 'true') {
++                btn.removeAttribute('data-confirming');
++                btn.textContent = 'End Session';
++                btn.style.color = '';
++                btn.style.borderColor = '';
++                btn.style.background = '';
++            }
++        }, 3000);
++    } else {
++        btn.removeAttribute('data-confirming');
++        btn.textContent = 'End Session';
++        btn.style.color = '';
++        btn.style.borderColor = '';
++        btn.style.background = '';
++        endSessionUI();
++    }
++}
++
++function endSessionUI(minutes = 0, successDiv = null) {
++    if (activeSessionInterval) clearInterval(activeSessionInterval);
++
++    // Stop Ambient Sound for Session
++    if (window.stopSessionAmbientAudio) {
++        window.stopSessionAmbientAudio();
++    }
++
++    // Hide UI and Fullscreen
++    document.getElementById('active-break-ui').classList.add('hidden');
++    try {
++        const exitFS = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
++        if (exitFS && (document.fullscreenElement || document.webkitFullscreenElement)) {
++            exitFS.call(document);
++        }
++    } catch (e) { console.warn("Fullscreen exit failed", e); }
++
++    if (minutes > 0 && successDiv) {
++        successDiv.textContent = `Successfully completed ${minutes} minute session!`;
++        successDiv.classList.add('show');
++    }
++
++    // Reload Balance and History
++    loadDashboardData();
++}
++
+ function showError(msg) {
+     const errorDiv = document.getElementById('error-message');
+     errorDiv.textContent = msg;
+diff --git a/frontend/dashboard/admin.html b/frontend/dashboard/admin.html
+index 0bf77b7..1b1a2f7 100644
+--- a/frontend/dashboard/admin.html
++++ b/frontend/dashboard/admin.html
+@@ -65,12 +65,14 @@
+         <div id="error-message" class="alert alert-error"></div>
+         <div id="success-message" class="alert alert-success"></div>
+ 
+-        <div class="admin-nav">
+-            <button class="btn btn-primary nav-btn" data-target="users-section">Users</button>
+-            <button class="btn btn-secondary nav-btn" data-target="payouts-section">Payouts</button>
+-            <button class="btn btn-secondary nav-btn" data-target="ledger-section">Ledger</button>
+-            <button class="btn btn-secondary nav-btn" data-target="announcements-section">Announcements</button>
+-            <button class="btn btn-secondary nav-btn" data-target="export-section">Exports</button>
++        <div class="admin-nav" style="border-bottom: 2px solid var(--border-color);">
++            <button class="btn btn-primary nav-btn" data-target="users-section">Users ≡ƒæÑ</button>
++            <button class="btn btn-secondary nav-btn" data-target="support-section">Feedback/Support ≡ƒÆ¼</button>
++            <button class="btn btn-secondary nav-btn" data-target="broadcast-section">Broadcast ≡ƒôó</button>
++            <button class="btn btn-secondary nav-btn" data-target="payouts-section">Payouts ≡ƒÆ░</button>
++            <button class="btn btn-secondary nav-btn" data-target="ledger-section">Ledger ≡ƒôë</button>
++            <button class="btn btn-secondary nav-btn text-danger transition-colors font-bold"
++                data-target="trash-section" style="color:var(--danger-color)">Trash ≡ƒùæ∩╕Å</button>
+         </div>
+ 
+         <!-- Users Section -->
+@@ -104,6 +106,7 @@
+                     <thead>
+                         <tr>
+                             <th>User (Mobile)</th>
++                            <th>UPI ID</th>
+                             <th>Amount</th>
+                             <th>Date</th>
+                             <th>Actions</th>
+@@ -111,7 +114,7 @@
+                     </thead>
+                     <tbody id="payouts-table-body">
+                         <tr>
+-                            <td colspan="4" class="text-center">Loading pending payouts...</td>
++                            <td colspan="5" class="text-center">Loading pending payouts...</td>
+                         </tr>
+                     </tbody>
+                 </table>
+@@ -143,35 +146,79 @@
+             </div>
+         </div>
+ 
+-        <!-- Announcements Section -->
+-        <div id="announcements-section" class="card admin-section">
+-            <h3>Manage Announcements</h3>
++        <!-- Announcements (Broadcast) Section -->
++        <div id="broadcast-section" class="card admin-section">
++            <h3>≡ƒôó System Broadcast</h3>
++            <p class="text-xs mb-2 text-slate-500">Send global system messages (e.g. Bank Holidays) directly to user
++                dashboards.</p>
+             <form id="announcement-form" class="mb-2 p-2"
+                 style="background: var(--background-color); border-radius: var(--border-radius);">
+                 <div class="form-group mb-1">
+-                    <label>New Announcement Message</label>
+-                    <textarea id="announcement-text" class="form-control" rows="3" required></textarea>
++                    <label>Broadcast Message Content</label>
++                    <textarea id="announcement-text" class="form-control" rows="3" required
++                        placeholder="e.g., No payouts on Sunday due to bank holiday."></textarea>
+                 </div>
+-                <button type="submit" class="btn btn-primary" style="width: auto;">Publish Announcement</button>
++                <button type="submit" class="btn btn-primary" style="width: auto;">Publish Broadcast</button>
+             </form>
+             <div style="overflow-x: auto;">
+                 <table>
+                     <thead>
+                         <tr>
+                             <th>Date</th>
+-                            <th>Message</th>
++                            <th>Broadcast Message</th>
+                             <th>Status</th>
+                         </tr>
+                     </thead>
+                     <tbody id="announcements-table-body">
+                         <tr>
+-                            <td colspan="3" class="text-center">Loading announcements...</td>
++                            <td colspan="3" class="text-center">Loading broadcasts...</td>
+                         </tr>
+                     </tbody>
+                 </table>
+             </div>
+         </div>
+ 
++        <!-- Feedback & Support Section Placeholder -->
++        <div id="support-section" class="card admin-section">
++            <h3>≡ƒÆ¼ User Feedback & Support</h3>
++            <p class="text-sm">Manage user chats, tickets, and feedback (Live DB integration in progress).</p>
++            <table class="mt-2 text-sm">
++                <thead>
++                    <tr>
++                        <th>User</th>
++                        <th>Message</th>
++                        <th>Action</th>
++                    </tr>
++                </thead>
++                <tbody>
++                    <tr>
++                        <td colspan="3" class="text-center italic opacity-50">Loading support tickets...</td>
++                    </tr>
++                </tbody>
++            </table>
++        </div>
++
++        <!-- Trash Section Placeholder -->
++        <div id="trash-section" class="card admin-section" style="border:1px solid var(--danger-color)">
++            <h3 style="color:var(--danger-color)">≡ƒùæ∩╕Å System Trash Can</h3>
++            <p class="text-sm">Review logically-deleted users before permanent purge (Live DB integration in progress).
++            </p>
++            <table class="mt-2 text-sm">
++                <thead>
++                    <tr>
++                        <th>Deleted Mobile</th>
++                        <th>Role</th>
++                        <th>Action</th>
++                    </tr>
++                </thead>
++                <tbody>
++                    <tr>
++                        <td colspan="3" class="text-center italic opacity-50">Trash is empty.</td>
++                    </tr>
++                </tbody>
++            </table>
++        </div>
++
+         <!-- Export Section -->
+         <div id="export-section" class="card admin-section">
+             <h3>CSV Data Export</h3>
+diff --git a/frontend/dashboard/seeder.html b/frontend/dashboard/seeder.html
+index 5b269ef..122043b 100644
+--- a/frontend/dashboard/seeder.html
++++ b/frontend/dashboard/seeder.html
+@@ -105,6 +105,76 @@
+             </div>
+         </div>
+ 
++        <!-- Edit Profile -->
++        <div class="card mt-2">
++            <h3>Edit Profile</h3>
++            <form id="edit-profile-form" class="mt-1">
++                <div class="dashboard-grid" style="gap: var(--spacing-sm);">
++                    <div class="form-group mb-1">
++                        <label>Business Name</label>
++                        <input type="text" id="edit-profile-name" class="form-control" placeholder="Your Name">
++                    </div>
++                    <div class="form-group mb-1">
++                        <label>UPI ID (Read Only)</label>
++                        <input type="text" id="edit-profile-upi" class="form-control" readonly
++                            style="background:var(--background-color); color:var(--text-secondary);">
++                        <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">Contact Admin to
++                            change UPI ID.</div>
++                    </div>
++                </div>
++                <!-- Profile Image -->
++                <div class="form-group mb-2" style="display:flex; align-items:center; gap: 1rem;">
++                    <img id="edit-profile-img-preview" src="../assets/logo.png"
++                        style="width: 60px; height: 60px; object-fit: cover; border-radius: 50%; border: 2px solid var(--border-color);">
++                    <div>
++                        <label class="btn btn-secondary"
++                            style="cursor:pointer; display:inline-block; margin-bottom: 0;">
++                            Change Photo
++                            <input type="file" id="edit-profile-img" accept="image/*" style="display: none;">
++                        </label>
++                    </div>
++                </div>
++                <button type="submit" class="btn btn-primary" id="btn-save-profile" style="width: auto;">Save
++                    Changes</button>
++                <div id="profile-msg" class="mt-1" style="font-weight: 500; font-size: 0.9rem;"></div>
++            </form>
++        </div>
++
++        <!-- Mindful Alarm -->
++        <div class="card mt-2">
++            <h3>Mindful Alarm</h3>
++            <p class="mb-2" style="font-size: 0.9rem; color: var(--text-secondary);">Set a daily offline reminder for
++                your digital wellness pause.</p>
++            <form id="alarm-form">
++                <div class="dashboard-grid" style="gap: var(--spacing-sm);">
++                    <div class="form-group mb-1">
++                        <label for="alarm-time">Alarm Time</label>
++                        <input type="time" id="alarm-time" class="form-control" required>
++                    </div>
++                    <div class="form-group mb-1">
++                        <label for="alarm-duration">Auto-Start Choice</label>
++                        <select id="alarm-duration" class="form-control">
++                            <option value="2">2 Minutes</option>
++                            <option value="5" selected>5 Minutes</option>
++                            <option value="10">10 Minutes</option>
++                        </select>
++                    </div>
++                </div>
++                <div class="form-group mb-2">
++                    <label for="alarm-message">Reminder Message</label>
++                    <input type="text" id="alarm-message" class="form-control" placeholder="E.g., Time to relax..."
++                        value="It's time for your digital wellness pause!" required>
++                </div>
++                <div style="display: flex; gap: var(--spacing-sm);">
++                    <button type="submit" class="btn btn-primary" id="btn-set-alarm" style="width: auto;">Set
++                        Alarm</button>
++                    <button type="button" class="btn btn-secondary hidden" id="btn-clear-alarm"
++                        style="background:#dc3545; width: auto;">Turn Off</button>
++                </div>
++                <div id="alarm-status" class="mt-1" style="font-weight: 500; font-size: 0.9rem;"></div>
++            </form>
++        </div>
++
+         <!-- Detailed Team List -->
+         <div class="card mt-2">
+             <h3>My Team (Level 1)</h3>
+@@ -125,13 +195,68 @@
+                 </table>
+             </div>
+         </div>
++
++        <!-- Support & Communication -->
++        <div class="card mt-2">
++            <h3>Support & Messages <span id="unread-messages-badge"
++                    style="display:none; background:red; color:white; border-radius:12px; padding:2px 8px; font-size:0.75rem; margin-left:8px;">0
++                    New</span></h3>
++            <p class="mb-1 text-sm text-slate-500">Contact the Administrator directly regarding payouts or account
++                questions.</p>
++            <div class="dashboard-grid mt-1">
++                <form id="support-form" style="display:flex; gap:0.5rem; flex-direction:column;">
++                    <textarea id="support-message" class="form-control" rows="2"
++                        placeholder="Describe your issue or query..." required></textarea>
++                    <button type="submit" class="btn btn-primary" style="align-self: flex-start; width: auto;">Send
++                        Message</button>
++                    <div id="support-status" class="mt-1" style="font-size:0.85rem;"></div>
++                </form>
++            </div>
++            <div id="support-thread" class="mt-2"
++                style="background:var(--background-color); border-radius:4px; padding:var(--spacing-sm); max-height:200px; overflow-y:auto;">
++                <p class="text-center text-secondary">Loading chat...</p>
++            </div>
++        </div>
++
++        <!-- Start Session (Added for Seeder) -->
++        <div class="card mt-2">
++            <h3>Start Pause Session</h3>
++            <p class="mb-2">Select a duration to begin your mindful pause.</p>
++
++            <div id="session-options" style="display: flex; flex-direction: column; gap: var(--spacing-sm);">
++                <button class="btn btn-primary session-btn" data-minutes="2">2 Minutes</button>
++                <button class="btn btn-primary session-btn" data-minutes="5">5 Minutes</button>
++                <button class="btn btn-primary session-btn" data-minutes="10">10 Minutes</button>
++            </div>
++        </div>
++    </div>
++
++    <!-- Active Break Fullscreen UI -->
++    <div id="active-break-ui" class="hidden">
++        <div class="breathe-circle">
++            <h2 id="session-timer-large">00:00</h2>
++        </div>
++        <h3 class="text-highlight">Digital Wellness Session</h3>
++        <p>Relax your eyes and mind. Focus on your breath.</p>
++        <p style="font-size: 0.9rem; margin-top: 1rem; color: var(--text-secondary); opacity: 0.8;">
++            ≡ƒöè 108 Hz (Deep Bass) ΓÇó 162 Hz (Perfect Fifth)
++        </p>
++        <button class="btn btn-outline-white" id="end-session-early-btn">End Session</button>
+     </div>
+ 
+     <!-- Centralized Utilities -->
+     <script src="../assets/js/config.js"></script>
+     <script src="../assets/js/api.js"></script>
+     <script src="../assets/js/auth.js"></script>
++    <script src="../assets/js/alignment.js" type="module"></script>
+     <script src="../assets/js/seeder.js"></script>
++    <script src="../assets/js/alarm.js"></script>
++
++    <!-- Harmonized Alignment Overlay -->
++    <div id="alignment-overlay">
++        <h2>Harmonic Alignment</h2>
++        <p>Preparing your digital pause</p>
++    </div>
+ </body>
+ 
+ </html>
+\ No newline at end of file
+diff --git a/frontend/dashboard/user.html b/frontend/dashboard/user.html
+index 05f8fa2..a39e87e 100644
+--- a/frontend/dashboard/user.html
++++ b/frontend/dashboard/user.html
+@@ -72,9 +72,119 @@
+                     <div class="timer-display" id="session-timer">00:00</div>
+                     <p>Please do not close this window.</p>
+                 </div>
++
++                <div class="mt-2" style="border-top: 1px solid var(--border-color); padding-top: var(--spacing-sm);">
++                    <label for="custom-audio" style="font-size: 0.9rem;">Optional: Select your own
++                        Meditation/Sound</label>
++                    <div id="saved-audio-container" class="hidden"
++                        style="margin-bottom: var(--spacing-sm); padding: var(--spacing-sm); background: var(--primary-color); color: white; border-radius: var(--border-radius); display: flex; justify-content: space-between; align-items: center;">
++                        <span id="saved-audio-name"
++                            style="font-weight: bold; font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
++                        <button id="remove-audio-btn" class="btn btn-secondary"
++                            style="padding: 0.2rem 0.6rem; font-size: 0.8rem; background: #dc3545; border: none; color: white; width: auto; margin-left: 10px;">Remove</button>
++                    </div>
++                    <input type="file" id="custom-audio" accept="audio/*" class="form-control"
++                        style="font-size: 0.85rem; padding: 0.5rem;">
++                </div>
+             </div>
+         </div>
+ 
++        <!-- 580 Family Feature Block (Hidden by default) -->
++        <div id="family-section-580" class="hidden mt-2">
++            <div class="card" style="border-left: 4px solid var(--primary-color);">
++                <h3 style="color: var(--primary-color);">SDP Family Access</h3>
++                <p id="family-count-msg" class="mb-2 text-muted" style="font-size: 0.9rem;">You can add family members
++                    who can use SDP for free with your plan.</p>
++                <form id="family-add-form"
++                    style="background: var(--background-color); padding: 1rem; border-radius: 8px;">
++                    <div class="dashboard-grid" style="gap: 1rem;">
++                        <div class="form-group mb-1">
++                            <label for="new-family-mobile">Family Mobile</label>
++                            <input type="tel" id="new-family-mobile" class="form-control" placeholder="10-digit number"
++                                maxlength="10" required>
++                        </div>
++                        <div class="form-group mb-1">
++                            <label for="new-family-pin">Set Their PIN</label>
++                            <input type="text" id="new-family-pin" class="form-control" placeholder="4-digit PIN"
++                                maxlength="4" required>
++                        </div>
++                    </div>
++                    <button type="submit" class="btn btn-primary" style="width: auto;">Add Family Member</button>
++                    <div id="family-msg" class="mt-1 text-sm font-bold"></div>
++                </form>
++
++                <div id="family-list-container" class="mt-2 hidden">
++                    <h4 style="font-size: 1rem; color: #475569; margin-bottom: 0.5rem;">Added Family Members:</h4>
++                    <ul id="family-list" style="padding-left: 1.5rem; color: #64748b; font-size: 0.9rem;">
++                    </ul>
++                </div>
++            </div>
++
++            <!-- Seeder Offer Block -->
++            <div class="card mt-2"
++                style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 1px solid #bae6fd;">
++                <h3 style="color: #0369a1;">≡ƒææ Become a Seeder / Partner</h3>
++                <p class="mb-2 text-muted" style="font-size: 0.95rem;">You have a Family Pack. You can activate your
++                    Seeder Dashboard to grow your network and start earning.</p>
++                <div style="text-align: center;">
++                    <a href="/seeder-offer" class="btn btn-primary"
++                        style="background-color: #0284c7; border: none; font-size: 1.1rem; padding: 0.75rem 2rem; display: inline-block;">View
++                        Partner Offer & Referral Link</a>
++                </div>
++            </div>
++        </div>
++
++        <!-- 178 Upgrade to 580 Offer (Hidden by default) -->
++        <div id="upgrade-offer-178" class="hidden mt-2">
++            <div class="card"
++                style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 1px solid #86efac;">
++                <h3 style="color: #166534;">≡ƒÜÇ Upgrade to Partner & Unlock +1 Free Family Spot!</h3>
++                <p class="mb-2 text-muted" style="font-size: 0.95rem;">Buy the <strong>Γé╣580 Kit</strong> to become a
++                    Seeder/Partner. Because you are continuing your current plan, you will receive an extra capacity to
++                    add <strong>4 Family Members</strong> instead of 3!</p>
++                <div style="text-align: center;">
++                    <a href="/public/login.html?amount=580&mode=purchase" class="btn btn-primary"
++                        style="background-color: #15803d; border: none; font-size: 1.1rem; padding: 0.75rem 2rem; display: inline-block;">Upgrade
++                        Now (Γé╣580)</a>
++                </div>
++            </div>
++        </div>
++
++        <!-- Mindful Alarm -->
++        <div class="card mt-2">
++            <h3>Mindful Alarm</h3>
++            <p class="mb-2" style="font-size: 0.9rem; color: var(--text-secondary);">Set a daily PC/Mobile reminder for
++                your digital wellness pause.</p>
++            <form id="alarm-form">
++                <div class="dashboard-grid" style="gap: var(--spacing-sm);">
++                    <div class="form-group mb-1">
++                        <label for="alarm-time">Alarm Time</label>
++                        <input type="time" id="alarm-time" class="form-control" required>
++                    </div>
++                    <div class="form-group mb-1">
++                        <label for="alarm-duration">Auto-Start Choice</label>
++                        <select id="alarm-duration" class="form-control">
++                            <option value="2">2 Minutes</option>
++                            <option value="5" selected>5 Minutes</option>
++                            <option value="10">10 Minutes</option>
++                        </select>
++                    </div>
++                </div>
++                <div class="form-group mb-2">
++                    <label for="alarm-message">Reminder Message</label>
++                    <input type="text" id="alarm-message" class="form-control" placeholder="E.g., Time to relax..."
++                        value="It's time for your digital wellness pause!" required>
++                </div>
++                <div style="display: flex; gap: var(--spacing-sm);">
++                    <button type="submit" class="btn btn-primary" id="btn-set-alarm" style="width: auto;">Set
++                        Alarm</button>
++                    <button type="button" class="btn btn-secondary hidden" id="btn-clear-alarm"
++                        style="background:#dc3545; width: auto;">Turn Off</button>
++                </div>
++                <div id="alarm-status" class="mt-1" style="font-weight: 500; font-size: 0.9rem;"></div>
++            </form>
++        </div>
++
+         <!-- Session History -->
+         <div class="card mt-2">
+             <h3>Recent Sessions</h3>
+@@ -83,13 +193,14 @@
+                     <thead>
+                         <tr style="border-bottom: 2px solid var(--border-color); text-align: left;">
+                             <th style="padding: 0.75rem 0.5rem;">Date</th>
++                            <th style="padding: 0.75rem 0.5rem;">Time</th>
+                             <th style="padding: 0.75rem 0.5rem;">Duration</th>
+                             <th style="padding: 0.75rem 0.5rem;">Status</th>
+                         </tr>
+                     </thead>
+                     <tbody id="history-table-body">
+                         <tr>
+-                            <td colspan="3" class="text-center" style="padding: 1rem;">Loading history...</td>
++                            <td colspan="4" class="text-center" style="padding: 1rem;">Loading history...</td>
+                         </tr>
+                     </tbody>
+                 </table>
+@@ -97,11 +208,34 @@
+         </div>
+     </div>
+ 
++    <!-- Active Break Fullscreen UI -->
++    <div id="active-break-ui" class="hidden">
++        <div class="breathe-circle">
++            <h2 id="session-timer-large">00:00</h2>
++        </div>
++        <h3 class="text-highlight">Digital Wellness Session</h3>
++        <p>Relax your eyes and mind. Focus on your breath.</p>
++        <p id="audio-desc-text"
++            style="font-size: 0.9rem; margin-top: 1rem; color: var(--text-secondary); opacity: 0.8;">
++            ≡ƒöè 108 Hz (Deep Bass) ΓÇó 162 Hz (Perfect Fifth)
++        </p>
++        <button class="btn btn-outline-white" id="end-session-early-btn">End Session</button>
++    </div>
++
+     <!-- Centralized Utilities -->
+     <script src="../assets/js/config.js"></script>
+     <script src="../assets/js/api.js"></script>
+     <script src="../assets/js/auth.js"></script>
++    <script src="../assets/js/audioDB.js"></script>
++    <script src="../assets/js/alignment.js" type="module"></script>
+     <script src="../assets/js/user.js"></script>
++    <script src="../assets/js/alarm.js"></script>
++
++    <!-- Harmonized Alignment Overlay -->
++    <div id="alignment-overlay">
++        <h2>Harmonic Alignment</h2>
++        <p>Preparing your digital pause</p>
++    </div>
+ </body>
+ 
+ </html>
+\ No newline at end of file
+diff --git a/frontend/public/index.html b/frontend/public/index.html
+index 311711e..a99227a 100644
+--- a/frontend/public/index.html
++++ b/frontend/public/index.html
+@@ -1,26 +1,504 @@
+ <!DOCTYPE html>
+ <html lang="en">
++
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Sinaank Digital Pause (SDP)</title>
+-    <link rel="stylesheet" href="../assets/css/theme.css">
++    <title>Sinaank Digital Pause</title>
++    <link rel="stylesheet" href="css/style.css">
++    <link rel="stylesheet" href="css/theme.css">
++    <link rel="icon" href="assets/logo.png">
++    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
++    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+ </head>
+-<body>
+-    <div class="container mt-3">
+-        <div class="text-center">
+-            <h1>Welcome to Sinaank Digital Pause</h1>
+-            <p class="mb-2">A revolutionary mindfulness and earning platform.</p>
+-            <div class="mb-3">
+-                <a href="product.html" class="btn btn-primary mb-1">View Products</a>
+-                <a href="login.html" class="btn btn-secondary">Login</a>
++
++<body class="bg-surface">
++
++    <!-- Header -->
++    <header>
++        <div class="container flex justify-between items-center">
++            <img src="assets/logo.png" alt="SDP Logo" class="logo-img logo-style" style="height: 40px;">
++            <div class="flex items-center gap-md">
++                <nav class="flex gap-sm">
++                    <a href="index.html" class="btn btn-text">Home</a>
++                    <a href="login.html" class="btn btn-text" id="login-btn">Login</a>
++                </nav>
+             </div>
+         </div>
+-        
+-        <div class="card mt-3">
+-            <h2>What is SDP?</h2>
+-            <p>SDP helps you disconnect to reconnect. By dedicating 2, 5, or 10 minutes of uninterrupted pause time, you build mental resilience while engaging in a structured referral logic ecosystem.</p>
++    </header>
++
++    <main>
++        <!-- VIEW: HOME -->
++        <section id="home" class="view-section">
++            <!-- Hero -->
++            <div class="hero hero-premium">
++                <div class="container">
++                    <h1>SDP ΓÇô A Short Digital Break</h1>
++                    <p class="hero-subtitle">Reset your mind. Rest your eyes. Reclaim control.</p>
++                    <p class="hero-transition text-white-80">Use it. Grow with it. Share it.</p>
++
++                    <div class="flex justify-center gap-md mt-2 flex-wrap">
++                        <a href="login.html" class="btn btn-primary btn-white">Get Started</a>
++                        <a href="#" onclick="openModal('modal-hero'); return false;"
++                            class="btn btn-secondary btn-glass">Learn More</a>
++                    </div>
++                </div>
++            </div>
++
++            <!-- Concept (Visual Cards) -->
++            <div id="growth-concept" class="container mt-neg-3 relative-z10">
++                <div class="visual-card-grid">
++                    <div class="visual-card">
++                        <span class="visual-icon">≡ƒºÿ</span>
++                        <h3>Take short digital breaks</h3>
++                        <p class="text-sm text-muted">Refresh your mind in just minutes.</p>
++                    </div>
++                    <div class="visual-card">
++                        <span class="visual-icon">≡ƒî▒</span>
++                        <h3>Build your SDP circle</h3>
++                        <p class="text-sm text-muted">Grow your network responsibly.</p>
++                    </div>
++                    <div class="visual-card">
++                        <span class="visual-icon">≡ƒæÑ</span>
++                        <h3>Invite others responsibly</h3>
++                        <p class="text-sm text-muted">Share the gift of digital wellness.</p>
++                    </div>
++                </div>
++            </div>
++
++            <!-- Unique Identity Section -->
++            <div class="container mt-4 mb-4">
++                <div class="glass-card"
++                    style="background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); border: 1px solid #ddd; padding: 2rem; border-radius: 16px;">
++                    <div class="flex flex-col md:flex-row items-center gap-2">
++                        <div class="flex-1 text-center md:text-left">
++                            <h2 class="text-primary mb-1">Your Unique Digital Frequency</h2>
++                            <p class="text-muted mb-1_5">
++                                SDP isn't just a timer. It's a personalized digital experience.
++                            </p>
++                            <ul style="list-style: none; padding: 0; display: flex; flex-col; gap: 1rem;">
++                                <li class="flex items-start gap-1">
++                                    <span style="font-size: 1.2rem;">≡ƒº¼</span>
++                                    <div>
++                                        <strong>One Mobile = One Identity</strong>
++                                        <p class="text-sm text-muted">Your sound and color patterns are mathematically
++                                            generated from your
++                                            unique mobile number. No two users have the exact same experience.</p>
++                                    </div>
++                                </li>
++                                <li class="flex items-start gap-1">
++                                    <span style="font-size: 1.2rem;">≡ƒÄº</span>
++                                    <div>
++                                        <strong>System Default Sound (Binaural)</strong>
++                                        <p class="text-sm text-muted">We recommend the <strong>System Default</strong>
++                                            sound. It uses
++                                            scientifically tuned Binaural Beats to help your brain enter a state of deep
++                                            relaxation quickly.</p>
++                                    </div>
++                                </li>
++                                <li class="flex items-start gap-1">
++                                    <span style="font-size: 1.2rem;">≡ƒ¢í∩╕Å</span>
++                                    <div>
++                                        <strong>Personal & Secure</strong>
++                                        <p class="text-sm text-muted">To maintain this calibration, avoid sharing your
++                                            login. Your account is tuned to <em>you</em>.</p>
++                                    </div>
++                                </li>
++                            </ul>
++                        </div>
++                        <div class="flex-1 flex justify-center">
++                            <!-- Visual Representation of Frequency -->
++                            <div
++                                style="width: 200px; height: 200px; border-radius: 50%; background: linear-gradient(45deg, var(--color-primary), #a855f7); opacity: 0.8; filter: blur(20px); animation: pulse 4s infinite;">
++                            </div>
++                            <div
++                                style="position: absolute; width: 150px; height: 150px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.5rem; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
++                                1 User<br>1 Sound
++                            </div>
++                        </div>
++                    </div>
++                </div>
++            </div>
++
++            <!-- Products -->
++            <div class="container" style="margin-top: 4rem;">
++                <h2 class="text-center">Products & Pricing</h2>
++                <div class="products-grid">
++                    <!-- Kit 1 -->
++                    <div class="product-card standard">
++                        <div
++                            style="background: #f1f5f9; color: #64748b; font-size: 0.75rem; font-weight: 700; display: inline-block; padding: 0.25rem 0.5rem; border-radius: 999px; margin-bottom: 0.5rem;">
++                            PERSONAL USE ONLY</div>
++                        <h3>SDP 1 Kit</h3>
++                        <div class="text-muted text-2xl font-bold text-primary">Γé╣178</div>
++                        <ul style="list-style: none; margin-top: 1rem; line-height: 2;">
++                            <li>1 user</li>
++                            <li>3,650 minutes per year</li>
++                            <li>Use only</li>
++                        </ul>
++                        <div class="flex gap-1 mt-1_5">
++                            <a href="login.html?mode=purchase&amount=178" class="btn btn-primary w-full">Buy Now</a>
++                            <a href="#" onclick="openModal('modal-178'); return false;"
++                                class="btn btn-secondary w-full">Learn More</a>
++                        </div>
++                    </div>
++
++                    <!-- Family -->
++                    <div class="product-card featured">
++                        <span class="badge">OFFER</span>
++                        <h3>SDP Family Pack</h3>
++
++                        <!-- Family Network Visual -->
++                        <div class="network-visual" style="height: 150px; margin: 1rem 0;">
++                            <div class="network-node main">≡ƒæñ</div>
++                            <div class="network-line" style="transform: rotate(0deg) translateX(40px);"></div>
++                            <div class="network-node" style="transform: translate(80px, 0) scale(0.6);">≡ƒæ¬</div>
++                            <div class="network-line" style="transform: rotate(120deg) translateX(40px);"></div>
++                            <div class="network-node"
++                                style="transform: rotate(120deg) translate(80px, 0) scale(0.6) rotate(-120deg);">≡ƒæ¬
++                            </div>
++                            <div class="network-line" style="transform: rotate(240deg) translateX(40px);"></div>
++                            <div class="network-node"
++                                style="transform: rotate(240deg) translate(80px, 0) scale(0.6) rotate(-240deg);">≡ƒæ¬
++                            </div>
++                        </div>
++
++                        <div>
++                            <span
++                                style="font-size: 0.9rem; color: var(--color-text-muted); display: block; margin-bottom: 2px;">178
++                                X 4 = <span style="text-decoration: line-through;">712</span></span>
++                            <div class="text-muted text-2xl font-bold text-primary">Γé╣580</div>
++                        </div>
++                        <ul style="list-style: none; margin-top: 1rem; line-height: 2;">
++                            <li>Total 4 users</li>
++                            <li>1 Primary + 3 Family</li>
++                            <li>Partner rights (Primary only)</li>
++                            <li style="color:var(--color-primary); font-weight:600;">≡ƒöö Smart Audio Break Alarm Included
++                            </li>
++                        </ul>
++                        <div class="flex gap-1 mt-1_5">
++                            <a href="login.html?mode=purchase&amount=580" class="btn btn-primary w-full">Buy Now</a>
++                            <a href="#" onclick="openModal('modal-580'); return false;"
++                                class="btn btn-secondary w-full">Learn More</a>
++                        </div>
++                    </div>
++                </div>
++            </div>
++
++            <div class="text-center" style="margin-top: 4rem; margin-bottom: 4rem;">
++                <a href="buyer.html" class="btn btn-secondary" style="border-radius: 50px; padding: 1rem 3rem;">View
++                    More Details</a>
++            </div>
++
++        </section>
++    </main>
++
++    <!-- FOOTER -->
++    <footer class="site-footer"
++        style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 3rem 1rem; text-align: center; margin-top: auto;">
++        <div class="container">
++            <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1.5rem;">This is a non-medical digital wellness
++                experience.</p>
++
++            <div style="margin-bottom: 1.5rem;">
++                <a href="seeder.html" style="color: #3b82f6; text-decoration: none; font-weight: 500;">Partner
++                    Access</a>
++            </div>
++
++            <p style="color: #94a3b8; font-size: 0.8rem;">
++                &copy; 2026 SINAANK. All rights reserved.<br>
++                Developed by SINAANK Team
++            </p>
++        </div>
++    </footer>
++
++    <!-- Dynamic Auth Logic -->
++    <script src="js/store.js"></script>
++    <script>
++        document.addEventListener('DOMContentLoaded', () => {
++            const session = localStorage.getItem('ssb_session');
++            const loginBtn = document.getElementById('login-btn');
++
++            if (session) {
++                try {
++                    const user = JSON.parse(session);
++                    // Replace Login with Dashboard
++                    if (loginBtn) {
++                        loginBtn.textContent = "Dashboard";
++                        // Determine Dashboard URL based on active identity or role
++                        let dashUrl = '/dashboard';
++                        if (user.role === 'SEEDER') {
++                            dashUrl = '/seeder';
++                        } else if (user.role === 'ADMIN' || user.role === 'ADMIN_A' || user.role === 'ADMIN_B') {
++                            dashUrl = '/admin';
++                        }
++
++                        loginBtn.href = dashUrl;
++
++                        // Add Logout (Only if not already there)
++                        const nav = document.querySelector('nav');
++                        if (nav && !document.getElementById('logout-btn')) {
++                            const logout = document.createElement('button');
++                            logout.id = 'logout-btn';
++                            logout.className = 'btn btn-text text-danger';
++                            logout.textContent = 'Logout';
++                            logout.onclick = () => {
++                                store.logout();
++                                window.location.reload();
++                            };
++                            nav.appendChild(logout);
++                        }
++                    }
++                } catch (e) {
++                    console.error("Session Parse Error", e);
++                    // If session is corrupt, just let the login button go to login.html
++                }
++            }
++            // Fallback: If no session, the Login button already points to login.html
++        });
++    </script>
++    <div id="modal-hero" class="modal-overlay">
++        <div class="modal-content">
++            <button class="modal-close" onclick="closeModal('modal-hero')">&times;</button>
++            <h2 class="text-primary mb-3">SDP Family Pack ΓÇô Γé╣580</h2>
++            <!-- Content from buyer_upgrade_178.html -->
++            <div style="margin-bottom: 1.5rem;">
++                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">Introduction</h3>
++                <p class="text-muted">Sinaank Digital Pause (SDP) is a short, structured digital break designed to
++                    reduce screen
++                    fatigue and support healthier digital habits.</p>
++                <p class="text-sm text-muted bg-slate-50 p-2 rounded border border-slate-100 mt-2">
++                    <strong>Note:</strong> SDP is not a medical, therapeutic, or religious product. It is a simple
++                    digital
++                    wellness experience for daily screen users.
++                </p>
++            </div>
++
++            <div
++                style="margin-bottom: 1.5rem; padding: 1rem; border-radius: 0.5rem; background: #fdf4ff; border-left: 4px solid #a855f7;">
++                <h3 style="font-size: 1.1rem; font-weight: 700; color: #6b21a8; margin-bottom: 0.5rem;">Your Unique
++                    Digital Frequency</h3>
++                <p class="text-sm" style="margin-bottom: 0.5rem;">SDP isn't just a timer. It generates a personalized
++                    audio-visual pattern based on your
++                    mobile number.</p>
++                <ul
++                    style="list-style: disc; padding-left: 1.5rem; color: var(--color-text-muted); display: flex; flex-direction: column; gap: 0.25rem;">
++                    <li><strong>One Mobile = One Identity</strong>: Your sound and color are mathematically unique to
++                        you.
++                    </li>
++                    <li><strong>System Default Sound</strong>: We use scientifically tuned Binaural Beats for deep
++                        relaxation.</li>
++                    <li><strong>Personal & Secure</strong>: Your account is calibrated to your identity.</li>
++                </ul>
++            </div>
++
++            <div style="margin-bottom: 1.5rem; border-top: 4px solid #3B82F6; padding-top: 1rem;">
++                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">What You Get with the Γé╣580
++                    Family Pack</h3>
++                <ul
++                    style="list-style: disc; padding-left: 1.5rem; color: var(--color-text-muted); display: flex; flex-direction: column; gap: 0.25rem;">
++                    <li><strong>1 Primary User + 3 Family Users</strong></li>
++                    <li>Guided Digital Pauses of 2 / 5 / 10 minutes</li>
++                    <li>Annual minutes access for the Primary User</li>
++                    <li>Mobile-numberΓÇôbased identity (email is not used)</li>
++                </ul>
++            </div>
++
++            <div style="margin-bottom: 1.5rem;">
++                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">How SDP Helps</h3>
++                <ul
++                    style="list-style: disc; padding-left: 1.5rem; color: var(--color-text-muted); display: flex; flex-direction: column; gap: 0.25rem;">
++                    <li>Reduces continuous screen stress</li>
++                    <li>Helps eyes and mind disengage briefly</li>
++                    <li>Encourages short, meaningful breaks</li>
++                    <li>Can be used anytime during the day</li>
++                </ul>
++            </div>
++
++            <div style="margin-bottom: 1.5rem;">
++                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">Important Information</h3>
++                <p class="text-muted">After purchasing the Γé╣580 Family Pack, the Primary User may choose to apply as a
++                    Seeder.</p>
++                <p class="font-medium text-primary">Becoming a Seeder is optional, not mandatory.</p>
++            </div>
++
++            <div class="text-center mt-4">
++                <button onclick="closeModal('modal-hero')" class="btn btn-secondary w-full">Back</button>
++                <div style="margin-top: 1rem;">
++                    <a href="#" onclick="closeModal('modal-hero'); openModal('modal-seeder-offer'); return false;"
++                        class="btn btn-outline-primary w-full">View Seeder Option</a>
++                </div>
++            </div>
++        </div>
++    </div>
++
++    <div id="modal-seeder-offer" class="modal-overlay">
++        <div class="modal-content">
++            <button class="modal-close" onclick="closeModal('modal-seeder-offer')">&times;</button>
++            <h2 class="text-primary mb-3">Become a Seeder</h2>
++            <p class="text-lg text-muted mb-4">A responsible guide for the digital wellness journey.</p>
++
++            <!-- MLM Disclaimer -->
++            <div
++                style="background: #fee2e2; border: 1px solid #ef4444; color: #b91c1c; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; font-weight: 700; text-align: center;">
++                This is NOT an MLM (Multi-Level Marketing) or Network Marketing program.
++            </div>
++
++            <div style="margin-bottom: 1.5rem;">
++                <h3 class="text-xl font-bold mb-3 text-slate-800">Overview</h3>
++                <p>A Seeder is a participant who understands SDP and helps introduce the concept of Digital Pause to
++                    others in a responsible manner.</p>
++            </div>
++
++            <div style="margin-bottom: 1.5rem;">
++                <h3 class="text-xl font-bold mb-3 text-slate-800">Role of a Seeder</h3>
++                <ul
++                    style="list-style: disc; padding-left: 1.5rem; color: var(--color-text-muted); display: flex; flex-direction: column; gap: 0.5rem;">
++                    <li>Explains correct use of SDP</li>
++                    <li>Builds a small, informed user group</li>
++                    <li>Helps spread awareness about digital wellness</li>
++                </ul>
++            </div>
++
++            <div
++                style="margin-bottom: 1.5rem; padding: 1rem; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 0.5rem;">
++                <h3 class="text-xl font-bold mb-3 text-amber-700">Payout & Transparency</h3>
++                <ul
++                    style="list-style: disc; padding-left: 1.5rem; color: var(--color-text-muted); display: flex; flex-direction: column; gap: 0.5rem;">
++                    <li>All payouts are manual</li>
++                    <li>Admin verification is required</li>
++                    <li>Payments are processed via UPI or bank by the Admin</li>
++                    <li>There is no automatic or guaranteed income</li>
++                </ul>
++            </div>
++
++            <div
++                style="margin-bottom: 1.5rem; padding: 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.5rem;">
++                <h3 class="text-xl font-bold mb-2 text-slate-800">Important Statement</h3>
++                <p class="mb-1">Becoming a Seeder is voluntary.</p>
++                <p class="font-medium text-slate-600">This is not a job offer, investment plan, or income scheme.</p>
++            </div>
++
++            <div class="text-center mt-4">
++                <button onclick="closeModal('modal-seeder-offer')" class="btn btn-primary w-full">Back to Main
++                    Page</button>
++            </div>
++            <div class="text-center mt-2 text-sm text-muted">
++                <em>(Application is open only for Family Pack owners)</em>
++            </div>
++        </div>
++    </div>
++
++    <!-- Modals -->
++    <div id="modal-178" class="modal-overlay">
++        <div class="modal-content">
++            <button class="modal-close" onclick="closeModal('modal-178')">&times;</button>
++            <h2 class="text-primary mb-3">SDP 1 Kit ΓÇô Γé╣178</h2>
++            <!-- Content from buyer.html -->
++            <div style="margin-bottom: 1.5rem;">
++                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">What is Digital Pause?</h3>
++                <p class="text-muted">A short, structured digital break designed to reduce screen fatigue. It is not
++                    meditation or therapyΓÇöjust a simple pause.</p>
++            </div>
++            <div style="margin-bottom: 1.5rem;">
++                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">How It Works</h3>
++                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; text-align: center;">
++                    <div style="padding: 0.5rem; background: #f8fafc; border-radius: 0.5rem;">
++                        <div style="font-size: 1.5rem;">ΓÜí</div>
++                        <strong>2 Min</strong><br><span class="text-sm text-muted">Quick Reset</span>
++                    </div>
++                    <div style="padding: 0.5rem; background: #f8fafc; border-radius: 0.5rem;">
++                        <div style="font-size: 1.5rem;">≡ƒîè</div>
++                        <strong>5 Min</strong><br><span class="text-sm text-muted">Balance</span>
++                    </div>
++                    <div style="padding: 0.5rem; background: #f8fafc; border-radius: 0.5rem;">
++                        <div style="font-size: 1.5rem;">≡ƒîî</div>
++                        <strong>10 Min</strong><br><span class="text-sm text-muted">Deep Pause</span>
++                    </div>
++                </div>
++            </div>
++            <div style="margin-bottom: 1.5rem;">
++                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">What You Get</h3>
++                <ul
++                    style="list-style: disc; padding-left: 1.5rem; color: var(--color-text-muted); display: flex; flex-direction: column; gap: 0.25rem;">
++                    <li>3,650 Minutes / Year</li>
++                    <li>Visual & Sound-based disengagement</li>
++                    <li>Personal Usage Dashboard</li>
++                </ul>
++            </div>
++            <div class="text-center mt-4">
++                <a href="login.html?mode=purchase&amount=178" class="btn btn-primary w-full">Buy Now ΓÇô Γé╣178</a>
++            </div>
++        </div>
++    </div>
++
++    <div id="modal-580" class="modal-overlay">
++        <div class="modal-content">
++            <button class="modal-close" onclick="closeModal('modal-580')">&times;</button>
++            <h2 class="text-primary mb-3">SDP Family Pack ΓÇô Γé╣580</h2>
++            <!-- Content from buyer_580.html -->
++            <div style="margin-bottom: 1.5rem;">
++                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">Introduction</h3>
++                <p class="text-muted">A structured digital break for you and your family (4 Users).</p>
++            </div>
++
++            <div
++                style="margin-bottom: 1.5rem; padding: 1rem; border-radius: 0.5rem; background: #fdf4ff; border-left: 4px solid #a855f7;">
++                <h3 style="font-size: 1.1rem; font-weight: 700; color: #6b21a8; margin-bottom: 0.5rem;">Your Unique
++                    Digital Frequency</h3>
++                <p class="text-sm" style="margin-bottom: 0.5rem;"><strong>One Mobile = One Identity.</strong> Your sound
++                    and color are
++                    mathematically unique to you.</p>
++                <p class="text-sm">We use scientifically tuned Binaural Beats for deep relaxation.</p>
++            </div>
++
++            <div style="margin-bottom: 1.5rem;">
++                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">Benefits</h3>
++                <ul
++                    style="list-style: disc; padding-left: 1.5rem; color: var(--color-text-muted); display: flex; flex-direction: column; gap: 0.25rem;">
++                    <li>1 Primary + 3 Family Members</li>
++                    <li>Partner Access (Optional Seeder Program)</li>
++                    <li>Smart Audio Break Alarm Included</li>
++                </ul>
++            </div>
++
++            <div
++                style="margin-bottom: 1.5rem; padding: 1rem; background: #eff6ff; border: 1px solid #dbeafe; border-radius: 0.5rem;">
++                <h3 style="font-size: 1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 0.25rem;">
++                    Passives Income Opportunity</h3>
++                <p class="text-sm text-muted" style="margin-bottom: 1rem;">Primary users can apply to become a
++                    <strong>Seeder</strong> to curb digital
++                    addiction in their community.
++                </p>
++                <a href="seeder_offer.html" class="btn btn-outline-primary w-full" style="font-size: 0.9rem;">View
++                    Seeder Details</a>
++            </div>
++
++            <div class="text-center mt-4">
++                <a href="login.html?mode=purchase&amount=580" class="btn btn-primary w-full">Buy Family Pack ΓÇô
++                    Γé╣580</a>
++            </div>
+         </div>
+     </div>
++
++    <script>
++        function openModal(id) {
++            document.getElementById(id).classList.add('active');
++            document.body.style.overflow = 'hidden'; // Prevent background scrolling
++        }
++
++        function closeModal(id) {
++            document.getElementById(id).classList.remove('active');
++            document.body.style.overflow = '';
++        }
++
++        // Close on click outside
++        document.querySelectorAll('.modal-overlay').forEach(modal => {
++            modal.addEventListener('click', (e) => {
++                if (e.target === modal) closeModal(modal.id);
++            });
++        });
++    </script>
+ </body>
+-</html>
++
++</html>
+\ No newline at end of file
+diff --git a/frontend/public/login.html b/frontend/public/login.html
+index dc7d955..f91635a 100644
+--- a/frontend/public/login.html
++++ b/frontend/public/login.html
+@@ -4,85 +4,279 @@
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+-    <title>Login - SDP</title>
+-    <link rel="stylesheet" href="../assets/css/theme.css">
++    <title>Sinaank Digital Pause - Login</title>
++    <link rel="icon" href="assets/logo.png">
++    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
++    <link rel="stylesheet" href="css/style.css">
++    <link rel="stylesheet" href="css/theme.css">
++    <style>
++        body {
++            background-color: #f1f5f9;
++        }
++    </style>
+ </head>
+ 
+ <body>
+-    <div class="container mt-3">
+-        <div class="card" style="max-width: 400px; margin: 0 auto;">
+-            <h1 class="text-center">Login to SDP</h1>
+-            <div id="error-message" class="alert alert-error"></div>
+-
+-            <form id="login-form">
+-                <div class="form-group">
+-                    <label for="mobileNumber">Mobile Number</label>
+-                    <input type="text" id="mobileNumber" class="form-control" required
+-                        placeholder="Enter mobile number">
+-                </div>
+-                <div class="form-group">
+-                    <label for="pin">PIN</label>
+-                    <input type="password" id="pin" class="form-control" required placeholder="Enter your PIN">
+-                </div>
+-                <button type="submit" class="btn btn-primary mt-1" id="login-btn">Secure Login</button>
+-            </form>
+-            <div class="text-center mt-2">
+-                <a href="register.html">Need an account? Register</a>
++
++    <div class="auth-wrapper">
++        <div class="auth-container">
++
++            <div class="text-center mb-4">
++                <img src="assets/logo.png" alt="SDP Logo" style="height: 60px; margin: 0 auto; display: block;"
++                    onerror="this.src='assets/logo.png'">
+             </div>
+-            <div class="text-center mt-1">
+-                <a href="index.html">Back to Home</a>
++
++            <!-- UNIFIED AUTH VIEW -->
++            <div id="auth-unified-view">
++                <div class="auth-header text-center">
++                    <h2 id="auth-title">Welcome</h2>
++                    <p id="auth-subtitle">Enter your mobile number to continue.</p>
++                </div>
++
++                <form id="unified-auth-form" onsubmit="handleUnifiedSub(event)">
++                    <div id="referral-section" class="mb-3" style="display:none;">
++                        <label for="register-ref" class="form-label text-success fw-bold text-center w-100">Referred
++                            By</label>
++                        <input type="text" class="form-control text-success fw-bold text-center" id="register-ref"
++                            readonly style="background-color: #f0fdf4; border: 1px solid #86efac; font-size: 1.1rem;">
++                    </div>
++
++                    <div id="mobile-step" class="mb-3">
++                        <label for="auth-mobile" class="form-label">Mobile Number</label>
++                        <div class="input-group">
++                            <select aria-label="ISD Code" class="form-select border-end-0 bg-white"
++                                style="border-radius: 0.75rem 0 0 0.75rem; max-width: 90px;">
++                                <option value="+91" selected>+91</option>
++                            </select>
++                            <input type="tel" class="form-control border-start-0" id="auth-mobile"
++                                placeholder="10-digit number" maxlength="10" pattern="\d{10}" inputmode="numeric"
++                                style="border-radius: 0 0.75rem 0.75rem 0;" required>
++                        </div>
++                    </div>
++
++                    <div id="pin-step" class="mb-4" style="display:none;">
++                        <label for="auth-pin" class="form-label text-primary fw-bold" id="pin-label">4-Digit PIN</label>
++                        <input type="password" class="form-control" id="auth-pin" placeholder="Enter 4-digit PIN"
++                            maxlength="4" pattern="\d{4}" inputmode="numeric"
++                            oninput="this.value = this.value.replace(/[^0-9]/g, '')">
++                    </div>
++
++                    <button type="button" id="next-btn" class="btn btn-primary w-100 mb-3"
++                        onclick="checkUserMobile()">Continue</button>
++                    <button type="submit" id="submit-btn" class="btn btn-primary w-100 mb-3"
++                        style="display:none;">Login</button>
++
++                    <div class="text-center">
++                        <a href="index.html" class="text-muted small" style="text-decoration: none;">ΓåÉ Back to Home</a>
++                    </div>
++                </form>
+             </div>
++
+         </div>
+     </div>
+ 
+-    <!-- Centralized Utilities -->
+-    <script src="../assets/js/config.js"></script>
+-    <script src="../assets/js/api.js"></script>
+-    <script src="../assets/js/auth.js"></script>
+-
++    <!-- Live API Logic -->
+     <script>
+-        document.getElementById('login-form').addEventListener('submit', async (e) => {
+-            e.preventDefault();
+-            const mobile = document.getElementById('mobileNumber').value;
+-            const pin = document.getElementById('pin').value;
+-            const errorDiv = document.getElementById('error-message');
+-            const submitBtn = document.getElementById('login-btn');
++        const BASE_URL = '';
++        let purchaseAmount = null;
++        let referralCode = null;
++        let userExists = false;
+ 
+-            errorDiv.classList.remove('show');
+-            submitBtn.disabled = true;
+-            submitBtn.textContent = 'Authenticating...';
++        document.addEventListener('DOMContentLoaded', async () => {
++            const urlParams = new URLSearchParams(window.location.search);
++            purchaseAmount = urlParams.get('amount');
++            referralCode = urlParams.get('ref');
++
++            const refSection = document.getElementById('referral-section');
++            const refInput = document.getElementById('register-ref');
++
++            if (referralCode) {
++                // Instantly force show while loading
++                refSection.style.display = 'block';
++                refInput.value = "Loading partner details...";
++
++                try {
++                    const res = await fetch(`${BASE_URL}/api/auth/referrer/${referralCode}`);
++                    const data = await res.json();
++
++                    if (res.ok && data.success) {
++                        const maskMobile = data.data.mobile ? data.data.mobile.substring(0, 2) + '******' + data.data.mobile.substring(8) : '';
++                        refInput.value = `${data.data.name} (${maskMobile})`;
++                    } else {
++                        refInput.value = referralCode;
++                    }
++                } catch (e) {
++                    console.error('Referral lookup failed', e);
++                    refInput.value = referralCode;
++                }
++            } else {
++                // Ensure it's hidden if no ref exists
++                refSection.style.display = 'none';
++            }
++        });
++
++        async function checkUserMobile() {
++            const mobileInput = document.getElementById('auth-mobile');
++            const mobile = mobileInput.value.trim();
++            if (mobile.length !== 10) {
++                alert("Please enter a valid 10-digit mobile number.");
++                return;
++            }
++
++            const nextBtn = document.getElementById('next-btn');
++            nextBtn.textContent = 'Checking...';
++            nextBtn.disabled = true;
+ 
+             try {
+-                const response = await Auth.login(mobile, pin);
++                const res = await fetch(`${BASE_URL}/api/auth/check-mobile`, {
++                    method: 'POST',
++                    headers: { 'Content-Type': 'application/json' },
++                    body: JSON.stringify({ mobile })
++                });
+ 
+-                // Login successful, redirect based on role
+-                const user = response.data?.user || response.user;
+-                if (!user) throw new Error("Invalid response format");
++                const data = await res.json();
++                nextBtn.style.setProperty('display', 'none', 'important');
++                document.getElementById('submit-btn').style.setProperty('display', 'block', 'important');
++                document.getElementById('pin-step').style.setProperty('display', 'block', 'important');
++                document.getElementById('auth-pin').required = true;
+ 
+-                if (user.role === 'ADMIN') {
+-                    window.location.href = '/dashboard/admin.html';
+-                } else if (user.role === 'SEEDER') {
+-                    window.location.href = '/dashboard/seeder.html';
++                // Lock mobile
++                mobileInput.readOnly = true;
++                mobileInput.style.backgroundColor = '#e9ecef';
++
++                if (res.ok && data.exists) {
++                    userExists = true;
++                    document.getElementById('auth-title').textContent = "Welcome Back";
++                    document.getElementById('auth-subtitle').textContent = "Please enter your PIN to login.";
++                    document.getElementById('pin-label').textContent = "Enter 4-Digit Login PIN";
++                    document.getElementById('submit-btn').textContent = "Secure Login";
+                 } else {
+-                    window.location.href = '/dashboard/user.html';
++                    userExists = false;
++                    document.getElementById('auth-title').textContent = "Create Account";
++                    document.getElementById('auth-subtitle').textContent = "Secure your account with a PIN.";
++                    document.getElementById('pin-label').textContent = "Set a 4-Digit Security PIN";
++                    document.getElementById('submit-btn').textContent = "Create Account & Continue";
+                 }
+-            } catch (err) {
+-                errorDiv.textContent = err.message || 'Login failed. Please verify credentials.';
+-                errorDiv.classList.add('show');
+-                submitBtn.disabled = false;
+-                submitBtn.textContent = 'Secure Login';
++
++            } catch (e) {
++                console.error(e);
++                nextBtn.textContent = 'Network Error! Try Again';
++                nextBtn.classList.remove('btn-primary');
++                nextBtn.classList.add('btn-danger', 'text-white');
++                nextBtn.disabled = false;
++
++                setTimeout(() => {
++                    nextBtn.textContent = 'Continue';
++                    nextBtn.classList.add('btn-primary');
++                    nextBtn.classList.remove('btn-danger', 'text-white');
++                }, 3000);
+             }
+-        });
++        }
+ 
+-        // If already logged in, redirect
+-        Auth.checkAuth().then(user => {
+-            if (user) {
+-                if (user.role === 'ADMIN') window.location.href = '/dashboard/admin.html';
+-                else if (user.role === 'SEEDER') window.location.href = '/dashboard/seeder.html';
+-                else window.location.href = '/dashboard/user.html';
++        async function handleUnifiedSub(e) {
++            e.preventDefault();
++
++            const pinStep = document.getElementById('pin-step');
++            if (pinStep.style.display === 'none') {
++                return checkUserMobile(); // Stop form submission if PIN is hidden, check mobile instead!
+             }
+-        });
++
++            const mobile = document.getElementById('auth-mobile').value;
++            const pin = document.getElementById('auth-pin').value;
++            const submitBtn = document.getElementById('submit-btn');
++
++            submitBtn.textContent = 'Processing...';
++            submitBtn.disabled = true;
++
++            if (userExists) {
++                // LOGIN
++                try {
++                    const res = await fetch(`${BASE_URL}/api/auth/login`, {
++                        method: 'POST',
++                        headers: { 'Content-Type': 'application/json' },
++                        body: JSON.stringify({ mobile, pin })
++                    });
++                    const data = await res.json();
++
++                    if (res.ok) {
++                        const role = data.data.user.role;
++
++                        // Wait, redirect directly to dashboard. Dashboard will show upgrade if applicable.
++                        if (role === 'ADMIN') window.location.href = '/admin';
++                        else if (role === 'SEEDER') window.location.href = '/seeder';
++                        else window.location.href = '/dashboard';
++                    } else {
++                        alert(data.message || 'Login failed, please check your PIN.');
++                        submitBtn.textContent = 'Secure Login';
++                        submitBtn.disabled = false;
++                    }
++                } catch (err) {
++                    alert('Network error connecting to Backend.');
++                    submitBtn.textContent = 'Secure Login';
++                    submitBtn.disabled = false;
++                }
++            } else {
++                // REGISTER
++                try {
++                    const reqBody = { mobile, pin, amount: purchaseAmount };
++                    if (referralCode) reqBody.referral_code = referralCode;
++
++                    const regRes = await fetch(`${BASE_URL}/api/auth/register`, {
++                        method: 'POST',
++                        headers: { 'Content-Type': 'application/json' },
++                        body: JSON.stringify(reqBody)
++                    });
++
++                    if (regRes.ok) {
++                        alert("Account created successfully! Auto-logging you in...");
++
++                        // Automatically log them in instead of reloading
++                        const loginRes = await fetch(`${BASE_URL}/api/auth/login`, {
++                            method: 'POST',
++                            headers: { 'Content-Type': 'application/json' },
++                            body: JSON.stringify({ mobile, pin })
++                        });
++
++                        if (loginRes.ok) {
++                            const loginData = await loginRes.json();
++                            const role = loginData.data.user.role;
++
++                            if (purchaseAmount === '580' || purchaseAmount === 580) {
++                                window.location.href = 'seeder_offer.html';
++                            } else {
++                                if (role === 'SEEDER') window.location.href = '/seeder';
++                                else window.location.href = '/dashboard';
++                            }
++                        } else {
++                            window.location.reload();
++                        }
++                    } else {
++                        const errorData = await regRes.json();
++                        alert(errorData.message || "Registration Failed.");
++                        submitBtn.textContent = 'Create Account & Continue';
++                        submitBtn.disabled = false;
++                    }
++                } catch (err) {
++                    alert('Network Error during registration');
++                    submitBtn.textContent = 'Create Account & Continue';
++                    submitBtn.disabled = false;
++                }
++            }
++        }
+     </script>
++
++    <!-- Payment Status Modal -->
++    <div id="payment-status-modal" class="hidden"
++        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; display: flex; justify-content: center; align-items: center;">
++        <div
++            style="background: white; padding: 2rem; border-radius: 1rem; text-align: center; max-width: 90%; width: 350px;">
++            <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
++                <span class="visually-hidden">Loading...</span>
++            </div>
++            <h3 class="mb-2">Payment Status</h3>
++            <p class="text-muted mb-0">Payment received successfully.<br>Your Digital Pause is being prepared.</p>
++        </div>
++    </div>
+ </body>
+ 
+ </html>
+\ No newline at end of file
+diff --git a/frontend/public/product.html b/frontend/public/product.html
+index a655a99..2f2fdd8 100644
+--- a/frontend/public/product.html
++++ b/frontend/public/product.html
+@@ -16,15 +16,15 @@
+         <div class="card">
+             <h2>Γé╣178 Basic Plan</h2>
+             <p>Access to daily 2-minute and 5-minute pause sessions.</p>
+-            <p class="mb-2">Includes standard referral benefits.</p>
++            <p class="mb-2">Experience a guided mindful audio environment to reset your focus.</p>
+             <a href="register.html?plan=178" class="btn btn-primary">Select Γé╣178 Plan</a>
+         </div>
+ 
+         <div class="card">
+             <h2>Γé╣580 Premium Plan</h2>
+-            <p>Full access to 2, 5, and 10-minute pause sessions.</p>
+-            <p>Includes family addition features and elevated referral bonuses.</p>
+-            <p class="mb-2">Maximized earning potential.</p>
++            <p>Full access to 2, 5, and 10-minute deep pause sessions with mindful audio.</p>
++            <p>Includes family addition features to share the wellness journey.</p>
++            <p class="mb-2">Experience extended immersive sessions with dynamic healing frequencies.</p>
+             <a href="register.html?plan=580" class="btn btn-primary">Select Γé╣580 Plan</a>
+         </div>
+ 

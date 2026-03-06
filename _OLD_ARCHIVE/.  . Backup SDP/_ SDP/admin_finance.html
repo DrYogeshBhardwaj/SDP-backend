@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finance Admin - Sinaank Digital Pause</title>
+    <link rel="stylesheet" href="css/style.css?v=2026.3.2">
+    <link rel="icon" href="assets/logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Admin Specific Styles */
+        body {
+            background-color: #f1f5f9;
+        }
+
+        .admin-nav {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .admin-container {
+            max-width: 95%;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .data-table th {
+            background: #f8fafc;
+            font-weight: 600;
+        }
+
+        .data-table tr:hover {
+            background: #f8fafc;
+        }
+
+        .tab-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab-btn.active {
+            border-bottom-color: var(--color-primary);
+            color: var(--color-primary);
+            font-weight: 600;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="admin-nav flex justify-between items-center gap-4 border-b border-gray-100"
+        style="min-height: 70px; padding: 0.75rem 1.5rem;">
+        <div class="flex items-center gap-3">
+            <a href="index.html" class="flex items-center">
+                <img src="assets/logo.png" style="height: 48px; width: auto; object-fit: contain;">
+            </a>
+            <div class="flex flex-col md:flex-row md:items-center md:gap-3 leading-tight">
+                <span class="font-extrabold text-xl text-slate-800 tracking-tight">Finance Admin</span>
+                <span
+                    class="badge badge-success self-start md:self-auto text-xs px-2 py-1 uppercase tracking-wider">FINANCE</span>
+            </div>
+        </div>
+        <div>
+            <button class="btn btn-sm btn-outline-danger whitespace-nowrap px-4 font-semibold"
+                onclick="adminApp.logout()">Log Out</button>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+        <!-- FINANCE ADMIN TABS -->
+        <div class="flex gap-1 mb-2 border-b border-gray-200">
+            <button class="tab-btn" onclick="adminApp.switchTab('cashin')" id="tab-cashin">Cash In 📥</button>
+            <button class="tab-btn" onclick="adminApp.switchTab('payouts')" id="tab-payouts">Payouts 💰</button>
+            <button class="tab-btn" onclick="adminApp.switchTab('expenses')" id="tab-expenses">Expenses 💸</button>
+        </div>
+
+        <!-- Welcome & Info Section -->
+        <div id="admin-welcome-section" class="mb-6">
+            <!-- Populated by admin.js -->
+        </div>
+
+        <!-- Stats Row (Persistent) -->
+        <div id="admin-stats">
+            <span class="text-muted p-2">Loading stats...</span>
+        </div>
+
+        <div id="content-area">
+            <!-- Content Loads Here -->
+        </div>
+
+    </div>
+
+    <!-- No Modals for Finance Admin (yet) -->
+
+    <script src="js/i18n.js?v=2026.3.2"></script>
+    <script src="js/store.js?v=2026.3.2"></script>
+    <script src="js/admin.js?v=2026.3.2"></script>
+    <script src="js/validator.js?v=2026.3.2"></script>
+</body>
+
+</html>

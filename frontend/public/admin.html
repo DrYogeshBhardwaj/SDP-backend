@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Admin - Sinaank Digital Pause</title>
+    <link rel="stylesheet" href="css/style.css?v=2026.3.2">
+    <link rel="icon" href="assets/logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Admin Specific Styles */
+        body {
+            background-color: #f1f5f9;
+        }
+
+        .admin-nav {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .admin-container {
+            max-width: 95%;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .data-table th {
+            background: #f8fafc;
+            font-weight: 600;
+        }
+
+        .data-table tr:hover {
+            background: #f8fafc;
+        }
+
+        .tab-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+
+        .tab-btn.active {
+            border-bottom-color: var(--color-primary);
+            color: var(--color-primary);
+            font-weight: 600;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="admin-nav flex justify-between items-center gap-4 border-b border-gray-100"
+        style="min-height: 70px; padding: 0.75rem 1.5rem;">
+        <div class="flex items-center gap-3">
+            <a href="index.html" class="flex items-center">
+                <img src="assets/logo.png" style="height: 48px; width: auto; object-fit: contain;">
+            </a>
+            <div class="flex flex-col md:flex-row md:items-center md:gap-3 leading-tight">
+                <span class="font-extrabold text-xl text-slate-800 tracking-tight">System Admin</span>
+                <span
+                    class="badge badge-primary self-start md:self-auto text-xs px-2 py-1 uppercase tracking-wider">SYSTEM</span>
+            </div>
+        </div>
+        <div>
+            <button class="btn btn-sm btn-outline-danger whitespace-nowrap px-4 font-semibold"
+                onclick="adminApp.logout()">Log Out</button>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+        <!-- SYSTEM ADMIN TABS -->
+        <div class="flex gap-1 mb-2 border-b border-gray-200">
+            <button class="tab-btn" onclick="adminApp.switchTab('users')" id="tab-users">Users 👥</button>
+            <button class="tab-btn" onclick="adminApp.switchTab('feedbacks')" id="tab-feedbacks">Feedback 💬</button>
+            <button class="tab-btn" onclick="adminApp.switchTab('broadcast')" id="tab-broadcast">Broadcast 📢</button>
+            <button class="tab-btn" onclick="adminApp.switchTab('logs')" id="tab-logs">System Logs 📜</button>
+            <button class="tab-btn" onclick="adminApp.switchTab('support')" id="tab-support">System Support 🔧</button>
+            <button class="tab-btn" onclick="adminApp.switchTab('trash')" id="tab-trash"
+                style="color:var(--color-danger);">Trash 🗑️</button>
+        </div>
+
+        <!-- Welcome & Info Section -->
+        <div id="admin-welcome-section" class="mb-6">
+            <!-- Populated by admin.js -->
+        </div>
+
+        <!-- Stats Row (Persistent) -->
+        <div id="admin-stats">
+            <span class="text-muted p-2">Loading stats...</span>
+        </div>
+
+        <div id="content-area">
+            <!-- Content Loads Here -->
+        </div>
+
+    </div>
+
+    <!-- Edit User Modal (ADMIN B Only) -->
+    <div id="edit-modal" class="demo-overlay hidden bg-dark-80">
+        <div class="modal-content"
+            style="border: 2px solid var(--color-primary); border-radius: 1rem; padding: 2rem; background: white; width: 90%; max-width: 400px;">
+            <h3 class="mb-1">Manage User</h3>
+            <form id="edit-form" onsubmit="adminApp.saveUser(event)">
+                <input type="hidden" id="edit-id">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="edit-name" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>Mobile</label>
+                    <input type="text" id="edit-mobile" class="form-input" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <input type="text" id="edit-role" class="form-input bg-gray-100" readonly>
+                </div>
+
+                <!-- Reset PIN Option -->
+                <div class="form-group border-t border-gray-200 pt-1 mt-1">
+                    <label class="text-success font-bold">⚠️ Reset PIN</label>
+                    <p class="text-xs text-muted mb-0_5">Only change if user requested.</p>
+                    <input type="text" id="edit-pin" class="form-input" placeholder="New 4-digit PIN" maxlength="4"
+                        oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                </div>
+
+                <div class="flex gap-1 mt-1">
+                    <button type="button" class="btn btn-secondary"
+                        onclick="document.getElementById('edit-modal').classList.add('hidden')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reply Modal  -->
+    <div id="reply-modal" class="demo-overlay hidden bg-dark-80">
+        <div class="modal-content"
+            style="border: 2px solid var(--color-primary); border-radius: 1rem; padding: 2rem; background: white; width: 90%; max-width: 400px;">
+            <h3 class="mb-1">Reply to User</h3>
+            <form id="reply-form" onsubmit="adminApp.sendReply(event)">
+                <input type="hidden" id="reply-id">
+                <div class="form-group">
+                    <label>User Message</label>
+                    <p id="reply-user-msg" class="text-sm p-2 bg-gray-50 rounded italic text-muted"></p>
+                </div>
+                <div class="form-group">
+                    <label>Your Reply</label>
+                    <textarea id="reply-text" class="form-input h-32" placeholder="Type your response..."
+                        required></textarea>
+                </div>
+                <div class="flex gap-1 mt-1">
+                    <button type="button" class="btn btn-secondary"
+                        onclick="document.getElementById('reply-modal').classList.add('hidden')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Send Reply</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/i18n.js?v=2026.3.2"></script>
+    <script src="js/store.js?v=2026.3.2"></script>
+    <script src="js/admin.js?v=2026.3.2"></script>
+    <script src="js/validator.js?v=2026.3.2"></script>
+</body>
+
+</html>

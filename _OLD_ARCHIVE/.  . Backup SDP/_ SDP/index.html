@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sinaank Digital Pause</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="icon" href="assets/logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body class="bg-surface">
+
+    <!-- Header -->
+    <header>
+        <div class="container flex justify-between items-center">
+            <img src="assets/images/logo.svg" alt="SDP Logo" class="logo-img logo-style" style="height: 40px;">
+            <div class="flex items-center gap-md">
+                <nav class="flex gap-sm">
+                    <a href="index.html" class="btn btn-text">Home</a>
+                    <a href="login.html" class="btn btn-text" id="login-btn">Login</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- VIEW: HOME -->
+        <section id="home" class="view-section">
+            <!-- Hero -->
+            <div class="hero hero-premium">
+                <div class="container">
+                    <h1>SDP – A Short Digital Break</h1>
+                    <p class="hero-subtitle">Reset your mind. Rest your eyes. Reclaim control.</p>
+                    <p class="hero-transition text-white-80">Use it. Grow with it. Share it.</p>
+
+                    <div class="flex justify-center gap-md mt-2 flex-wrap">
+                        <a href="login.html" class="btn btn-primary btn-white">Get Started</a>
+                        <a href="#" onclick="openModal('modal-hero'); return false;"
+                            class="btn btn-secondary btn-glass">Learn More</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Concept (Visual Cards) -->
+            <div id="growth-concept" class="container mt-neg-3 relative-z10">
+                <div class="visual-card-grid">
+                    <div class="visual-card">
+                        <span class="visual-icon">🧘</span>
+                        <h3>Take short digital breaks</h3>
+                        <p class="text-sm text-muted">Refresh your mind in just minutes.</p>
+                    </div>
+                    <div class="visual-card">
+                        <span class="visual-icon">🌱</span>
+                        <h3>Build your SDP circle</h3>
+                        <p class="text-sm text-muted">Grow your network responsibly.</p>
+                    </div>
+                    <div class="visual-card">
+                        <span class="visual-icon">👥</span>
+                        <h3>Invite others responsibly</h3>
+                        <p class="text-sm text-muted">Share the gift of digital wellness.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Unique Identity Section -->
+            <div class="container mt-4 mb-4">
+                <div class="glass-card"
+                    style="background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); border: 1px solid #ddd; padding: 2rem; border-radius: 16px;">
+                    <div class="flex flex-col md:flex-row items-center gap-2">
+                        <div class="flex-1 text-center md:text-left">
+                            <h2 class="text-primary mb-1">Your Unique Digital Frequency</h2>
+                            <p class="text-muted mb-1_5">
+                                SDP isn't just a timer. It's a personalized digital experience.
+                            </p>
+                            <ul style="list-style: none; padding: 0; display: flex; flex-col; gap: 1rem;">
+                                <li class="flex items-start gap-1">
+                                    <span style="font-size: 1.2rem;">🧬</span>
+                                    <div>
+                                        <strong>One Mobile = One Identity</strong>
+                                        <p class="text-sm text-muted">Your sound and color patterns are mathematically
+                                            generated from your
+                                            unique mobile number. No two users have the exact same experience.</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start gap-1">
+                                    <span style="font-size: 1.2rem;">🎧</span>
+                                    <div>
+                                        <strong>System Default Sound (Binaural)</strong>
+                                        <p class="text-sm text-muted">We recommend the <strong>System Default</strong>
+                                            sound. It uses
+                                            scientifically tuned Binaural Beats to help your brain enter a state of deep
+                                            relaxation quickly.</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start gap-1">
+                                    <span style="font-size: 1.2rem;">🛡️</span>
+                                    <div>
+                                        <strong>Personal & Secure</strong>
+                                        <p class="text-sm text-muted">To maintain this calibration, avoid sharing your
+                                            login. Your account is tuned to <em>you</em>.</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="flex-1 flex justify-center">
+                            <!-- Visual Representation of Frequency -->
+                            <div
+                                style="width: 200px; height: 200px; border-radius: 50%; background: linear-gradient(45deg, var(--color-primary), #a855f7); opacity: 0.8; filter: blur(20px); animation: pulse 4s infinite;">
+                            </div>
+                            <div
+                                style="position: absolute; width: 150px; height: 150px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.5rem; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                                1 User<br>1 Sound
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Products -->
+            <div class="container" style="margin-top: 4rem;">
+                <h2 class="text-center">Products & Pricing</h2>
+                <div class="products-grid">
+                    <!-- Kit 1 -->
+                    <div class="product-card standard">
+                        <div
+                            style="background: #f1f5f9; color: #64748b; font-size: 0.75rem; font-weight: 700; display: inline-block; padding: 0.25rem 0.5rem; border-radius: 999px; margin-bottom: 0.5rem;">
+                            PERSONAL USE ONLY</div>
+                        <h3>SDP 1 Kit</h3>
+                        <div class="text-muted text-2xl font-bold text-primary">₹178</div>
+                        <ul style="list-style: none; margin-top: 1rem; line-height: 2;">
+                            <li>1 user</li>
+                            <li>3,650 minutes per year</li>
+                            <li>Use only</li>
+                        </ul>
+                        <div class="flex gap-1 mt-1_5">
+                            <a href="login.html?mode=purchase&amount=178" class="btn btn-primary w-full">Buy Now</a>
+                            <a href="#" onclick="openModal('modal-178'); return false;"
+                                class="btn btn-secondary w-full">Learn More</a>
+                        </div>
+                    </div>
+
+                    <!-- Family -->
+                    <div class="product-card featured">
+                        <span class="badge">OFFER</span>
+                        <h3>SDP Family Pack</h3>
+
+                        <!-- Family Network Visual -->
+                        <div class="network-visual" style="height: 150px; margin: 1rem 0;">
+                            <div class="network-node main">👤</div>
+                            <div class="network-line" style="transform: rotate(0deg) translateX(40px);"></div>
+                            <div class="network-node" style="transform: translate(80px, 0) scale(0.6);">👪</div>
+                            <div class="network-line" style="transform: rotate(120deg) translateX(40px);"></div>
+                            <div class="network-node"
+                                style="transform: rotate(120deg) translate(80px, 0) scale(0.6) rotate(-120deg);">👪
+                            </div>
+                            <div class="network-line" style="transform: rotate(240deg) translateX(40px);"></div>
+                            <div class="network-node"
+                                style="transform: rotate(240deg) translate(80px, 0) scale(0.6) rotate(-240deg);">👪
+                            </div>
+                        </div>
+
+                        <div>
+                            <span
+                                style="font-size: 0.9rem; color: var(--color-text-muted); display: block; margin-bottom: 2px;">178
+                                X 4 = <span style="text-decoration: line-through;">712</span></span>
+                            <div class="text-muted text-2xl font-bold text-primary">₹580</div>
+                        </div>
+                        <ul style="list-style: none; margin-top: 1rem; line-height: 2;">
+                            <li>Total 4 users</li>
+                            <li>1 Primary + 3 Family</li>
+                            <li>Partner rights (Primary only)</li>
+                            <li style="color:var(--color-primary); font-weight:600;">🔔 Smart Audio Break Alarm Included
+                            </li>
+                        </ul>
+                        <div class="flex gap-1 mt-1_5">
+                            <a href="login.html?mode=purchase&amount=580" class="btn btn-primary w-full">Buy Now</a>
+                            <a href="#" onclick="openModal('modal-580'); return false;"
+                                class="btn btn-secondary w-full">Learn More</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center" style="margin-top: 4rem; margin-bottom: 4rem;">
+                <a href="buyer.html" class="btn btn-secondary" style="border-radius: 50px; padding: 1rem 3rem;">View
+                    More Details</a>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="site-footer"
+        style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 3rem 1rem; text-align: center; margin-top: auto;">
+        <div class="container">
+            <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1.5rem;">This is a non-medical digital wellness
+                experience.</p>
+
+            <div style="margin-bottom: 1.5rem;">
+                <a href="seeder.html" style="color: #3b82f6; text-decoration: none; font-weight: 500;">Partner
+                    Access</a>
+            </div>
+
+            <p style="color: #94a3b8; font-size: 0.8rem;">
+                &copy; 2026 SINAANK. All rights reserved.<br>
+                Developed by SINAANK Team
+            </p>
+        </div>
+    </footer>
+
+    <!-- Dynamic Auth Logic -->
+    <script src="js/store.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const session = localStorage.getItem('ssb_session');
+            const loginBtn = document.getElementById('login-btn');
+
+            if (session) {
+                try {
+                    const user = JSON.parse(session);
+                    // Replace Login with Dashboard
+                    if (loginBtn) {
+                        loginBtn.textContent = "Dashboard";
+                        // Determine Dashboard URL based on active identity or role
+                        let dashUrl = 'dashboard_178.html';
+                        if (user.activeIdentityId) {
+                            const pid = user.activeIdentityId;
+                            if (pid.startsWith('S')) dashUrl = 'seeder.html';
+                            else if (user.hasFamilyPlan) dashUrl = 'dashboard_580.html';
+                        } else {
+                            if (user.hasFamilyPlan) dashUrl = 'dashboard_580.html';
+                        }
+
+                        loginBtn.href = dashUrl;
+
+                        // Add Logout (Only if not already there)
+                        const nav = document.querySelector('nav');
+                        if (nav && !document.getElementById('logout-btn')) {
+                            const logout = document.createElement('button');
+                            logout.id = 'logout-btn';
+                            logout.className = 'btn btn-text text-danger';
+                            logout.textContent = 'Logout';
+                            logout.onclick = () => {
+                                store.logout();
+                                window.location.reload();
+                            };
+                            nav.appendChild(logout);
+                        }
+                    }
+                } catch (e) {
+                    console.error("Session Parse Error", e);
+                    // If session is corrupt, just let the login button go to login.html
+                }
+            }
+            // Fallback: If no session, the Login button already points to login.html
+        });
+    </script>
+    <div id="modal-hero" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('modal-hero')">&times;</button>
+            <h2 class="text-primary mb-3">SDP Family Pack – ₹580</h2>
+            <!-- Content from buyer_upgrade_178.html -->
+            <div style="margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">Introduction</h3>
+                <p class="text-muted">Sinaank Digital Pause (SDP) is a short, structured digital break designed to
+                    reduce screen
+                    fatigue and support healthier digital habits.</p>
+                <p class="text-sm text-muted bg-slate-50 p-2 rounded border border-slate-100 mt-2">
+                    <strong>Note:</strong> SDP is not a medical, therapeutic, or religious product. It is a simple
+                    digital
+                    wellness experience for daily screen users.
+                </p>
+            </div>
+
+            <div
+                style="margin-bottom: 1.5rem; padding: 1rem; border-radius: 0.5rem; background: #fdf4ff; border-left: 4px solid #a855f7;">
+                <h3 style="font-size: 1.1rem; font-weight: 700; color: #6b21a8; margin-bottom: 0.5rem;">Your Unique
+                    Digital Frequency</h3>
+                <p class="text-sm" style="margin-bottom: 0.5rem;">SDP isn't just a timer. It generates a personalized
+                    audio-visual pattern based on your
+                    mobile number.</p>
+                <ul
+                    style="list-style: disc; padding-left: 1.5rem; color: var(--color-text-muted); display: flex; flex-direction: column; gap: 0.25rem;">
+                    <li><strong>One Mobile = One Identity</strong>: Your sound and color are mathematically unique to
+                        you.
+                    </li>
+                    <li><strong>System Default Sound</strong>: We use scientifically tuned Binaural Beats for deep
+                        relaxation.</li>
+                    <li><strong>Personal & Secure</strong>: Your account is calibrated to your identity.</li>
+                </ul>
+            </div>
+
+            <div style="margin-bottom: 1.5rem; border-top: 4px solid #3B82F6; padding-top: 1rem;">
+                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">What You Get with the ₹580
+                    Family Pack</h3>
+                <ul
+                    style="list-style: disc; padding-left: 1.5rem; color: var(--color-text-muted); display: flex; flex-direction: column; gap: 0.25rem;">
+                    <li><strong>1 Primary User + 3 Family Users</strong></li>
+                    <li>Guided Digital Pauses of 2 / 5 / 10 minutes</li>
+                    <li>Annual minutes access for the Primary User</li>
+                    <li>Mobile-number–based identity (email is not used)</li>
+                </ul>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">How SDP Helps</h3>
+                <ul
+                    style="list-style: disc; padding-left: 1.5rem; color: var(--color-text-muted); display: flex; flex-direction: column; gap: 0.25rem;">
+                    <li>Reduces continuous screen stress</li>
+                    <li>Helps eyes and mind disengage briefly</li>
+                    <li>Encourages short, meaningful breaks</li>
+                    <li>Can be used anytime during the day</li>
+                </ul>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">Important Information</h3>
+                <p class="text-muted">After purchasing the ₹580 Family Pack, the Primary User may choose to apply as a
+                    Seeder.</p>
+                <p class="font-medium text-primary">Becoming a Seeder is optional, not mandatory.</p>
+            </div>
+
+            <div class="text-center mt-4">
+                <button onclick="closeModal('modal-hero')" class="btn btn-secondary w-full">Back</button>
+                <div style="margin-top: 1rem;">
+                    <a href="#" onclick="closeModal('modal-hero'); openModal('modal-seeder-offer'); return false;"
+                        class="btn btn-outline-primary w-full">View Seeder Option</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-seeder-offer" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('modal-seeder-offer')">&times;</button>
+            <h2 class="text-primary mb-3">Become a Seeder</h2>
+            <p class="text-lg text-muted mb-4">A responsible guide for the digital wellness journey.</p>
+
+            <!-- MLM Disclaimer -->
+            <div
+                style="background: #fee2e2; border: 1px solid #ef4444; color: #b91c1c; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; font-weight: 700; text-align: center;">
+                This is NOT an MLM (Multi-Level Marketing) or Network Marketing program.
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <h3 class="text-xl font-bold mb-3 text-slate-800">Overview</h3>
+                <p>A Seeder is a participant who understands SDP and helps introduce the concept of Digital Pause to
+                    others in a responsible manner.</p>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <h3 class="text-xl font-bold mb-3 text-slate-800">Role of a Seeder</h3>
+                <ul
+                    style="list-style: disc; padding-left: 1.5rem; color: var(--color-text-muted); display: flex; flex-direction: column; gap: 0.5rem;">
+                    <li>Explains correct use of SDP</li>
+                    <li>Builds a small, informed user group</li>
+                    <li>Helps spread awareness about digital wellness</li>
+                </ul>
+            </div>
+
+            <div
+                style="margin-bottom: 1.5rem; padding: 1rem; background: #fffbeb; border: 1px solid #fcd34d; border-radius: 0.5rem;">
+                <h3 class="text-xl font-bold mb-3 text-amber-700">Payout & Transparency</h3>
+                <ul
+                    style="list-style: disc; padding-left: 1.5rem; color: var(--color-text-muted); display: flex; flex-direction: column; gap: 0.5rem;">
+                    <li>All payouts are manual</li>
+                    <li>Admin verification is required</li>
+                    <li>Payments are processed via UPI or bank by the Admin</li>
+                    <li>There is no automatic or guaranteed income</li>
+                </ul>
+            </div>
+
+            <div
+                style="margin-bottom: 1.5rem; padding: 1rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.5rem;">
+                <h3 class="text-xl font-bold mb-2 text-slate-800">Important Statement</h3>
+                <p class="mb-1">Becoming a Seeder is voluntary.</p>
+                <p class="font-medium text-slate-600">This is not a job offer, investment plan, or income scheme.</p>
+            </div>
+
+            <div class="text-center mt-4">
+                <button onclick="closeModal('modal-seeder-offer')" class="btn btn-primary w-full">Back to Main
+                    Page</button>
+            </div>
+            <div class="text-center mt-2 text-sm text-muted">
+                <em>(Application is open only for Family Pack owners)</em>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-178" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('modal-178')">&times;</button>
+            <h2 class="text-primary mb-3">SDP 1 Kit – ₹178</h2>
+            <!-- Content from buyer.html -->
+            <div style="margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">What is Digital Pause?</h3>
+                <p class="text-muted">A short, structured digital break designed to reduce screen fatigue. It is not
+                    meditation or therapy—just a simple pause.</p>
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">How It Works</h3>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; text-align: center;">
+                    <div style="padding: 0.5rem; background: #f8fafc; border-radius: 0.5rem;">
+                        <div style="font-size: 1.5rem;">⚡</div>
+                        <strong>2 Min</strong><br><span class="text-sm text-muted">Quick Reset</span>
+                    </div>
+                    <div style="padding: 0.5rem; background: #f8fafc; border-radius: 0.5rem;">
+                        <div style="font-size: 1.5rem;">🌊</div>
+                        <strong>5 Min</strong><br><span class="text-sm text-muted">Balance</span>
+                    </div>
+                    <div style="padding: 0.5rem; background: #f8fafc; border-radius: 0.5rem;">
+                        <div style="font-size: 1.5rem;">🌌</div>
+                        <strong>10 Min</strong><br><span class="text-sm text-muted">Deep Pause</span>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">What You Get</h3>
+                <ul
+                    style="list-style: disc; padding-left: 1.5rem; color: var(--color-text-muted); display: flex; flex-direction: column; gap: 0.25rem;">
+                    <li>3,650 Minutes / Year</li>
+                    <li>Visual & Sound-based disengagement</li>
+                    <li>Personal Usage Dashboard</li>
+                </ul>
+            </div>
+            <div class="text-center mt-4">
+                <a href="login.html?mode=purchase&amount=178" class="btn btn-primary w-full">Buy Now – ₹178</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-580" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('modal-580')">&times;</button>
+            <h2 class="text-primary mb-3">SDP Family Pack – ₹580</h2>
+            <!-- Content from buyer_580.html -->
+            <div style="margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">Introduction</h3>
+                <p class="text-muted">A structured digital break for you and your family (4 Users).</p>
+            </div>
+
+            <div
+                style="margin-bottom: 1.5rem; padding: 1rem; border-radius: 0.5rem; background: #fdf4ff; border-left: 4px solid #a855f7;">
+                <h3 style="font-size: 1.1rem; font-weight: 700; color: #6b21a8; margin-bottom: 0.5rem;">Your Unique
+                    Digital Frequency</h3>
+                <p class="text-sm" style="margin-bottom: 0.5rem;"><strong>One Mobile = One Identity.</strong> Your sound
+                    and color are
+                    mathematically unique to you.</p>
+                <p class="text-sm">We use scientifically tuned Binaural Beats for deep relaxation.</p>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">Benefits</h3>
+                <ul
+                    style="list-style: disc; padding-left: 1.5rem; color: var(--color-text-muted); display: flex; flex-direction: column; gap: 0.25rem;">
+                    <li>1 Primary + 3 Family Members</li>
+                    <li>Partner Access (Optional Seeder Program)</li>
+                    <li>Smart Audio Break Alarm Included</li>
+                </ul>
+            </div>
+
+            <div
+                style="margin-bottom: 1.5rem; padding: 1rem; background: #eff6ff; border: 1px solid #dbeafe; border-radius: 0.5rem;">
+                <h3 style="font-size: 1rem; font-weight: 700; color: var(--color-primary); margin-bottom: 0.25rem;">
+                    Passives Income Opportunity</h3>
+                <p class="text-sm text-muted" style="margin-bottom: 1rem;">Primary users can apply to become a
+                    <strong>Seeder</strong> to curb digital
+                    addiction in their community.
+                </p>
+                <a href="seeder_offer.html" class="btn btn-outline-primary w-full" style="font-size: 0.9rem;">View
+                    Seeder Details</a>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="login.html?mode=purchase&amount=580" class="btn btn-primary w-full">Buy Family Pack –
+                    ₹580</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Close on click outside
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal(modal.id);
+            });
+        });
+    </script>
+</body>
+
+</html>

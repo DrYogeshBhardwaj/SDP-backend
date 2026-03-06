@@ -12,11 +12,11 @@
   },
   {
     "msg": "Created Admin:",
-    "data": "3149e2af-a03d-418c-8a87-9abcbc6dea01"
+    "data": "d4cd0d19-ea58-4a19-9500-2308de50ae45"
   },
   {
     "msg": "Created Seeder:",
-    "data": "ab52a828-99f8-4b4e-bce7-f279ad171adf with ₹500 balance"
+    "data": "4e18f4bf-1ee4-463f-97ba-0b8762b15a0c with ₹500 balance"
   },
   {
     "msg": "\n[Test 1] Requesting Payout of ₹500 for SEEDER...",
@@ -28,14 +28,14 @@
       "success": true,
       "message": "Payout requested successfully",
       "data": {
-        "payout_id": "ee73bb9e-06f2-4ca3-bb73-a0155631b031",
+        "payout_id": "e7fee52b-b5f4-46dc-be10-6aa60c304a7d",
         "requested_amount": 500,
         "status": "PENDING"
       }
     }
   },
   {
-    "msg": "Expected Wallet Balance (Not Deducted Yet): ₹500, Actual: ₹500",
+    "msg": "Expected Wallet Balance (Not Deducted Yet): ₹500, Actual: ₹0",
     "data": null
   },
   {
@@ -46,7 +46,7 @@
     "msg": "Double Request Response:",
     "data": {
       "success": false,
-      "message": "You already have a pending payout request"
+      "message": "Insufficient balance to request payout"
     }
   },
   {
@@ -58,7 +58,7 @@
     "data": 1
   },
   {
-    "msg": "\n[Test 4] Admin Rejecting Payout ID: ee73bb9e-06f2-4ca3-bb73-a0155631b031",
+    "msg": "\n[Test 4] Admin Rejecting Payout ID: e7fee52b-b5f4-46dc-be10-6aa60c304a7d",
     "data": null
   },
   {
@@ -81,11 +81,11 @@
     "data": null
   },
   {
-    "msg": "New Payout Created ID: 4b8b42d5-6aa2-4279-8d35-aea7999132f9",
+    "msg": "New Payout Created ID: 4ef5008a-5341-4ecd-9da7-55e3b3ad4932",
     "data": null
   },
   {
-    "msg": "\n[Test 6] Admin Approving Payout ID: 4b8b42d5-6aa2-4279-8d35-aea7999132f9",
+    "msg": "\n[Test 6] Admin Approving Payout ID: 4ef5008a-5341-4ecd-9da7-55e3b3ad4932",
     "data": null
   },
   {

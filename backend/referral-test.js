@@ -23,6 +23,11 @@ const req = (method, path, body, cookie) => new Promise((resolve, reject) => {
 });
 
 async function runTest() {
+    await prisma.systemLog.deleteMany();
+    await prisma.systemExpense.deleteMany();
+    await prisma.announcement.deleteMany();
+    await prisma.message.deleteMany();
+    await prisma.userRank.deleteMany();
     await prisma.transaction.deleteMany();
     await prisma.bonusLedger.deleteMany();
     await prisma.referral.deleteMany();

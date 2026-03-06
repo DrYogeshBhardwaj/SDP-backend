@@ -1,0 +1,14 @@
+{
+  "results": {
+    "created_201": 1,
+    "idempotent_200": 0,
+    "failed_application_400": 4,
+    "rate_limited_429": 45,
+    "other": 0
+  },
+  "databaseState": {
+    "finalWalletBalance": 0,
+    "pendingPayouts": 1,
+    "lockedId": "87988f70-de61-4fd4-924d-512ac3f8aee5"
+  }
+}
