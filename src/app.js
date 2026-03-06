@@ -1,6 +1,3 @@
-app.get('/', (req, res) => {
-    res.json({ message: 'SDP Backend API Running' });
-});
 
 const express = require('express');
 const cors = require('cors');
@@ -8,6 +5,12 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
+
+const app = express();
+
+app.get('/', (req, res) => {
+  res.json({ message: 'SDP Backend API Running' });
+});
 
 // 1. Necessary Routes Imports
 const authRoutes = require('./modules/auth/auth.routes');
