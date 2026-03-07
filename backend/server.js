@@ -38,6 +38,7 @@ app.use((req, res, next) => {
 });
 
 // Serve frontend statically from the public folder (EXACT ROOT STRUCTURE MATCH)
+// DYNAMIC FLUSH CACHE COMMIT: 2024-03-07T16:35:00Z
 console.log("Serving static from:", path.join(__dirname, "public"));
 app.use(express.static(path.join(__dirname, "public")));
 
