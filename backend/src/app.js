@@ -35,7 +35,7 @@ app.use((req, res, next) => {
 });
 
 // Serve frontend statically from the public folder
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "../public")));
 
 // Production Security Trusts (for VPS Reverse Proxy like Nginx)
 app.set('trust proxy', 1);
