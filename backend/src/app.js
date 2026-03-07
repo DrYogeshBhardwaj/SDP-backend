@@ -21,18 +21,27 @@ const { errorResponse } = require('./utils/response');
 
 const app = express();
 
+const allowedOrigins = [
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+    "http://localhost:8081",
+    "http://127.0.0.1:8081",
+    "https://sinaank.com"
+];
+
 // CORS Middleware - Placed at the very top before any other middleware or routes
 app.use(cors({
-    origin: [
-        "http://localhost:8080",
-        "http://127.0.0.1:8080",
-        "http://localhost:8081",
-        "http://127.0.0.1:8081",
-        "https://sinaank.com"
-    ],
+    origin: function (origin, callback) {
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(null, true);   // allow temporarily for testing
+        }
+    },
+    credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true
+    allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
 app.options("*", cors());
