@@ -21,7 +21,11 @@ const { errorResponse } = require('./utils/response');
 
 const app = express();
 
-// Security
+
+// ======================
+// SECURITY
+// ======================
+
 app.set('trust proxy', 1);
 app.disable('x-powered-by');
 
@@ -30,52 +34,39 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false
 }));
 
-// CORS FIX
+
+// ======================
+// CORS (open for deployment)
+// ======================
+
 app.use(cors({
   origin: true,
   credentials: true
 }));
 
-  app.use(cors({
-    origin: function (origin, callback) {
-      if (!origin) return callback(null, true);
-      if (!allowedOrigins.includes(origin)) {
-        return callback(new Error('CORS blocked'), false);
-      }
-      return callback(null, true);
-    },
-    credentials: true
-  }));
 
-} else {
+// ======================
+// BODY PARSERS
+// ======================
 
-  app.use(cors({
-    origin: [
-      'http://localhost:3000',
-      'http://127.0.0.1:5000',
-      'http://localhost:5000'
-    ],
-    credentials: true
-  }));
-
-}
-
-// Parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan('dev'));
 
 
+// ======================
 // HEALTH CHECK
+// ======================
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'SDP Backend Running' });
 });
 
 
-// =====================
-// FRONTEND STATIC
-// =====================
+// ======================
+// STATIC FRONTEND
+// ======================
 
 const publicPath = path.join(__dirname, '../public');
 
@@ -83,28 +74,58 @@ app.use(express.static(publicPath));
 app.use('/assets', express.static(path.join(publicPath, 'assets')));
 
 
-// =====================
+// ======================
 // FRONTEND ROUTES
-// =====================
+// ======================
 
-app.get('/', (req, res) => res.sendFile(path.join(publicPath, 'index.html')));
-app.get('/login', (req, res) => res.sendFile(path.join(publicPath, 'login.html')));
-app.get('/buyer', (req, res) => res.sendFile(path.join(publicPath, 'buyer.html')));
-app.get('/dashboard', (req, res) => res.sendFile(path.join(publicPath, 'user.html')));
-app.get('/seeder', (req, res) => res.sendFile(path.join(publicPath, 'seeder.html')));
-app.get('/admin', (req, res) => res.sendFile(path.join(publicPath, 'admin.html')));
+app.get('/', (req, res) =>
+  res.sendFile(path.join(publicPath, 'index.html'))
+);
 
-app.get('/admin.html', (req, res) => res.redirect('/admin'));
+app.get('/login', (req, res) =>
+  res.sendFile(path.join(publicPath, 'login.html'))
+);
 
-app.get('/seeder-form', (req, res) => res.sendFile(path.join(publicPath, 'seeder_form.html')));
-app.get('/seeder-offer', (req, res) => res.sendFile(path.join(publicPath, 'seeder_offer.html')));
-app.get('/join-580', (req, res) => res.sendFile(path.join(publicPath, 'join_580.html')));
-app.get('/invite', (req, res) => res.sendFile(path.join(publicPath, 'invite.html')));
+app.get('/buyer', (req, res) =>
+  res.sendFile(path.join(publicPath, 'buyer.html'))
+);
+
+app.get('/dashboard', (req, res) =>
+  res.sendFile(path.join(publicPath, 'user.html'))
+);
+
+app.get('/seeder', (req, res) =>
+  res.sendFile(path.join(publicPath, 'seeder.html'))
+);
+
+app.get('/admin', (req, res) =>
+  res.sendFile(path.join(publicPath, 'admin.html'))
+);
+
+app.get('/admin.html', (req, res) =>
+  res.redirect('/admin')
+);
+
+app.get('/seeder-form', (req, res) =>
+  res.sendFile(path.join(publicPath, 'seeder_form.html'))
+);
+
+app.get('/seeder-offer', (req, res) =>
+  res.sendFile(path.join(publicPath, 'seeder_offer.html'))
+);
+
+app.get('/join-580', (req, res) =>
+  res.sendFile(path.join(publicPath, 'join_580.html'))
+);
+
+app.get('/invite', (req, res) =>
+  res.sendFile(path.join(publicPath, 'invite.html'))
+);
 
 
-// =====================
+// ======================
 // API ROUTES
-// =====================
+// ======================
 
 app.use('/api/auth', authRoutes);
 app.use('/api', otpRoutes);
@@ -120,9 +141,9 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/announcements', announcementRoutes);
 
 
-// =====================
+// ======================
 // ERROR HANDLER
-// =====================
+// ======================
 
 app.use((err, req, res, next) => {
 
