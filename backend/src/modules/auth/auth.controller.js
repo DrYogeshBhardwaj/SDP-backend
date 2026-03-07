@@ -23,6 +23,10 @@ const register = async (req, res) => {
     try {
         let { mobile, country_code = '+91', name, pin, amount } = req.body;
 
+        // Stringify to handle literal numbers from json
+        mobile = String(mobile);
+        pin = String(pin);
+
         // Validation
         if (!mobile || !pin) {
             return errorResponse(res, 400, 'Mobile and PIN are required');
@@ -151,13 +155,17 @@ const register = async (req, res) => {
 
         return successResponse(res, 201, 'Registration processed successfully');
     } catch (error) {
-        return errorResponse(res, 500, 'Registration failed', error);
+        console.error("REGISTER API CRASH:", error);
+        return res.status(500).json({ success: false, message: 'Registration failed', error: error.message || error.toString() });
     }
 };
 
 const login = async (req, res) => {
     try {
         const { mobile, pin } = req.body;
+
+        mobile = String(mobile);
+        pin = String(pin);
 
         if (!mobile || !pin) {
             return errorResponse(res, 400, 'Mobile and PIN are required');
@@ -208,7 +216,8 @@ const login = async (req, res) => {
         });
 
     } catch (error) {
-        return errorResponse(res, 500, 'Login failed', error);
+        console.error("LOGIN API CRASH:", error);
+        return res.status(500).json({ success: false, message: 'Login failed', error: error.message || error.toString() });
     }
 };
 
