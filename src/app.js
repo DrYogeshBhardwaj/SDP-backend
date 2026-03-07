@@ -1,4 +1,3 @@
-
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -6,6 +5,7 @@ const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
+
 const authRoutes = require('./modules/auth/auth.routes');
 const otpRoutes = require('./modules/auth/otp.routes');
 const productRoutes = require('./modules/products/product.routes');
@@ -26,66 +26,111 @@ const app = express();
 app.set('trust proxy', 1);
 app.disable('x-powered-by');
 
-// Middlewares
+// Security Middlewares
 app.use(helmet({
     contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false,
     crossOriginEmbedderPolicy: false
 }));
 
-// Hardened CORS
+// CORS
 if (process.env.NODE_ENV === 'production') {
     const allowedOrigins = [process.env.FRONTEND_URL || 'https://sinaank.com'];
+
     app.use(cors({
         origin: function (origin, callback) {
             if (!origin) return callback(null, true);
-            if (allowedOrigins.indexOf(origin) === -1) {
-                const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-                return callback(new Error(msg), false);
+            if (!allowedOrigins.includes(origin)) {
+                return callback(new Error('CORS blocked'), false);
             }
             return callback(null, true);
         },
-        credentials: true,
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization']
+        credentials: true
     }));
+
 } else {
-    // Local development (localhost testing)
+
     app.use(cors({
-        origin: ['http://localhost:3000', 'http://127.0.0.1:5000', 'http://localhost:5000'],
-        credentials: true,
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization']
+        origin: [
+            'http://localhost:3000',
+            'http://127.0.0.1:5000',
+            'http://localhost:5000'
+        ],
+        credentials: true
     }));
 }
 
+// Body Parsing
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan('dev'));
 
-// HEALTH CHECK (Placed at the very top to bypass all custom router middlewares)
+
+// HEALTH CHECK
 app.get('/api/health', (req, res) => {
     res.json({ status: 'SDP Backend Running' });
 });
 
-// Serve frontend for local testing
-app.use(express.static(path.join(__dirname, '../../frontend/public')));
-app.use('/assets', express.static(path.join(__dirname, '../../frontend/assets')));
 
-// Specific Frontend Layout Routes
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/public/index.html')));
-app.get('/login', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/public/login.html')));
-app.get('/buyer', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/public/buyer.html')));
-app.get('/dashboard', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/dashboard/user.html')));
-app.get('/seeder', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/public/seeder.html')));
-app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/dashboard/admin.html')));
+// ================================
+// FRONTEND STATIC SERVING
+// ================================
+
+app.use(express.static(path.join(__dirname, '../../public')));
+app.use('/assets', express.static(path.join(__dirname, '../../public/assets')));
+
+
+// ================================
+// FRONTEND ROUTES
+// ================================
+
+app.get('/', (req, res) =>
+    res.sendFile(path.join(__dirname, '../../public/index.html'))
+);
+
+app.get('/login', (req, res) =>
+    res.sendFile(path.join(__dirname, '../../public/login.html'))
+);
+
+app.get('/buyer', (req, res) =>
+    res.sendFile(path.join(__dirname, '../../public/buyer.html'))
+);
+
+app.get('/dashboard', (req, res) =>
+    res.sendFile(path.join(__dirname, '../../public/user.html'))
+);
+
+app.get('/seeder', (req, res) =>
+    res.sendFile(path.join(__dirname, '../../public/seeder.html'))
+);
+
+app.get('/admin', (req, res) =>
+    res.sendFile(path.join(__dirname, '../../public/admin.html'))
+);
+
 app.get('/admin.html', (req, res) => res.redirect('/admin'));
-app.get('/seeder-form', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/public/seeder_form.html')));
-app.get('/seeder-offer', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/public/seeder_offer.html')));
-app.get('/join-580', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/public/join_580.html')));
-app.get('/invite', (req, res) => res.sendFile(path.join(__dirname, '../../frontend/public/invite.html')));
 
-// Routes
+app.get('/seeder-form', (req, res) =>
+    res.sendFile(path.join(__dirname, '../../public/seeder_form.html'))
+);
+
+app.get('/seeder-offer', (req, res) =>
+    res.sendFile(path.join(__dirname, '../../public/seeder_offer.html'))
+);
+
+app.get('/join-580', (req, res) =>
+    res.sendFile(path.join(__dirname, '../../public/join_580.html'))
+);
+
+app.get('/invite', (req, res) =>
+    res.sendFile(path.join(__dirname, '../../public/invite.html'))
+);
+
+
+// ================================
+// API ROUTES
+// ================================
+
 app.use('/api/auth', authRoutes);
 app.use('/api', otpRoutes);
 app.use('/api/products', productRoutes);
@@ -100,9 +145,12 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/announcements', announcementRoutes);
 
 
+// ================================
+// ERROR HANDLER
+// ================================
 
-// Central error handler
 app.use((err, req, res, next) => {
+
     if (process.env.NODE_ENV !== 'production') {
         console.error(err.stack);
     } else {
@@ -110,11 +158,14 @@ app.use((err, req, res, next) => {
     }
 
     const statusCode = err.status || 500;
-    const message = process.env.NODE_ENV === 'production' && statusCode === 500
-        ? 'Internal Server Error'
-        : (err.message || 'Internal Server Error');
+
+    const message =
+        process.env.NODE_ENV === 'production' && statusCode === 500
+            ? 'Internal Server Error'
+            : (err.message || 'Internal Server Error');
 
     return errorResponse(res, statusCode, message);
+
 });
 
 module.exports = app;
