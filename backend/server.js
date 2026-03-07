@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -5,21 +6,24 @@ const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
-const authRoutes = require('./modules/auth/auth.routes');
-const otpRoutes = require('./modules/auth/otp.routes');
-const productRoutes = require('./modules/products/product.routes');
-const minutesRoutes = require('./modules/minutes/minutes.routes');
-const seederRoutes = require('./modules/seeder/seeder.routes');
-const financeRoutes = require('./modules/finance/finance.routes');
-const adminRoutes = require('./modules/admin/admin.routes');
-const expenseRoutes = require('./modules/admin/expense.routes');
-const messageRoutes = require('./modules/communication/message.routes');
-const announcementRoutes = require('./modules/communication/announcement.routes');
-const adminAnnouncementRoutes = require('./modules/communication/admin.announcement.routes');
-const exportRoutes = require('./modules/admin/export.routes');
-const { errorResponse } = require('./utils/response');
+
+// Preserve all route module requirements from /src/
+const authRoutes = require('./src/modules/auth/auth.routes');
+const otpRoutes = require('./src/modules/auth/otp.routes');
+const productRoutes = require('./src/modules/products/product.routes');
+const minutesRoutes = require('./src/modules/minutes/minutes.routes');
+const seederRoutes = require('./src/modules/seeder/seeder.routes');
+const financeRoutes = require('./src/modules/finance/finance.routes');
+const adminRoutes = require('./src/modules/admin/admin.routes');
+const expenseRoutes = require('./src/modules/admin/expense.routes');
+const messageRoutes = require('./src/modules/communication/message.routes');
+const announcementRoutes = require('./src/modules/communication/announcement.routes');
+const adminAnnouncementRoutes = require('./src/modules/communication/admin.announcement.routes');
+const exportRoutes = require('./src/modules/admin/export.routes');
+const { errorResponse } = require('./src/utils/response');
 
 const app = express();
+const PORT = process.env.PORT || 5000;
 
 app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -30,12 +34,11 @@ app.use((req, res, next) => {
     if (req.method === "OPTIONS") {
         return res.status(200).end();
     }
-
     next();
 });
 
-// Serve frontend statically from the public folder
-app.use(express.static(path.join(__dirname, "../public")));
+// Serve frontend statically from the public folder (EXACT ROOT STRUCTURE MATCH)
+app.use(express.static(path.join(__dirname, "public")));
 
 // Production Security Trusts (for VPS Reverse Proxy like Nginx)
 app.set('trust proxy', 1);
@@ -47,8 +50,6 @@ app.use(helmet({
     crossOriginEmbedderPolicy: false
 }));
 
-
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -59,8 +60,7 @@ app.get('/api/health', (req, res) => {
     res.json({ status: 'SDP Backend Running' });
 });
 
-// Next line starts Routes //
-// Routes
+// Routes (Inheriting from the /src/ subdirectory modules identically to before)
 app.use('/api/auth', authRoutes);
 app.use('/api', otpRoutes);
 app.use('/api/products', productRoutes);
@@ -74,6 +74,14 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/announcements', announcementRoutes);
 
+// Fallback to exactly public/index.html internally as requested
+app.get("*", (req, res, next) => {
+    // Prevent overriding of standard API routes natively if an endpoint genuinely crashes
+    if (req.originalUrl.startsWith('/api')) {
+        return next();
+    }
+    res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 
 
 // Central error handler
@@ -92,4 +100,6 @@ app.use((err, req, res, next) => {
     return errorResponse(res, statusCode, message);
 });
 
-module.exports = app;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
