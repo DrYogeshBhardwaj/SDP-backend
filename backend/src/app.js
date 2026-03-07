@@ -21,6 +21,21 @@ const { errorResponse } = require('./utils/response');
 
 const app = express();
 
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+
+    res.setHeader("Access-Control-Allow-Origin", origin || "*");
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+
+    if (req.method === "OPTIONS") {
+        return res.status(200).end();
+    }
+
+    next();
+});
+
 // Production Security Trusts (for VPS Reverse Proxy like Nginx)
 app.set('trust proxy', 1);
 app.disable('x-powered-by');
