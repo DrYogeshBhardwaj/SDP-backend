@@ -38,6 +38,7 @@ app.use((req, res, next) => {
 });
 
 // Serve frontend statically from the public folder (EXACT ROOT STRUCTURE MATCH)
+console.log("Serving static from:", path.join(__dirname, "public"));
 app.use(express.static(path.join(__dirname, "public")));
 
 // Production Security Trusts (for VPS Reverse Proxy like Nginx)
