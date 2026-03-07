@@ -21,6 +21,12 @@ const { errorResponse } = require('./utils/response');
 
 const app = express();
 
+// CORS Middleware - Placed at the very top before any other middleware or routes
+app.use(cors({
+    origin: true,
+    credentials: true
+}));
+
 // Production Security Trusts (for VPS Reverse Proxy like Nginx)
 app.set('trust proxy', 1);
 app.disable('x-powered-by');
@@ -31,13 +37,7 @@ app.use(helmet({
     crossOriginEmbedderPolicy: false
 }));
 
-// Simplified CORS
-app.use(cors({
-    origin: true,
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
