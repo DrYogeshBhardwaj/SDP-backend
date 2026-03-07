@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1E40AF;stop-opacity:1" /> <!-- Strong Deep Blue -->
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1" /> <!-- Strong Deep Purple -->
+    </linearGradient>
+  </defs>
+
+  <!-- Group containing graphics shifted UP by 50 units -->
+  <!-- This keeps the original proportions but moves them out of the way of the text -->
+  <g transform="translate(0, -50)">
+      
+      <!-- Phone Outline (Original Proportions: 200x300) -->
+      <rect x="150" y="100" width="200" height="300" rx="40" ry="40" 
+            fill="none" stroke="url(#grad1)" stroke-width="15" />
+
+      <!-- Pause Symbol (Centered relative to original phone) -->
+      <rect x="210" y="280" width="25" height="80" rx="10" fill="url(#grad1)" />
+      <rect x="265" y="280" width="25" height="80" rx="10" fill="url(#grad1)" />
+
+      <!-- Leaf Shape (Original Curves) -->
+      <path d="M155,220 
+               Q155,120 250,120 
+               Q340,120 340,200 
+               Q340,280 250,220
+               Q180,180 155,220 Z" 
+            fill="url(#grad1)" />
+      
+      <!-- Leaf Vein -->
+      <path d="M160,220 Q240,160 330,190" stroke="white" stroke-width="4" fill="none" opacity="0.8"/>
+
+      <!-- Pixels (Original Positions) -->
+      <rect x="350" y="140" width="15" height="15" fill="#1E40AF" opacity="1.0" />
+      <rect x="370" y="130" width="12" height="12" fill="#7C3AED" opacity="0.9" />
+      <rect x="360" y="160" width="10" height="10" fill="#7C3AED" opacity="0.8" />
+      <rect x="385" y="150" width="8" height="8" fill="#1E40AF" opacity="0.7" />
+      <rect x="345" y="110" width="10" height="10" fill="#7C3AED" opacity="0.6" />
+  </g>
+
+  <!-- Text SDP - Positioned carefully below the shifted graphic -->
+  <!-- Graphic ends visually around y=350 (300+100-50). -->
+  <text x="50%" y="430" font-family="'Segoe UI', sans-serif" font-weight="bold" font-size="75" 
+        fill="url(#grad1)" text-anchor="middle">SDP</text>
+  
+  <!-- Text Sinaank Digital Pause -->
+  <text x="50%" y="475" font-family="'Segoe UI', sans-serif" font-weight="600" font-size="24" 
+        fill="#1F2937" text-anchor="middle">Sinaank Digital Pause</text>
+
+</svg>
