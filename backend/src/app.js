@@ -23,7 +23,13 @@ const app = express();
 
 // CORS Middleware - Placed at the very top before any other middleware or routes
 app.use(cors({
-    origin: true,
+    origin: [
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
+        "http://localhost:8081",
+        "http://127.0.0.1:8081",
+        "https://sinaank.com" // Preserving production origin for safety if needed later, though you can use multiple environments
+    ],
     credentials: true
 }));
 
