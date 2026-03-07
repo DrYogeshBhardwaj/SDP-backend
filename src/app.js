@@ -30,9 +30,11 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false
 }));
 
-// CORS
-if (process.env.NODE_ENV === 'production') {
-  const allowedOrigins = [process.env.FRONTEND_URL || 'https://sinaank.com'];
+// CORS FIX
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
 
   app.use(cors({
     origin: function (origin, callback) {
