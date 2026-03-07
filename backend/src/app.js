@@ -32,9 +32,12 @@ const allowedOrigins = [
 // CORS Middleware - Placed at the very top before any other middleware or routes
 app.use(cors({
     origin: function (origin, callback) {
-        // ALWAYS allow all origins temporarily for testing
-        // to prevent 500 errors from CORS origin mismatch.
-        callback(null, true);
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(null, true);   // allow temporarily for testing
+        }
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
