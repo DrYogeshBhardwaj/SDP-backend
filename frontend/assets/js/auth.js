@@ -30,7 +30,7 @@ const Auth = {
             console.error('Logout error', e);
         } finally {
             // Always redirect to login on logout
-            window.location.href = '/login';
+            window.location.href = '/public/login.html';
         }
     },
 
@@ -38,15 +38,15 @@ const Auth = {
     async protectPage(requiredRole = null) {
         const user = await this.checkAuth();
         if (!user) {
-            window.location.href = '/login';
+            window.location.href = '/public/login.html';
             return null;
         }
 
         if (requiredRole && user.role !== requiredRole && user.role !== 'SUPERADMIN' && user.role !== 'ADMIN_A' && user.role !== 'ADMIN_B') {
             // Not authorized for this page, redirect to appropriate dashboard
-            if (user.role === 'ADMIN' || user.role === 'ADMIN_A' || user.role === 'ADMIN_B') window.location.href = '/admin';
-            else if (user.role === 'SEEDER') window.location.href = '/seeder';
-            else window.location.href = '/dashboard';
+            if (user.role === 'ADMIN' || user.role === 'ADMIN_A' || user.role === 'ADMIN_B') window.location.href = '/dashboard/admin.html';
+            else if (user.role === 'SEEDER') window.location.href = '/dashboard/seeder.html';
+            else window.location.href = '/dashboard/user.html';
             return null;
         }
 

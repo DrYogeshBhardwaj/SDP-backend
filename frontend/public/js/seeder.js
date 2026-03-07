@@ -6,7 +6,7 @@ class SeederApp {
 
     async init() {
         try {
-            const res = await fetch('/api/auth/me');
+            const res = await fetch(CONFIG.API_BASE_URL + '/auth/me', { credentials: 'include' });
             if (!res.ok) {
                 window.location.href = 'login.html';
                 return;
@@ -44,8 +44,9 @@ class SeederApp {
     async loadLiveData() {
         try {
             const token = localStorage.getItem('sdp_token');
-            const netRes = await fetch('/api/seeder/network-tree', {
-                headers: { 'Authorization': `Bearer ${token}` }
+            const netRes = await fetch(CONFIG.API_BASE_URL + '/seeder/network-tree', {
+                headers: { 'Authorization': `Bearer ${token}` },
+                credentials: 'include'
             });
             if (netRes.ok) {
                 const netData = await netRes.json();
@@ -89,8 +90,9 @@ class SeederApp {
 
                 try {
                     const token = localStorage.getItem('sdp_token');
-                    const res = await fetch('/api/auth/family', {
+                    const res = await fetch(CONFIG.API_BASE_URL + '/auth/family', {
                         method: 'POST',
+                        credentials: 'include',
                         headers: {
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${token}`
@@ -124,8 +126,9 @@ class SeederApp {
     async loadFamilyMembers() {
         try {
             const token = localStorage.getItem('sdp_token');
-            const res = await fetch('/api/auth/family', {
-                headers: { 'Authorization': `Bearer ${token}` }
+            const res = await fetch(CONFIG.API_BASE_URL + '/auth/family', {
+                headers: { 'Authorization': `Bearer ${token}` },
+                credentials: 'include'
             });
             const data = await res.json();
 
@@ -552,7 +555,7 @@ class SeederApp {
 
     async logout() {
         try {
-            await fetch('/api/auth/logout', { method: 'POST' });
+            await fetch(CONFIG.API_BASE_URL + '/auth/logout', { method: 'POST', credentials: 'include' });
         } catch (e) { }
         window.location.href = 'login.html';
     }

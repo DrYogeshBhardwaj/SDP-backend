@@ -177,7 +177,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             try {
-                const res = await fetch('/api/auth/me');
+                const res = await fetch(CONFIG.API_BASE_URL + '/auth/me', { credentials: 'include' });
                 if (res.ok) {
                     const data = await res.json();
                     const user = data.data.user;

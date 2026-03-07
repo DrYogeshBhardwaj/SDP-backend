@@ -38,29 +38,37 @@
                     <p class="hero-transition text-white-80">Use it. Grow with it. Share it.</p>
 
                     <div class="flex justify-center gap-md mt-2 flex-wrap">
-                        <a href="login.html" class="btn btn-primary btn-white">Get Started</a>
-                        <a href="#" onclick="openModal('modal-hero'); return false;"
-                            class="btn btn-secondary btn-glass">Learn More</a>
+                        <a href="login.html" class="btn btn-primary" style="min-width: 180px;">Get Started</a>
+                        <a href="#" onclick="openModal('modal-hero'); return false;" class="btn btn-secondary"
+                            style="min-width: 180px;">Learn More</a>
                     </div>
                 </div>
             </div>
 
             <!-- Concept (Visual Cards) -->
-            <div id="growth-concept" class="container mt-neg-3 relative-z10">
-                <div class="visual-card-grid">
-                    <div class="visual-card">
-                        <span class="visual-icon">🧘</span>
-                        <h3>Take short digital breaks</h3>
+            <div id="growth-concept" class="container mt-neg-3 relative-z10"
+                style="margin-top: -2rem; position: relative; z-index: 10;">
+                <div class="visual-card-grid"
+                    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; justify-items: center;">
+                    <div class="visual-card"
+                        style="background: white; padding: 1.5rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; width: 100%; max-width: 320px;">
+                        <span class="visual-icon"
+                            style="font-size: 2.5rem; margin-bottom: 1rem; display: inline-block;">🧘</span>
+                        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Take short digital breaks</h3>
                         <p class="text-sm text-muted">Refresh your mind in just minutes.</p>
                     </div>
-                    <div class="visual-card">
-                        <span class="visual-icon">🌱</span>
-                        <h3>Build your SDP circle</h3>
+                    <div class="visual-card"
+                        style="background: white; padding: 1.5rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; width: 100%; max-width: 320px;">
+                        <span class="visual-icon"
+                            style="font-size: 2.5rem; margin-bottom: 1rem; display: inline-block;">🌱</span>
+                        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Build your SDP circle</h3>
                         <p class="text-sm text-muted">Grow your network responsibly.</p>
                     </div>
-                    <div class="visual-card">
-                        <span class="visual-icon">👥</span>
-                        <h3>Invite others responsibly</h3>
+                    <div class="visual-card"
+                        style="background: white; padding: 1.5rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; width: 100%; max-width: 320px;">
+                        <span class="visual-icon"
+                            style="font-size: 2.5rem; margin-bottom: 1rem; display: inline-block;">👥</span>
+                        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Invite others responsibly</h3>
                         <p class="text-sm text-muted">Share the gift of digital wellness.</p>
                     </div>
                 </div>
@@ -76,7 +84,7 @@
                             <p class="text-muted mb-1_5">
                                 SDP isn't just a timer. It's a personalized digital experience.
                             </p>
-                            <ul style="list-style: none; padding: 0; display: flex; flex-col; gap: 1rem;">
+                            <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem;">
                                 <li class="flex items-start gap-1">
                                     <span style="font-size: 1.2rem;">🧬</span>
                                     <div>
@@ -112,7 +120,7 @@
                                 style="width: 200px; height: 200px; border-radius: 50%; background: linear-gradient(45deg, var(--color-primary), #a855f7); opacity: 0.8; filter: blur(20px); animation: pulse 4s infinite;">
                             </div>
                             <div
-                                style="position: absolute; width: 150px; height: 150px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.5rem; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                                style="position: absolute; width: 150px; height: 150px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: bold; font-size: 1.5rem; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
                                 1 User<br>1 Sound
                             </div>
                         </div>
@@ -144,12 +152,14 @@
                     </div>
 
                     <!-- Family -->
-                    <div class="product-card featured">
-                        <span class="badge">OFFER</span>
+                    <div class="product-card featured" style="position: relative;">
+                        <span class="badge"
+                            style="position: absolute; top: 1rem; right: 1rem; background: var(--color-warning); color: white; padding: 0.4rem 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">OFFER</span>
                         <h3>SDP Family Pack</h3>
 
                         <!-- Family Network Visual -->
-                        <div class="network-visual" style="height: 150px; margin: 1rem 0;">
+                        <div class="network-visual"
+                            style="height: 120px; margin: 1.5rem 0 2.5rem 0; position: relative;">
                             <div class="network-node main">👤</div>
                             <div class="network-line" style="transform: rotate(0deg) translateX(40px);"></div>
                             <div class="network-node" style="transform: translate(80px, 0) scale(0.6);">👪</div>
@@ -195,17 +205,15 @@
 
     <!-- FOOTER -->
     <footer class="site-footer"
-        style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 3rem 1rem; text-align: center; margin-top: auto;">
-        <div class="container">
-            <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1.5rem;">This is a non-medical digital wellness
-                experience.</p>
+        style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 3rem 1rem 2rem; text-align: center; margin-top: auto;">
+        <div class="container" style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+            <p style="color: #64748b; font-size: 0.95rem;">This is a non-medical digital wellness experience.</p>
 
-            <div style="margin-bottom: 1.5rem;">
-                <a href="seeder.html" style="color: #3b82f6; text-decoration: none; font-weight: 500;">Partner
-                    Access</a>
-            </div>
+            <a href="seeder.html"
+                style="color: #3b82f6; text-decoration: none; font-weight: 500; font-size: 0.95rem; display: inline-block;">Partner
+                Access</a>
 
-            <p style="color: #94a3b8; font-size: 0.8rem;">
+            <p style="color: #94a3b8; font-size: 0.8rem; margin-top: 1rem;">
                 &copy; 2026 SINAANK. All rights reserved.<br>
                 Developed by SINAANK Team
             </p>
@@ -226,11 +234,11 @@
                     if (loginBtn) {
                         loginBtn.textContent = "Dashboard";
                         // Determine Dashboard URL based on active identity or role
-                        let dashUrl = '/dashboard';
+                        let dashUrl = '/dashboard/user.html';
                         if (user.role === 'SEEDER') {
-                            dashUrl = '/seeder';
+                            dashUrl = '/dashboard/seeder.html';
                         } else if (user.role === 'ADMIN' || user.role === 'ADMIN_A' || user.role === 'ADMIN_B') {
-                            dashUrl = '/admin';
+                            dashUrl = '/dashboard/admin.html';
                         }
 
                         loginBtn.href = dashUrl;

@@ -1,6 +1,6 @@
 const CONFIG = {
-    // Dynamically route to backend using relative path pattern for VPS
-    API_BASE_URL: window.location.origin + '/api'
+    // Direct connection to Railway backend for local frontend testing
+    API_BASE_URL: 'https://sdp-backend-production.up.railway.app/api'
 };
 
 Object.freeze(CONFIG);

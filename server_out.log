@@ -1,0 +1,12 @@
+[dotenv@17.3.1] injecting env (1) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+Server running on http://localhost:5000
+[0mPOST /api/auth/register [31m500[0m 512.622 ms - 352[0m
+[0mPOST /api/auth/login [31m500[0m 398.889 ms - 377[0m
+[0mPOST /api/products/purchase [33m401[0m 0.334 ms - 62[0m
+[0mPOST /api/seeder/activate [33m401[0m 0.219 ms - 62[0m
+[0mPOST /api/auth/register [31m500[0m 361.172 ms - 352[0m
+[0mPOST /api/auth/login [31m500[0m 341.520 ms - 377[0m
+[0mPOST /api/products/purchase [33m401[0m 0.164 ms - 62[0m
+[0mPOST /api/seeder/activate [33m401[0m 0.180 ms - 62[0m
+[0mPOST /api/auth/register [31m500[0m 421.815 ms - 352[0m
+[0mPOST /api/auth/register [31m500[0m 364.642 ms - 352[0m

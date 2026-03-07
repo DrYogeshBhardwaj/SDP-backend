@@ -443,7 +443,7 @@
         window.addEventListener('load', async () => {
             try {
                 // Fetch user data directly from our secure HTTPOnly backend
-                const res = await fetch('/api/auth/me');
+                const res = await fetch(CONFIG.API_BASE_URL + '/auth/me', { credentials: 'include' });
                 const data = await res.json();
 
                 if (!res.ok) {
@@ -472,7 +472,7 @@
 
             } catch (error) {
                 alert("Please login first.");
-                window.location.href = '/login';
+                window.location.href = 'login.html';
             }
         });
 
@@ -588,8 +588,9 @@
                 }
 
                 // Call backend API
-                const response = await fetch('/api/seeder/activate', {
+                const response = await fetch(CONFIG.API_BASE_URL + '/seeder/activate', {
                     method: 'POST',
+                    credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json'
                     },

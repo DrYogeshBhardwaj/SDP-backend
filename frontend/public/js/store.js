@@ -19,8 +19,9 @@ class Store {
 
         // FORCE LOGOUT MIGRATION (Version 6)
         if (storedVersion < 6) {
-            console.log("Migration v6: Forcing Global Logout");
+            // console.log("Migration v6: Forcing Global Logout");
             this.logout();
+            localStorage.setItem('ssb_db_version', this.DB_VERSION.toString());
         }
 
         // 2. Robust Seed: Ensure Admin A and Admin B exist (Critical for Split Roles)
@@ -55,7 +56,7 @@ class Store {
         let usersUpdated = false;
         adminsToCheck.forEach(admin => {
             if (!currentUsers.find(u => u.mobile === admin.mobile)) {
-                console.log(`Seeding missing admin: ${admin.name}`);
+                // console.log(`Seeding missing admin: ${admin.name}`);
                 currentUsers.push(admin);
                 usersUpdated = true;
             }

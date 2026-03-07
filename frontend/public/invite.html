@@ -85,7 +85,7 @@
 
     <!-- Live API Logic -->
     <script>
-        const BASE_URL = '';
+        const BASE_URL = 'https://sdp-backend-production.up.railway.app';
         let purchaseAmount = null;
         let referralCode = null;
         let userExists = false;
@@ -210,9 +210,9 @@
                         const role = data.data.user.role;
 
                         // Wait, redirect directly to dashboard. Dashboard will show upgrade if applicable.
-                        if (role === 'ADMIN') window.location.href = '/admin';
-                        else if (role === 'SEEDER') window.location.href = '/seeder';
-                        else window.location.href = '/dashboard';
+                        if (role === 'ADMIN') window.location.href = '/dashboard/admin.html';
+                        else if (role === 'SEEDER') window.location.href = '/dashboard/seeder.html';
+                        else window.location.href = '/dashboard/user.html';
                     } else {
                         alert(data.message || 'Login failed, please check your PIN.');
                         submitBtn.textContent = 'Secure Login';
@@ -236,28 +236,8 @@
                     });
 
                     if (regRes.ok) {
-                        alert("Account created successfully! Auto-logging you in...");
-
-                        // Automatically log them in instead of reloading
-                        const loginRes = await fetch(`${BASE_URL}/api/auth/login`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ mobile, pin })
-                        });
-
-                        if (loginRes.ok) {
-                            const loginData = await loginRes.json();
-                            const role = loginData.data.user.role;
-
-                            if (purchaseAmount === '580' || purchaseAmount === 580) {
-                                window.location.href = 'seeder_offer.html';
-                            } else {
-                                if (role === 'SEEDER') window.location.href = '/seeder';
-                                else window.location.href = '/dashboard';
-                            }
-                        } else {
-                            window.location.reload();
-                        }
+                        alert("Account created successfully! Payment registered.\n\nPlease login from the main page to continue.");
+                        window.location.href = 'index.html';
                     } else {
                         const errorData = await regRes.json();
                         alert(errorData.message || "Registration Failed.");

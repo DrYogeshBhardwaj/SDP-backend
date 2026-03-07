@@ -77,7 +77,7 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/announcements', announcementRoutes);
 
 // Fallback to exactly public/index.html internally as requested
-app.get("*", (req, res, next) => {
+app.use((req, res, next) => {
     // Prevent overriding of standard API routes natively if an endpoint genuinely crashes
     if (req.originalUrl.startsWith('/api')) {
         return next();

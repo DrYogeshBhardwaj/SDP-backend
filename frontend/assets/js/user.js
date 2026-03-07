@@ -64,8 +64,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             try {
                 // Wait for the backend API route if it doesn't exist yet, passing it explicitly
-                const res = await fetch('/api/auth/family', {
+                const res = await fetch(CONFIG.API_BASE_URL + '/auth/family', {
                     method: 'POST',
+                    credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('sdp_token')}`
@@ -98,8 +99,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function loadFamilyMembers(user) {
         try {
-            const res = await fetch('/api/auth/family', {
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('sdp_token')}` }
+            const res = await fetch(CONFIG.API_BASE_URL + '/auth/family', {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('sdp_token')}` },
+                credentials: 'include'
             });
             const data = await res.json();
 
