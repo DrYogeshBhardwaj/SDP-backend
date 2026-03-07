@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seeder Dashboard - SDP</title>
+    <link rel="stylesheet" href="../assets/css/theme.css">
+    <style>
+        .metric-card {
+            text-align: center;
+            background: var(--background-color);
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius);
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--spacing-md);
+        }
+
+        @media (min-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container mt-3">
+        <div class="card"
+            style="display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-md);">
+            <h2 style="margin: 0; font-size: 1.25rem;">Seeder: <span id="user-name-display">Loading...</span></h2>
+            <button class="btn btn-secondary logout-btn" style="width: auto; padding: 0.5rem 1rem;">Logout</button>
+        </div>
+
+        <div id="error-message" class="alert alert-error"></div>
+        <div id="success-message" class="alert alert-success"></div>
+
+        <div class="dashboard-grid mt-2">
+            <!-- Earnings & Referrals -->
+            <div class="card">
+                <h3>My Earnings</h3>
+                <div class="dashboard-grid mt-1">
+                    <div class="metric-card">
+                        <div>Wallet Balance</div>
+                        <div class="metric-value" id="wallet-balance">₹0</div>
+                    </div>
+                    <div class="metric-card" style="border: 1px solid var(--warning-color);">
+                        <div>Total Bonus</div>
+                        <div class="metric-value" style="color: var(--warning-color);" id="total-bonus">₹0</div>
+                    </div>
+                </div>
+
+                <div class="mt-2">
+                    <h4>Request Payout</h4>
+                    <form id="payout-form" class="mt-1">
+                        <div class="form-group mb-1">
+                            <input type="number" id="payout-amount" class="form-control" placeholder="Amount (Min ₹200)"
+                                min="200" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="payout-btn">Withdraw Funds</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Team & Rank -->
+            <div class="card">
+                <h3>Referral Network</h3>
+                <div class="mt-1 p-2" style="background: var(--background-color); border-radius: var(--border-radius);">
+                    <strong>My Referral Link:</strong>
+                    <div style="display: flex; gap: var(--spacing-sm); margin-top: var(--spacing-xs);">
+                        <input type="text" id="referral-link" class="form-control" readonly style="flex: 1;">
+                        <button id="copy-link-btn" class="btn btn-secondary" style="width: auto;">Copy</button>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid mt-2">
+                    <div class="metric-card">
+                        <div>Level 1 Team</div>
+                        <div class="metric-value" id="level1-count"
+                            style="color: var(--text-primary); font-size: 1.5rem;">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div>Level 2 Team</div>
+                        <div class="metric-value" id="level2-count"
+                            style="color: var(--text-primary); font-size: 1.5rem;">0</div>
+                    </div>
+                </div>
+
+                <div class="mt-2 text-center">
+                    <strong>Current Rank/Status:</strong>
+                    <span id="rank-status"
+                        style="padding: 0.25rem 0.5rem; background: var(--success-color); color: white; border-radius: 4px; font-size: 0.85rem; margin-left: var(--spacing-xs);">Active
+                        Seeder</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Profile -->
+        <div class="card mt-2">
+            <h3>Edit Profile</h3>
+            <form id="edit-profile-form" class="mt-1">
+                <div class="dashboard-grid" style="gap: var(--spacing-sm);">
+                    <div class="form-group mb-1">
+                        <label>Business Name</label>
+                        <input type="text" id="edit-profile-name" class="form-control" placeholder="Your Name">
+                    </div>
+                    <div class="form-group mb-1">
+                        <label>UPI ID (Read Only)</label>
+                        <input type="text" id="edit-profile-upi" class="form-control" readonly
+                            style="background:var(--background-color); color:var(--text-secondary);">
+                        <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">Contact Admin to
+                            change UPI ID.</div>
+                    </div>
+                </div>
+                <!-- Profile Image -->
+                <div class="form-group mb-2" style="display:flex; align-items:center; gap: 1rem;">
+                    <img id="edit-profile-img-preview" src="../assets/logo.png"
+                        style="width: 60px; height: 60px; object-fit: cover; border-radius: 50%; border: 2px solid var(--border-color);">
+                    <div>
+                        <label class="btn btn-secondary"
+                            style="cursor:pointer; display:inline-block; margin-bottom: 0;">
+                            Change Photo
+                            <input type="file" id="edit-profile-img" accept="image/*" style="display: none;">
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" id="btn-save-profile" style="width: auto;">Save
+                    Changes</button>
+                <div id="profile-msg" class="mt-1" style="font-weight: 500; font-size: 0.9rem;"></div>
+            </form>
+        </div>
+
+        <!-- Mindful Alarm -->
+        <div class="card mt-2">
+            <h3>Mindful Alarm</h3>
+            <p class="mb-2" style="font-size: 0.9rem; color: var(--text-secondary);">Set a daily offline reminder for
+                your digital wellness pause.</p>
+            <form id="alarm-form">
+                <div class="dashboard-grid" style="gap: var(--spacing-sm);">
+                    <div class="form-group mb-1">
+                        <label for="alarm-time">Alarm Time</label>
+                        <input type="time" id="alarm-time" class="form-control" required>
+                    </div>
+                    <div class="form-group mb-1">
+                        <label for="alarm-duration">Auto-Start Choice</label>
+                        <select id="alarm-duration" class="form-control">
+                            <option value="2">2 Minutes</option>
+                            <option value="5" selected>5 Minutes</option>
+                            <option value="10">10 Minutes</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group mb-2">
+                    <label for="alarm-message">Reminder Message</label>
+                    <input type="text" id="alarm-message" class="form-control" placeholder="E.g., Time to relax..."
+                        value="It's time for your digital wellness pause!" required>
+                </div>
+                <div style="display: flex; gap: var(--spacing-sm);">
+                    <button type="submit" class="btn btn-primary" id="btn-set-alarm" style="width: auto;">Set
+                        Alarm</button>
+                    <button type="button" class="btn btn-secondary hidden" id="btn-clear-alarm"
+                        style="background:#dc3545; width: auto;">Turn Off</button>
+                </div>
+                <div id="alarm-status" class="mt-1" style="font-weight: 500; font-size: 0.9rem;"></div>
+            </form>
+        </div>
+
+        <!-- Detailed Team List -->
+        <div class="card mt-2">
+            <h3>My Team (Level 1)</h3>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; margin-top: var(--spacing-sm); min-width: 400px;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border-color); text-align: left;">
+                            <th style="padding: 0.75rem 0.5rem;">Mobile</th>
+                            <th style="padding: 0.75rem 0.5rem;">Joined</th>
+                            <th style="padding: 0.75rem 0.5rem;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="team-table-body">
+                        <tr>
+                            <td colspan="3" class="text-center" style="padding: 1rem;">Loading team...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Support & Communication -->
+        <div class="card mt-2">
+            <h3>Support & Messages <span id="unread-messages-badge"
+                    style="display:none; background:red; color:white; border-radius:12px; padding:2px 8px; font-size:0.75rem; margin-left:8px;">0
+                    New</span></h3>
+            <p class="mb-1 text-sm text-slate-500">Contact the Administrator directly regarding payouts or account
+                questions.</p>
+            <div class="dashboard-grid mt-1">
+                <form id="support-form" style="display:flex; gap:0.5rem; flex-direction:column;">
+                    <textarea id="support-message" class="form-control" rows="2"
+                        placeholder="Describe your issue or query..." required></textarea>
+                    <button type="submit" class="btn btn-primary" style="align-self: flex-start; width: auto;">Send
+                        Message</button>
+                    <div id="support-status" class="mt-1" style="font-size:0.85rem;"></div>
+                </form>
+            </div>
+            <div id="support-thread" class="mt-2"
+                style="background:var(--background-color); border-radius:4px; padding:var(--spacing-sm); max-height:200px; overflow-y:auto;">
+                <p class="text-center text-secondary">Loading chat...</p>
+            </div>
+        </div>
+
+        <!-- Start Session (Added for Seeder) -->
+        <div class="card mt-2">
+            <h3>Start Pause Session</h3>
+            <p class="mb-2">Select a duration to begin your mindful pause.</p>
+
+            <div id="session-options" style="display: flex; flex-direction: column; gap: var(--spacing-sm);">
+                <button class="btn btn-primary session-btn" data-minutes="2">2 Minutes</button>
+                <button class="btn btn-primary session-btn" data-minutes="5">5 Minutes</button>
+                <button class="btn btn-primary session-btn" data-minutes="10">10 Minutes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Break Fullscreen UI -->
+    <div id="active-break-ui" class="hidden">
+        <div class="breathe-circle">
+            <h2 id="session-timer-large">00:00</h2>
+        </div>
+        <h3 class="text-highlight">Digital Wellness Session</h3>
+        <p>Relax your eyes and mind. Focus on your breath.</p>
+        <p style="font-size: 0.9rem; margin-top: 1rem; color: var(--text-secondary); opacity: 0.8;">
+            🔊 108 Hz (Deep Bass) • 162 Hz (Perfect Fifth)
+        </p>
+        <button class="btn btn-outline-white" id="end-session-early-btn">End Session</button>
+    </div>
+
+    <!-- Centralized Utilities -->
+    <script src="../assets/js/config.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/alignment.js" type="module"></script>
+    <script src="../assets/js/seeder.js"></script>
+    <script src="../assets/js/alarm.js"></script>
+
+    <!-- Harmonized Alignment Overlay -->
+    <div id="alignment-overlay">
+        <h2>Harmonic Alignment</h2>
+        <p>Preparing your digital pause</p>
+    </div>
+</body>
+
+</html>
