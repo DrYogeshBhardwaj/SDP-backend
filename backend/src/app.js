@@ -33,7 +33,7 @@ app.use(helmet({
 
 // Hardened CORS
 if (process.env.NODE_ENV === 'production') {
-    const allowedOrigins = [process.env.FRONTEND_URL || 'https://sinaank.com'];
+    const allowedOrigins = [process.env.FRONTEND_URL || 'https://sinaank.com', 'http://127.0.0.1:3000', 'http://localhost:3000'];
     app.use(cors({
         origin: function (origin, callback) {
             if (!origin) return callback(null, true);
@@ -50,7 +50,7 @@ if (process.env.NODE_ENV === 'production') {
 } else {
     // Local development (localhost testing)
     app.use(cors({
-        origin: ['http://localhost:3000', 'http://127.0.0.1:5000', 'http://localhost:5000'],
+        origin: ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://127.0.0.1:5000', 'http://localhost:5000'],
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization']
@@ -61,6 +61,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(morgan('dev'));
+
+// HEALTH CHECK (Placed at the very top to bypass all custom router middlewares)
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'SDP Backend Running' });
+});
 
 // Next line starts Routes //
 // Routes
@@ -77,9 +82,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/announcements', announcementRoutes);
 
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'SDP Backend Running' });
-});
+
 
 // Central error handler
 app.use((err, req, res, next) => {
