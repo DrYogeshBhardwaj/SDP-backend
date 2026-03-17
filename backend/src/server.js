@@ -7,21 +7,21 @@ const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 
-// Preserve all route module requirements from /src/
-const authRoutes = require('./src/modules/auth/auth.routes');
-const otpRoutes = require('./src/modules/auth/otp.routes');
-const productRoutes = require('./src/modules/products/product.routes');
-const minutesRoutes = require('./src/modules/minutes/minutes.routes');
-const seederRoutes = require('./src/modules/seeder/seeder.routes');
-const financeRoutes = require('./src/modules/finance/finance.routes');
-const adminRoutes = require('./src/modules/admin/admin.routes');
-const expenseRoutes = require('./src/modules/admin/expense.routes');
-const messageRoutes = require('./src/modules/communication/message.routes');
-const announcementRoutes = require('./src/modules/communication/announcement.routes');
-const adminAnnouncementRoutes = require('./src/modules/communication/admin.announcement.routes');
-const exportRoutes = require('./src/modules/admin/export.routes');
-const referralRoutes = require('./src/modules/referral/referral.routes');
-const { errorResponse } = require('./src/utils/response');
+// Preserve all route module requirements from /modules/
+const authRoutes = require('./modules/auth/auth.routes');
+const otpRoutes = require('./modules/auth/otp.routes');
+const productRoutes = require('./modules/products/product.routes');
+const minutesRoutes = require('./modules/minutes/minutes.routes');
+const seederRoutes = require('./modules/seeder/seeder.routes');
+const financeRoutes = require('./modules/finance/finance.routes');
+const adminRoutes = require('./modules/admin/admin.routes');
+const expenseRoutes = require('./modules/admin/expense.routes');
+const messageRoutes = require('./modules/communication/message.routes');
+const announcementRoutes = require('./modules/communication/announcement.routes');
+const adminAnnouncementRoutes = require('./modules/communication/admin.announcement.routes');
+const exportRoutes = require('./modules/admin/export.routes');
+const referralRoutes = require('./modules/referral/referral.routes');
+const { errorResponse } = require('./utils/response');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -39,14 +39,14 @@ app.use((req, res, next) => {
 });
 
 // Serve frontend statically from the root frontend folders to avoid duplicating files
-console.log("Serving static from:", path.join(__dirname, "../frontend"));
+console.log("Serving static from:", path.join(__dirname, "../../frontend"));
 // Map /public in URL to frontend/public folder
-app.use('/public', express.static(path.join(__dirname, "../frontend/public")));
-app.use('/assets', express.static(path.join(__dirname, "../frontend/assets")));
-app.use('/dashboard', express.static(path.join(__dirname, "../frontend/dashboard")));
+app.use('/public', express.static(path.join(__dirname, "../../frontend/public")));
+app.use('/assets', express.static(path.join(__dirname, "../../frontend/assets")));
+app.use('/dashboard', express.static(path.join(__dirname, "../../frontend/dashboard")));
 
 // Also serve the root public folder intrinsically to support legacy links
-app.use(express.static(path.join(__dirname, "../frontend/public")));
+app.use(express.static(path.join(__dirname, "../../frontend/public")));
 
 // Production Security Trusts (for VPS Reverse Proxy like Nginx)
 app.set('trust proxy', 1);
