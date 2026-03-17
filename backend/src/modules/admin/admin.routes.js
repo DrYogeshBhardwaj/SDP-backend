@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { getPendingPayouts, approvePayout, rejectPayout, getUsers, blockUser, unblockUser, resetUserPin, editUser, trashUser, getTrashedUsers, restoreUser, purgeUser, getSystemStats, getLedger, getUserDetails } = require('./admin.controller');
-const authMiddleware = require('../../middlewares/authMiddleware');
+const { authMiddleware } = require('../../middlewares/authMiddleware');
 
 // Very basic admin middleware for now
 const requireAdmin = (req, res, next) => {

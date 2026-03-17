@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { sendMessage, getThread, markAsRead, getInbox } = require('./message.controller');
-const authMiddleware = require('../../middlewares/authMiddleware');
+const { authMiddleware } = require('../../middlewares/authMiddleware');
 
 // Protect all routes with JWT
 router.use(authMiddleware);

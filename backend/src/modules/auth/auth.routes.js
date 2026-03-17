@@ -2,7 +2,7 @@ console.log("🔥 AUTH ROUTES LOADED - NEW FILE");
 const express = require('express');
 const router = express.Router();
 const authController = require('./auth.controller');
-const authMiddleware = require('../../middlewares/authMiddleware');
+const { authMiddleware } = require('../../middlewares/authMiddleware');
 const { loginLimiter } = require('../../middlewares/rateLimiter');
 
 // Debugging undefined exports (will log in Railway)

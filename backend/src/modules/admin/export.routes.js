@@ -6,7 +6,7 @@ const {
     exportBonusLedger,
     exportExpenses
 } = require('./export.controller');
-const authMiddleware = require('../../middlewares/authMiddleware');
+const { authMiddleware } = require('../../middlewares/authMiddleware');
 const rateLimit = require('express-rate-limit');
 
 const requireAdmin = (req, res, next) => {

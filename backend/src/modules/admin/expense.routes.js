@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { createExpense, getExpenses } = require('./expense.controller');
-const authMiddleware = require('../../middlewares/authMiddleware');
+const { authMiddleware } = require('../../middlewares/authMiddleware');
 
 const requireAdmin = (req, res, next) => {
     if (req.user && req.user.role === 'ADMIN') {
