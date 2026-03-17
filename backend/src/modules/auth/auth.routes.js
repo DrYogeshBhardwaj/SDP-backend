@@ -1,35 +1,25 @@
 console.log("🔥 AUTH ROUTES LOADED - NEW FILE");
 const express = require('express');
 const router = express.Router();
-const {
-    checkMobile,
-    register,
-    login,
-    logout,
-    getMe,
-    updateProfile,
-    addFamily,
-    getFamily,
-    getReferrer
-} = require('./auth.controller');
+const authController = require('./auth.controller');
+const authMiddleware = require('../../middlewares/authMiddleware');
+const { loginLimiter } = require('../../middlewares/rateLimiter');
 
 // Debugging undefined exports (will log in Railway)
 console.log("authMiddleware:", typeof authMiddleware);
-console.log("getMe:", typeof getMe);
-console.log("login:", typeof login);
+console.log("authController.getMe:", typeof authController?.getMe);
+console.log("authController.login:", typeof authController?.login);
 
-router.post('/check-mobile', checkMobile);
-router.post('/register', register);
-router.post('/login', loginLimiter, login);
-router.post('/logout', authMiddleware, logout);
-// TEMPORARY FIX
-// router.get('/me', authMiddleware, getMe);
-router.get('/me', (req, res) => res.send("OK"));
-router.put('/profile', authMiddleware, updateProfile);
+router.post('/check-mobile', authController.checkMobile);
+router.post('/register', authController.register);
+router.post('/login', loginLimiter, authController.login);
+router.post('/logout', authMiddleware, authController.logout);
+router.get('/me', authMiddleware, authController.getMe);
+router.put('/profile', authMiddleware, authController.updateProfile);
 
-router.post('/family', authMiddleware, addFamily);
-router.get('/family', authMiddleware, getFamily);
+router.post('/family', authMiddleware, authController.addFamily);
+router.get('/family', authMiddleware, authController.getFamily);
 
-router.get('/referrer/:code', getReferrer);
+router.get('/referrer/:code', authController.getReferrer);
 
 module.exports = router;
