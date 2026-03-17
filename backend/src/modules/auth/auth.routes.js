@@ -1,19 +1,30 @@
 const express = require('express');
 const router = express.Router();
-const authController = require('./auth.controller');
-const authMiddleware = require('../../middlewares/authMiddleware');
-const { loginLimiter } = require('../../middlewares/rateLimiter');
+const {
+    checkMobile,
+    register,
+    login,
+    logout,
+    getMe,
+    updateProfile,
+    addFamily,
+    getFamily,
+    getReferrer
+} = require('./auth.controller');
 
-router.post('/check-mobile', authController.checkMobile);
-router.post('/register', authController.register);
-router.post('/login', loginLimiter, authController.login);
-router.post('/logout', authMiddleware, authController.logout);
-router.get('/me', authMiddleware, authController.getMe);
-router.put('/profile', authMiddleware, authController.updateProfile);
+// Debugging undefined exports (will log in Railway)
+console.log("Auth Controller Exports:", { checkMobile, register, login, logout, getMe, updateProfile, addFamily, getFamily, getReferrer });
 
-router.post('/family', authMiddleware, authController.addFamily);
-router.get('/family', authMiddleware, authController.getFamily);
+router.post('/check-mobile', checkMobile);
+router.post('/register', register);
+router.post('/login', loginLimiter, login);
+router.post('/logout', authMiddleware, logout);
+router.get('/me', authMiddleware, getMe);
+router.put('/profile', authMiddleware, updateProfile);
 
-router.get('/referrer/:code', authController.getReferrer);
+router.post('/family', authMiddleware, addFamily);
+router.get('/family', authMiddleware, getFamily);
+
+router.get('/referrer/:code', getReferrer);
 
 module.exports = router;

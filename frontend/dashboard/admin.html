@@ -223,6 +223,52 @@
             </div>
         </div>
 
+        <!-- User Details Modal -->
+        <div id="user-details-modal" class="hidden"
+            style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: none; align-items: center; justify-content: center;">
+            <div class="card"
+                style="width: 90%; max-width: 700px; max-height: 90vh; overflow-y: auto;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1rem;">
+                    <h3 style="margin: 0;">User Details: <span id="detail-mobile"></span></h3>
+                    <button class="btn btn-secondary" onclick="closeUserDetailsModal()"
+                        style="width: auto; padding: 0.2rem 0.5rem;">Close</button>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                    <div style="background: var(--background-color); padding: 1rem; border-radius: var(--border-radius);">
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Role & Status</div>
+                        <div style="font-weight: bold; font-size: 1.1rem;"><span id="detail-role"></span> • <span id="detail-status"></span></div>
+                    </div>
+                    <div style="background: var(--background-color); padding: 1rem; border-radius: var(--border-radius);">
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Wallet Balance</div>
+                        <div style="font-weight: bold; font-size: 1.1rem; color: var(--success-color);">₹<span id="detail-wallet">0</span></div>
+                    </div>
+                    <div style="background: var(--background-color); padding: 1rem; border-radius: var(--border-radius);">
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Referrals (L1 / L2)</div>
+                        <div style="font-weight: bold; font-size: 1.1rem;"><span id="detail-l1">0</span> / <span id="detail-l2">0</span></div>
+                    </div>
+                </div>
+
+                <h4>Last 10 Bonus Entries</h4>
+                <div style="overflow-x: auto; background: var(--background-color); border-radius: var(--border-radius); border: 1px solid var(--border-color);">
+                    <table style="margin: 0;">
+                        <thead style="background: var(--card-bg);">
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Source User</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detail-ledger-body">
+                            <tr><td colspan="4" class="text-center italic opacity-50">Loading ledger...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- Trash Section Placeholder -->
         <div id="trash-section" class="card admin-section" style="border:1px solid var(--danger-color)">
             <h3 style="color:var(--danger-color)">🗑️ System Trash Can</h3>

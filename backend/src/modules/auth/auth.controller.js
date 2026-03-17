@@ -98,8 +98,13 @@ const register = async (req, res) => {
 
             // Handle Referral Logic if a referral code was provided
             if (req.body.referral_code) {
-                const referrer = await tx.user.findUnique({
-                    where: { referral_code: req.body.referral_code },
+                const referrer = await tx.user.findFirst({
+                    where: { 
+                        OR: [
+                            { referral_code: req.body.referral_code },
+                            { mobile: req.body.referral_code }
+                        ]
+                    },
                     include: { referredBy: true }
                 });
 
@@ -162,7 +167,7 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
     try {
-        const { mobile, pin } = req.body;
+        let { mobile, pin } = req.body;
 
         mobile = String(mobile);
         pin = String(pin);

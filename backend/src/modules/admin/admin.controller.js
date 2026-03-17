@@ -577,6 +577,73 @@ const getLedger = async (req, res) => {
     }
 };
 
+const getUserDetails = async (req, res) => {
+    try {
+        const userId = req.params.id;
+
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            include: {
+                cash: true,
+                _count: {
+                    select: {
+                        referrals: true
+                    }
+                }
+            }
+        });
+
+        if (!user) return errorResponse(res, 404, 'User not found');
+
+        // Level 1 explicitly active
+        const level1Count = await prisma.referral.count({
+            where: { referrerId: userId, level: 1 }
+        });
+
+        const level2Count = await prisma.referral.count({
+            where: { referrerId: userId, level: 2 }
+        });
+
+        // 10 latest bonus ledger entries
+        const latestBonuses = await prisma.bonusLedger.findMany({
+            where: { userId: userId },
+            include: {
+                sourceUser: {
+                    select: { mobile: true, name: true }
+                }
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 10
+        });
+
+        return successResponse(res, 200, 'User details retrieved', {
+            info: {
+                name: user.name,
+                mobile: user.mobile,
+                role: user.role,
+                status: user.status,
+                joinedAt: user.createdAt,
+            },
+            wallet: user.cash?.balance || 0,
+            network: {
+                level1: level1Count,
+                level2: level2Count,
+                total: user._count.referrals
+            },
+            recentBonuses: latestBonuses.map(b => ({
+                amount: Math.abs(b.amount),
+                type: b.type,
+                date: b.createdAt,
+                sourceMobile: b.sourceUser?.mobile || 'System'
+            }))
+        });
+
+    } catch (error) {
+        console.error('Get User Details Error:', error);
+        return errorResponse(res, 500, 'Failed to fetch user details');
+    }
+};
+
 module.exports = {
     getPendingPayouts,
     approvePayout,
@@ -591,5 +658,6 @@ module.exports = {
     restoreUser,
     purgeUser,
     getSystemStats,
-    getLedger
+    getLedger,
+    getUserDetails
 };

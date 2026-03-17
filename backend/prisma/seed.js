@@ -36,11 +36,11 @@ async function main() {
 
     console.log('Seeding ranks...');
     const ranks = [
-        { name: 'Seeder', directRequired: 0, networkRequired: 0, bonusAmount: 0 },
-        { name: 'Builder', directRequired: 10, networkRequired: 0, bonusAmount: 300 },
-        { name: 'Partner', directRequired: 0, networkRequired: 50, bonusAmount: 1000 },
-        { name: 'Senior Partner', directRequired: 0, networkRequired: 100, bonusAmount: 2500 },
-        { name: 'Elite Partner', directRequired: 0, networkRequired: 200, bonusAmount: 5000 }
+        { name: 'Silver Partner', directRequired: 0, networkRequired: 25, bonusAmount: 500 },
+        { name: 'Gold Partner', directRequired: 0, networkRequired: 50, bonusAmount: 1200 },
+        { name: 'Platinum Partner', directRequired: 0, networkRequired: 100, bonusAmount: 3000 },
+        { name: 'Diamond Partner', directRequired: 0, networkRequired: 250, bonusAmount: 8000 },
+        { name: 'Crown Partner', directRequired: 0, networkRequired: 500, bonusAmount: 20000 }
     ];
 
     for (const rank of ranks) {

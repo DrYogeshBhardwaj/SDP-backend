@@ -139,22 +139,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const ctx = new AudioContext();
-            const osc = ctx.createOscillator();
-            const gainNode = ctx.createGain();
+            
+            // First chime (C5)
+            const osc1 = ctx.createOscillator();
+            const gain1 = ctx.createGain();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(523.25, ctx.currentTime);
+            
+            gain1.gain.setValueAtTime(0, ctx.currentTime);
+            gain1.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 0.05);
+            gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.0);
+            
+            osc1.connect(gain1);
+            gain1.connect(ctx.destination);
+            osc1.start(ctx.currentTime);
+            osc1.stop(ctx.currentTime + 1.0);
 
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(880, ctx.currentTime); // High pitch bell
-            osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 1.5); // slide down
+            // Second chime (E5 - Ascending major third for positive feel)
+            const osc2 = ctx.createOscillator();
+            const gain2 = ctx.createGain();
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(659.25, ctx.currentTime + 0.3);
+            
+            gain2.gain.setValueAtTime(0, ctx.currentTime + 0.3);
+            gain2.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 0.35);
+            gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.5);
+            
+            osc2.connect(gain2);
+            gain2.connect(ctx.destination);
+            osc2.start(ctx.currentTime + 0.3);
+            osc2.stop(ctx.currentTime + 1.5);
 
-            gainNode.gain.setValueAtTime(0, ctx.currentTime);
-            gainNode.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.05); // quick attack
-            gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 2.5); // long decay
-
-            osc.connect(gainNode);
-            gainNode.connect(ctx.destination);
-
-            osc.start(ctx.currentTime);
-            osc.stop(ctx.currentTime + 3);
         } catch (e) {
             console.warn("Could not play alarm bell", e);
         }

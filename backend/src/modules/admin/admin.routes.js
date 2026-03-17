@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getPendingPayouts, approvePayout, rejectPayout, getUsers, blockUser, unblockUser, resetUserPin, editUser, trashUser, getTrashedUsers, restoreUser, purgeUser, getSystemStats, getLedger } = require('./admin.controller');
+const { getPendingPayouts, approvePayout, rejectPayout, getUsers, blockUser, unblockUser, resetUserPin, editUser, trashUser, getTrashedUsers, restoreUser, purgeUser, getSystemStats, getLedger, getUserDetails } = require('./admin.controller');
 const authMiddleware = require('../../middlewares/authMiddleware');
 
 // Very basic admin middleware for now
@@ -23,6 +23,7 @@ router.get('/users/trash', getTrashedUsers);
 router.post('/users/:id/restore', restoreUser);
 router.delete('/users/:id/purge', purgeUser);
 router.get('/users', getUsers);
+router.get('/users/:id/details', getUserDetails);
 router.post('/users/:id/block', blockUser);
 router.post('/users/:id/unblock', unblockUser);
 router.post('/users/:id/reset-pin', resetUserPin);

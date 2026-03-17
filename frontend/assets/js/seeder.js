@@ -5,8 +5,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const user = await Auth.protectPage('SEEDER');
     if (!user) return; // Will redirect
 
-    // Set referral link
-    const refLink = `${window.location.origin}/public/register.html?ref=${user.mobile}`;
+    // Set referral link to default to the 580 Family Pack
+    const refLink = `${window.location.origin}/public/login.html?ref=${user.mobile}&amount=580`;
     document.getElementById('referral-link').value = refLink;
 
     // Save user.mobile globally for AudioDB
@@ -179,17 +179,43 @@ async function startSession(minutes) {
             if (audioDescText) {
                 audioDescText.innerHTML = `🎵 Playing Custom Sound: <b>${originalFileName}</b>`;
             }
-        } else {
-            const audioDescText = document.getElementById('audio-desc-text');
-            if (audioDescText) {
-                audioDescText.innerHTML = `🔊 108 Hz (Deep Bass) • 162 Hz (Perfect Fifth)`;
-            }
-        }
 
-        // START AMBIENT SOUND SYNCHRONOUSLY to bypass autoplay policies
-        // We pass 5 seconds delay so it fades in exactly when the visual ritual ends.
-        if (window.playSessionAmbientAudio) {
-            window.playSessionAmbientAudio(5, customAudioSource);
+            // START AMBIENT SOUND SYNCHRONOUSLY to bypass autoplay policies
+            if (window.playSessionAmbientAudio) {
+                window.playSessionAmbientAudio(5, customAudioSource);
+            }
+        } else {
+            if (window.ssbCore && window.currentUserMobile) {
+                const vals = window.ssbCore.calculateValues(window.currentUserMobile);
+                const styledVals = window.ssbCore.verifyContrast(vals.val1, vals.val2);
+
+                const breakUI = document.getElementById('active-break-ui');
+                if (breakUI) {
+                    breakUI.style.background = `linear-gradient(135deg, ${styledVals.color1} 0%, ${styledVals.color2} 100%)`;
+                }
+
+                const audioDescText = document.getElementById('audio-desc-text');
+                if (audioDescText) {
+                    audioDescText.innerHTML = `🔊 ${window.ssbCore.getFrequencyText(styledVals.val1)} (Mobank) • ${window.ssbCore.getFrequencyText(styledVals.val2)} (Yogank)`;
+                }
+
+                try {
+                    await window.ssbCore.startAudio(styledVals.val1, styledVals.val2);
+                } catch (e) {
+                    console.warn('[SSB CORE] Audio failed, using fallback:', e);
+                    if (window.playSessionAmbientAudio) {
+                        window.playSessionAmbientAudio(5);
+                    }
+                }
+            } else {
+                const audioDescText = document.getElementById('audio-desc-text');
+                if (audioDescText) {
+                    audioDescText.innerHTML = `🔊 108 Hz (Deep Bass) • 162 Hz (Perfect Fifth)`;
+                }
+                if (window.playSessionAmbientAudio) {
+                    window.playSessionAmbientAudio(5);
+                }
+            }
         }
 
         // START FULLSCREEN SYNCHRONOUSLY to bypass fullscreen policies
@@ -273,9 +299,18 @@ function endSessionUI(minutes = 0, successDiv = null) {
     if (window.stopSessionAmbientAudio) {
         window.stopSessionAmbientAudio();
     }
+    
+    // Stop SSB Audio
+    if (window.ssbCore) {
+        window.ssbCore.stopAudio();
+    }
 
     // Hide UI and Fullscreen
-    document.getElementById('active-break-ui').classList.add('hidden');
+    const breakUI = document.getElementById('active-break-ui');
+    if (breakUI) {
+        breakUI.classList.add('hidden');
+        breakUI.style.background = ''; // reset custom color
+    }
     try {
         const exitFS = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
         if (exitFS && (document.fullscreenElement || document.webkitFullscreenElement)) {
@@ -300,6 +335,10 @@ async function loadSeederData() {
 
         document.getElementById('wallet-balance').textContent = `₹${user.walletBalance || 0}`;
         document.getElementById('total-bonus').textContent = `₹${user.totalBonus || 0}`;
+        
+        const minutesBalanceEl = document.getElementById('minutes-balance');
+        if (minutesBalanceEl) minutesBalanceEl.textContent = user.minutesBalance || 0;
+
         // Optional rank/status purely from backend
         if (user.status) {
             document.getElementById('rank-status').textContent = user.status;
@@ -324,29 +363,37 @@ async function loadSeederData() {
         document.getElementById('level1-count').textContent = network.directCount || network.level1Count || 0;
         document.getElementById('level2-count').textContent = network.indirectCount || network.level2Count || 0;
 
-        // Fetch Direct Team List (Level 1)
+        // Fetch Direct Team List (Level 1 & 2)
         const teamData = await ApiClient.get('/referral/team').catch(() => ({}));
         const team = teamData.data?.team || teamData.team || [];
+        const teamLevel2 = teamData.data?.teamLevel2 || teamData.teamLevel2 || [];
 
-        renderTeam(team);
+        renderTeam(team, 'team-table-body');
+        renderTeam(teamLevel2, 'team-level2-table-body');
     } catch (error) {
         showError('Failed to load seeder data.');
     }
 }
 
-function renderTeam(team) {
-    const tbody = document.getElementById('team-table-body');
+function renderTeam(team, tableId = 'team-table-body') {
+    const tbody = document.getElementById(tableId);
+    if (!tbody) return;
+    
     if (!team || team.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" class="text-center" style="padding: 1rem;">No direct referrals yet. Share your link!</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center" style="padding: 1rem;">No referrals yet. Share your link!</td></tr>';
         return;
     }
 
     tbody.innerHTML = team.map(member => `
         <tr style="border-bottom: 1px solid var(--border-color);">
             <td style="padding: 0.75rem 0.5rem;">${maskMobile(member.mobile)}</td>
+            <td style="padding: 0.75rem 0.5rem;">${member.pincode || 'N/A'}</td>
             <td style="padding: 0.75rem 0.5rem;">${new Date(member.createdAt).toLocaleDateString()}</td>
             <td style="padding: 0.75rem 0.5rem; color: ${member.hasPurchasedPlan ? 'var(--success-color)' : 'var(--text-secondary)'};">
                 ${member.hasPurchasedPlan ? 'Active' : 'Pending'}
+            </td>
+            <td style="padding: 0.75rem 0.5rem; font-weight: bold; color: ${member.amountGained > 0 ? 'var(--success-color)' : 'inherit'};">
+                ₹${member.amountGained || 0}
             </td>
         </tr>
     `).join('');

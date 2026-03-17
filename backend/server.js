@@ -20,6 +20,7 @@ const messageRoutes = require('./src/modules/communication/message.routes');
 const announcementRoutes = require('./src/modules/communication/announcement.routes');
 const adminAnnouncementRoutes = require('./src/modules/communication/admin.announcement.routes');
 const exportRoutes = require('./src/modules/admin/export.routes');
+const referralRoutes = require('./src/modules/referral/referral.routes');
 const { errorResponse } = require('./src/utils/response');
 
 const app = express();
@@ -37,10 +38,15 @@ app.use((req, res, next) => {
     next();
 });
 
-// Serve frontend statically from the public folder (EXACT ROOT STRUCTURE MATCH)
-// DYNAMIC FLUSH CACHE COMMIT: 2024-03-07T16:35:00Z
-console.log("Serving static from:", path.join(__dirname, "public"));
-app.use(express.static(path.join(__dirname, "public")));
+// Serve frontend statically from the root frontend folders to avoid duplicating files
+console.log("Serving static from:", path.join(__dirname, "../frontend"));
+// Map /public in URL to frontend/public folder
+app.use('/public', express.static(path.join(__dirname, "../frontend/public")));
+app.use('/assets', express.static(path.join(__dirname, "../frontend/assets")));
+app.use('/dashboard', express.static(path.join(__dirname, "../frontend/dashboard")));
+
+// Also serve the root public folder intrinsically to support legacy links
+app.use(express.static(path.join(__dirname, "../frontend/public")));
 
 // Production Security Trusts (for VPS Reverse Proxy like Nginx)
 app.set('trust proxy', 1);
@@ -52,8 +58,8 @@ app.use(helmet({
     crossOriginEmbedderPolicy: false
 }));
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 app.use(morgan('dev'));
 
@@ -75,6 +81,7 @@ app.use('/api/admin/announcements', adminAnnouncementRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/announcements', announcementRoutes);
+app.use('/api/referral', referralRoutes);
 
 // Fallback to exactly public/index.html internally as requested
 app.use((req, res, next) => {
@@ -82,7 +89,7 @@ app.use((req, res, next) => {
     if (req.originalUrl.startsWith('/api')) {
         return next();
     }
-    res.sendFile(path.join(__dirname, "public", "index.html"));
+    res.sendFile(path.join(__dirname, "../frontend/public", "index.html"));
 });
 
 

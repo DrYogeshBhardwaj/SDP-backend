@@ -45,6 +45,72 @@
         <div id="error-message" class="alert alert-error"></div>
         <div id="success-message" class="alert alert-success"></div>
 
+        <!-- Start Session (Added for Seeder) -->
+        <div class="card mt-2">
+            <h3>Start Pause Session</h3>
+            <p class="mb-2">Select a duration to begin your mindful pause.</p>
+
+            <div class="mt-2 p-2 mb-2" style="background: var(--background-color); border-radius: var(--border-radius); text-align: center; padding: var(--spacing-md);">
+                <h4>Minutes Balance</h4>
+                <div class="timer-display" style="color: var(--primary-color); font-size: 3rem; font-weight: bold;" id="minutes-balance">0</div>
+            </div>
+
+            <div id="session-options" style="display: flex; flex-direction: column; gap: var(--spacing-sm);">
+                <button class="btn btn-primary session-btn" data-minutes="2">2 Minutes</button>
+                <button class="btn btn-primary session-btn" data-minutes="5">5 Minutes</button>
+                <button class="btn btn-primary session-btn" data-minutes="10">10 Minutes</button>
+            </div>
+
+            <div class="mt-2" style="border-top: 1px solid var(--border-color); padding-top: var(--spacing-sm);">
+                <label for="custom-audio" style="font-size: 0.9rem;">Optional: Select your own
+                    Meditation/Sound</label>
+                <div id="saved-audio-container" class="hidden"
+                    style="margin-bottom: var(--spacing-sm); padding: var(--spacing-sm); background: var(--primary-color); color: white; border-radius: var(--border-radius); display: flex; justify-content: space-between; align-items: center;">
+                    <span id="saved-audio-name"
+                        style="font-weight: bold; font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
+                    <button id="remove-audio-btn" class="btn btn-secondary"
+                        style="padding: 0.2rem 0.6rem; font-size: 0.8rem; background: #dc3545; border: none; color: white; width: auto; margin-left: 10px;">Remove</button>
+                </div>
+                <input type="file" id="custom-audio" accept="audio/*" class="form-control"
+                    style="font-size: 0.85rem; padding: 0.5rem;">
+            </div>
+        </div>
+        <!-- Mindful Alarm -->
+        <div class="card mt-2">
+            <h3>Mindful Alarm</h3>
+            <p class="mb-2" style="font-size: 0.9rem; color: var(--text-secondary);">Set a daily offline reminder for
+                your digital wellness pause.</p>
+            <form id="alarm-form">
+                <div class="dashboard-grid" style="gap: var(--spacing-sm);">
+                    <div class="form-group mb-1">
+                        <label for="alarm-time">Alarm Time</label>
+                        <input type="time" id="alarm-time" class="form-control" required>
+                    </div>
+                    <div class="form-group mb-1">
+                        <label for="alarm-duration">Auto-Start Choice</label>
+                        <select id="alarm-duration" class="form-control">
+                            <option value="2">2 Minutes</option>
+                            <option value="5" selected>5 Minutes</option>
+                            <option value="10">10 Minutes</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group mb-2">
+                    <label for="alarm-message">Reminder Message</label>
+                    <input type="text" id="alarm-message" class="form-control" placeholder="E.g., Time to relax..."
+                        value="It's time for your digital wellness pause!" required>
+                </div>
+                <div style="display: flex; gap: var(--spacing-sm);">
+                    <button type="submit" class="btn btn-primary" id="btn-set-alarm" style="width: auto;">Set
+                        Alarm</button>
+                    <button type="button" class="btn btn-secondary hidden" id="btn-clear-alarm"
+                        style="background:#dc3545; width: auto;">Turn Off</button>
+                </div>
+                <div id="alarm-status" class="mt-1" style="font-weight: 500; font-size: 0.9rem;"></div>
+            </form>
+        </div>
+
+
         <div class="dashboard-grid mt-2">
             <!-- Earnings & Referrals -->
             <div class="card">
@@ -140,41 +206,6 @@
             </form>
         </div>
 
-        <!-- Mindful Alarm -->
-        <div class="card mt-2">
-            <h3>Mindful Alarm</h3>
-            <p class="mb-2" style="font-size: 0.9rem; color: var(--text-secondary);">Set a daily offline reminder for
-                your digital wellness pause.</p>
-            <form id="alarm-form">
-                <div class="dashboard-grid" style="gap: var(--spacing-sm);">
-                    <div class="form-group mb-1">
-                        <label for="alarm-time">Alarm Time</label>
-                        <input type="time" id="alarm-time" class="form-control" required>
-                    </div>
-                    <div class="form-group mb-1">
-                        <label for="alarm-duration">Auto-Start Choice</label>
-                        <select id="alarm-duration" class="form-control">
-                            <option value="2">2 Minutes</option>
-                            <option value="5" selected>5 Minutes</option>
-                            <option value="10">10 Minutes</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group mb-2">
-                    <label for="alarm-message">Reminder Message</label>
-                    <input type="text" id="alarm-message" class="form-control" placeholder="E.g., Time to relax..."
-                        value="It's time for your digital wellness pause!" required>
-                </div>
-                <div style="display: flex; gap: var(--spacing-sm);">
-                    <button type="submit" class="btn btn-primary" id="btn-set-alarm" style="width: auto;">Set
-                        Alarm</button>
-                    <button type="button" class="btn btn-secondary hidden" id="btn-clear-alarm"
-                        style="background:#dc3545; width: auto;">Turn Off</button>
-                </div>
-                <div id="alarm-status" class="mt-1" style="font-weight: 500; font-size: 0.9rem;"></div>
-            </form>
-        </div>
-
         <!-- Detailed Team List -->
         <div class="card mt-2">
             <h3>My Team (Level 1)</h3>
@@ -183,13 +214,35 @@
                     <thead>
                         <tr style="border-bottom: 2px solid var(--border-color); text-align: left;">
                             <th style="padding: 0.75rem 0.5rem;">Mobile</th>
+                            <th style="padding: 0.75rem 0.5rem;">Pincode</th>
                             <th style="padding: 0.75rem 0.5rem;">Joined</th>
                             <th style="padding: 0.75rem 0.5rem;">Status</th>
+                            <th style="padding: 0.75rem 0.5rem;">Amt Gained</th>
                         </tr>
                     </thead>
                     <tbody id="team-table-body">
                         <tr>
-                            <td colspan="3" class="text-center" style="padding: 1rem;">Loading team...</td>
+                            <td colspan="5" class="text-center" style="padding: 1rem;">Loading team...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <h3 class="mt-2" style="border-top: 1px solid var(--border-color); padding-top: var(--spacing-md);">My Team (Level 2)</h3>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; margin-top: var(--spacing-sm); min-width: 400px;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border-color); text-align: left;">
+                            <th style="padding: 0.75rem 0.5rem;">Mobile</th>
+                            <th style="padding: 0.75rem 0.5rem;">Pincode</th>
+                            <th style="padding: 0.75rem 0.5rem;">Joined</th>
+                            <th style="padding: 0.75rem 0.5rem;">Status</th>
+                            <th style="padding: 0.75rem 0.5rem;">Amt Gained</th>
+                        </tr>
+                    </thead>
+                    <tbody id="team-level2-table-body">
+                        <tr>
+                            <td colspan="5" class="text-center" style="padding: 1rem;">Loading team...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -218,17 +271,6 @@
             </div>
         </div>
 
-        <!-- Start Session (Added for Seeder) -->
-        <div class="card mt-2">
-            <h3>Start Pause Session</h3>
-            <p class="mb-2">Select a duration to begin your mindful pause.</p>
-
-            <div id="session-options" style="display: flex; flex-direction: column; gap: var(--spacing-sm);">
-                <button class="btn btn-primary session-btn" data-minutes="2">2 Minutes</button>
-                <button class="btn btn-primary session-btn" data-minutes="5">5 Minutes</button>
-                <button class="btn btn-primary session-btn" data-minutes="10">10 Minutes</button>
-            </div>
-        </div>
     </div>
 
     <!-- Active Break Fullscreen UI -->
@@ -248,7 +290,9 @@
     <script src="../assets/js/config.js"></script>
     <script src="../assets/js/api.js"></script>
     <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/audioDB.js"></script>
     <script src="../assets/js/alignment.js" type="module"></script>
+    <script src="../public/js/ssb_core.js"></script>
     <script src="../assets/js/seeder.js"></script>
     <script src="../assets/js/alarm.js"></script>
 

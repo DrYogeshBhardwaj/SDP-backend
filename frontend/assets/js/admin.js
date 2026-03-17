@@ -222,6 +222,7 @@ async function loadUsers() {
             }
                         <button class="action-btn" style="background: #3b82f6;" onclick="editUser('${u.id}', '${u.name || ''}')">Edit</button>
                         <button class="action-btn" style="background: #eab308; color:#000;" onclick="resetPin('${u.id}')">Reset PIN</button>
+                        <button class="action-btn" style="background: var(--accent);" onclick="viewUserDetails('${u.id}')">Info</button>
                         <button class="action-btn" style="background: #1e293b;" onclick="trashUser('${u.id}')">Trash</button>
                     </div>
                 </td>
@@ -231,6 +232,56 @@ async function loadUsers() {
         showError('Failed to load users.');
     }
 }
+
+window.closeUserDetailsModal = function () {
+    const modal = document.getElementById('user-details-modal');
+    if (modal) modal.style.display = 'none';
+};
+
+window.viewUserDetails = async function (userId) {
+    try {
+        const modal = document.getElementById('user-details-modal');
+        if (!modal) return;
+        
+        // Show modal with loading state
+        document.getElementById('detail-mobile').textContent = "Loading...";
+        document.getElementById('detail-ledger-body').innerHTML = '<tr><td colspan="4" class="text-center italic opacity-50">Loading ledger...</td></tr>';
+        modal.style.display = 'flex';
+
+        const res = await ApiClient.get(`/admin/users/${userId}/details`);
+        const details = res.data || res.details; // Ensure compatibility with successResponse structure
+
+        if (!details) throw new Error("No data returned");
+
+        // Populate basic mapping
+        document.getElementById('detail-mobile').textContent = details.info.mobile + (details.info.name ? ` (${details.info.name})` : '');
+        document.getElementById('detail-role').textContent = details.info.role;
+        document.getElementById('detail-status').textContent = details.info.status;
+        document.getElementById('detail-wallet').textContent = details.wallet;
+        document.getElementById('detail-l1').textContent = details.network.level1;
+        document.getElementById('detail-l2').textContent = details.network.level2;
+
+        // Populate Ledger
+        const tbody = document.getElementById('detail-ledger-body');
+        if (details.recentBonuses && details.recentBonuses.length > 0) {
+            tbody.innerHTML = details.recentBonuses.map(b => `
+                <tr>
+                    <td class="text-sm">${new Date(b.date).toLocaleDateString()}</td>
+                    <td class="text-sm font-bold">${b.type}</td>
+                    <td class="text-sm text-secondary">${b.sourceMobile}</td>
+                    <td class="text-sm font-bold text-success">₹${b.amount}</td>
+                </tr>
+            `).join('');
+        } else {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center italic opacity-50">No bonuses found</td></tr>';
+        }
+
+    } catch (err) {
+        console.error("View Details Error:", err);
+        showError('Failed to fetch user details.');
+        closeUserDetailsModal();
+    }
+};
 
 // Ensure global access for inline onclick handlers
 window.updateUserStatus = async function (userId, status) {

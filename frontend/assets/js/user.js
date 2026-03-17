@@ -268,17 +268,43 @@ async function startSession(minutes) {
             if (audioDescText) {
                 audioDescText.innerHTML = `🎵 Playing Custom Sound: <b>${originalFileName}</b>`;
             }
-        } else {
-            const audioDescText = document.getElementById('audio-desc-text');
-            if (audioDescText) {
-                audioDescText.innerHTML = `🔊 108 Hz (Deep Bass) • 162 Hz (Perfect Fifth)`;
-            }
-        }
 
-        // START AMBIENT SOUND SYNCHRONOUSLY to bypass autoplay policies
-        // We pass 5 seconds delay so it fades in exactly when the visual ritual ends.
-        if (window.playSessionAmbientAudio) {
-            window.playSessionAmbientAudio(5, customAudioSource);
+            // START AMBIENT SOUND SYNCHRONOUSLY to bypass autoplay policies
+            if (window.playSessionAmbientAudio) {
+                window.playSessionAmbientAudio(5, customAudioSource);
+            }
+        } else {
+            if (window.ssbCore && window.currentUserMobile) {
+                const vals = window.ssbCore.calculateValues(window.currentUserMobile);
+                const styledVals = window.ssbCore.verifyContrast(vals.val1, vals.val2);
+
+                const breakUI = document.getElementById('active-break-ui');
+                if (breakUI) {
+                    breakUI.style.background = `linear-gradient(135deg, ${styledVals.color1} 0%, ${styledVals.color2} 100%)`;
+                }
+
+                const audioDescText = document.getElementById('audio-desc-text');
+                if (audioDescText) {
+                    audioDescText.innerHTML = `🔊 ${window.ssbCore.getFrequencyText(styledVals.val1)} (Mobank) • ${window.ssbCore.getFrequencyText(styledVals.val2)} (Yogank)`;
+                }
+
+                try {
+                    await window.ssbCore.startAudio(styledVals.val1, styledVals.val2);
+                } catch (e) {
+                    console.warn('[SSB CORE] Audio failed, using fallback:', e);
+                    if (window.playSessionAmbientAudio) {
+                        window.playSessionAmbientAudio(5);
+                    }
+                }
+            } else {
+                const audioDescText = document.getElementById('audio-desc-text');
+                if (audioDescText) {
+                    audioDescText.innerHTML = `🔊 108 Hz (Deep Bass) • 162 Hz (Perfect Fifth)`;
+                }
+                if (window.playSessionAmbientAudio) {
+                    window.playSessionAmbientAudio(5);
+                }
+            }
         }
 
         // START FULLSCREEN SYNCHRONOUSLY to bypass fullscreen policies
@@ -362,9 +388,18 @@ function endSessionUI(minutes = 0, successDiv = null) {
     if (window.stopSessionAmbientAudio) {
         window.stopSessionAmbientAudio();
     }
+    
+    // Stop SSB Audio
+    if (window.ssbCore) {
+        window.ssbCore.stopAudio();
+    }
 
     // Hide UI and Fullscreen
-    document.getElementById('active-break-ui').classList.add('hidden');
+    const breakUI = document.getElementById('active-break-ui');
+    if (breakUI) {
+        breakUI.classList.add('hidden');
+        breakUI.style.background = ''; // reset custom color
+    }
     try {
         const exitFS = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
         if (exitFS && (document.fullscreenElement || document.webkitFullscreenElement)) {
