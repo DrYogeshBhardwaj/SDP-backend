@@ -1,3 +1,4 @@
+console.log("🔥 AUTH ROUTES LOADED - NEW FILE");
 const express = require('express');
 const router = express.Router();
 const {
