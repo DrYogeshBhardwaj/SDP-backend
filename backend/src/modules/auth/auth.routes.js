@@ -13,13 +13,17 @@ const {
 } = require('./auth.controller');
 
 // Debugging undefined exports (will log in Railway)
-console.log("Auth Controller Exports:", { checkMobile, register, login, logout, getMe, updateProfile, addFamily, getFamily, getReferrer });
+console.log("authMiddleware:", typeof authMiddleware);
+console.log("getMe:", typeof getMe);
+console.log("login:", typeof login);
 
 router.post('/check-mobile', checkMobile);
 router.post('/register', register);
 router.post('/login', loginLimiter, login);
 router.post('/logout', authMiddleware, logout);
-router.get('/me', authMiddleware, getMe);
+// TEMPORARY FIX
+// router.get('/me', authMiddleware, getMe);
+router.get('/me', (req, res) => res.send("OK"));
 router.put('/profile', authMiddleware, updateProfile);
 
 router.post('/family', authMiddleware, addFamily);
