@@ -1,6 +1,6 @@
 const CONFIG = {
-    // Direct connection to Railway backend for local frontend testing
-    API_BASE_URL: 'http://localhost:5000/api'
+    // Relative connection to backend so it works locally and on Railway
+    API_BASE_URL: '/api'
 };
 
 Object.freeze(CONFIG);

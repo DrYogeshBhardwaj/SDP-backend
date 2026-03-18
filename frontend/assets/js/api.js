@@ -29,7 +29,7 @@ class ApiClient {
             if (!response.ok) {
                 // If 401 Unauthorized, redirect to login
                 if (response.status === 401 && !window.location.pathname.includes('login.html')) {
-                    window.location.href = 'login.html';
+                    window.location.href = '/public/login.html';
                 }
 
                 throw new Error(data.message || data.error || 'API Request Failed');
