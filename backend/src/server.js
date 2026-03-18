@@ -38,9 +38,9 @@ app.use((req, res, next) => {
     next();
 });
 
-// Serve frontend statically from the root frontend folders to avoid duplicating files
+// Serve static assets natively directly from the sibling subdirectories
 console.log("Serving static from:", path.join(__dirname, "../public"));
-// Map /public in URL to frontend/public folder
+// Map /public in URL to its corresponding folder
 app.use('/public', express.static(path.join(__dirname, "../public")));
 app.use('/assets', express.static(path.join(__dirname, "../assets")));
 app.use('/dashboard', express.static(path.join(__dirname, "../dashboard")));
