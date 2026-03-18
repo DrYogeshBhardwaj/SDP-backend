@@ -39,14 +39,14 @@ app.use((req, res, next) => {
 });
 
 // Serve frontend statically from the root frontend folders to avoid duplicating files
-console.log("Serving static from:", path.join(__dirname, "../../frontend"));
+console.log("Serving static from:", path.join(__dirname, "../public"));
 // Map /public in URL to frontend/public folder
-app.use('/public', express.static(path.join(__dirname, "../../frontend/public")));
-app.use('/assets', express.static(path.join(__dirname, "../../frontend/assets")));
-app.use('/dashboard', express.static(path.join(__dirname, "../../frontend/dashboard")));
+app.use('/public', express.static(path.join(__dirname, "../public")));
+app.use('/assets', express.static(path.join(__dirname, "../assets")));
+app.use('/dashboard', express.static(path.join(__dirname, "../dashboard")));
 
 // Also serve the root public folder intrinsically to support legacy links
-app.use(express.static(path.join(__dirname, "../../frontend/public")));
+app.use(express.static(path.join(__dirname, "../public")));
 
 // Production Security Trusts (for VPS Reverse Proxy like Nginx)
 app.set('trust proxy', 1);
@@ -89,7 +89,7 @@ app.use((req, res, next) => {
     if (req.originalUrl.startsWith('/api')) {
         return next();
     }
-    res.sendFile(path.join(__dirname, "../frontend/public", "index.html"));
+    res.sendFile(path.join(__dirname, "../public", "index.html"));
 });
 
 

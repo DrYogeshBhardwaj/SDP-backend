@@ -438,6 +438,7 @@
     </div>
 
     <!-- Scripts -->
+    <script src="../assets/js/config.js"></script>
     <script>
         // Init
         window.addEventListener('load', async () => {
@@ -455,14 +456,14 @@
                 // Block if already seeder
                 if (user.role === 'SEEDER') {
                     alert("You are already a Partner.");
-                    window.location.href = '/seeder';
+                    window.location.href = '/dashboard/seeder.html';
                     return;
                 }
 
                 // Enforce only Family plan buyers
                 if (user.role !== 'USER_580') {
                     alert("Only Family kit buyers (₹580) can activate Seeder status.");
-                    window.location.href = '/buyer';
+                    window.location.href = '/dashboard/user.html';
                     return;
                 }
 
@@ -607,7 +608,7 @@
 
                 if (response.ok) {
                     alert(`🎉 Partner Activated!\n\nYour Partner ID: ${data.data.referral_code}\nWelcome to the team.`);
-                    window.location.href = '/seeder';
+                    window.location.href = '/dashboard/seeder.html';
                 } else {
                     throw new Error(data.message || 'Activation failed');
                 }

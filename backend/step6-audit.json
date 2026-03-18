@@ -12,7 +12,7 @@
     "data": null
   },
   {
-    "msg": "Top Level Seeder Ready with Ref Code: SDP-8R81FO",
+    "msg": "Top Level Seeder Ready with Ref Code: SDP-72NHVV",
     "data": null
   },
   {
@@ -21,12 +21,14 @@
       "success": true,
       "message": "System stats retrieved",
       "data": {
-        "total_users": 2,
+        "total_users": 3,
         "total_seeders": 1,
         "total_wallet_balance": 0,
         "total_pending_payout": 0,
+        "pending_payout_count": 0,
+        "unread_messages_count": 0,
         "total_cash_distributed": 0,
-        "total_minutes_balance": 3650,
+        "total_minutes_balance": 7300,
         "total_minutes_used": 0
       }
     }
@@ -44,27 +46,27 @@
     "data": null
   },
   {
-    "msg": "\nFinal Validation for Seeder 4ad33c59-0580-4fcc-ac1b-1bab46189c39:",
+    "msg": "\nFinal Validation for Seeder cff19453-a28b-4aff-86c6-30085be43a38:",
     "data": null
   },
   {
-    "msg": "Expected Wallet Cash: ₹2720. Actual: ₹2720",
+    "msg": "Expected Wallet Cash: ₹2720. Actual: ₹2420",
     "data": null
   },
   {
-    "msg": "Ranks Achieved: Builder",
+    "msg": "Ranks Achieved: ",
     "data": null
   },
   {
-    "msg": "SUCCESS: Builder Rank was correctly awarded.",
+    "msg": "ERROR: Builder Rank was NOT awarded.",
     "data": null
   },
   {
-    "msg": "SUCCESS: BonusLedger entry correctly created exactly once.",
-    "data": null
+    "msg": "ERROR: BonusLedger anomaly:",
+    "data": []
   },
   {
-    "msg": "SUCCESS: SystemLog properly documented the auto-credit.",
+    "msg": "ERROR: SystemLog anomaly.",
     "data": null
   },
   {
