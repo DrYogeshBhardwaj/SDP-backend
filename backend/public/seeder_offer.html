@@ -89,10 +89,11 @@
 
     <style>
         /* Language Toggle Styles */
-        .hi-text { display: none !important; }
-        body.hi-mode .en-text { display: none !important; }
-        body.hi-mode .hi-text { display: block !important; }
-        body.hi-mode span.hi-text { display: inline !important; }
+        .en-text { display: block; }
+        .hi-text { display: none; }
+        
+        body.lang-hi .en-text { display: none !important; }
+        body.lang-hi .hi-text { display: block !important; }
         
         .toggle-container {
             position: absolute;
@@ -287,11 +288,11 @@
     <script>
         function setLang(lang) {
             if (lang === 'hi') {
-                document.body.classList.add('hi-mode');
+                document.body.classList.add('lang-hi');
                 document.getElementById('btn-hi').classList.add('active');
                 document.getElementById('btn-en').classList.remove('active');
             } else {
-                document.body.classList.remove('hi-mode');
+                document.body.classList.remove('lang-hi');
                 document.getElementById('btn-en').classList.add('active');
                 document.getElementById('btn-hi').classList.remove('active');
             }
