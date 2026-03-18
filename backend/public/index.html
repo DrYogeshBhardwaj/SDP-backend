@@ -10,18 +10,63 @@
     <link rel="icon" href="assets/logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Language Toggle Styles */
+        .en-text { display: block; }
+        .hi-text { display: none; }
+        
+        body.lang-hi .en-text { display: none !important; }
+        body.lang-hi .hi-text { display: block !important; }
+        
+        .toggle-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #f8fafc;
+            border-radius: 20px;
+            padding: 4px;
+            display: flex;
+            gap: 4px;
+            z-index: 50;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+        }
+        .lang-btn {
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #64748b;
+        }
+        .lang-btn.active {
+            background: #3b82f6;
+            color: white;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+    </style>
 </head>
 
 <body class="bg-surface">
+
+    <div class="toggle-container">
+        <div class="lang-btn active" id="btn-en" onclick="setLang('en')">EN</div>
+        <div class="lang-btn" id="btn-hi" onclick="setLang('hi')">HI</div>
+    </div>
 
     <!-- Header -->
     <header>
         <div class="container flex justify-between items-center">
             <img src="assets/logo.png" alt="SDP Logo" class="logo-img logo-style" style="height: 40px;">
-            <div class="flex items-center gap-md">
+            <div class="flex items-center gap-md" style="margin-right: 120px;">
                 <nav class="flex gap-sm">
-                    <a href="index.html" class="btn btn-text">Home</a>
-                    <a href="login.html" class="btn btn-text" id="login-btn">Login</a>
+                    <a href="index.html" class="btn btn-text">
+                        <span class="en-text">Home</span><span class="hi-text">होम</span>
+                    </a>
+                    <a href="login.html" class="btn btn-text" id="login-btn">
+                        <span class="en-text">Login</span><span class="hi-text">लॉगिन</span>
+                    </a>
                 </nav>
             </div>
         </div>
@@ -33,14 +78,28 @@
             <!-- Hero -->
             <div class="hero hero-premium">
                 <div class="container">
-                    <h1>SDP – A Short Digital Break</h1>
-                    <p class="hero-subtitle">Reset your mind. Rest your eyes. Reclaim control.</p>
-                    <p class="hero-transition text-white-80">Use it. Grow with it. Share it.</p>
+                    <h1>
+                        <span class="en-text">SDP – A Short Digital Break</span>
+                        <span class="hi-text">SDP – एक छोटा डिजिटल विराम</span>
+                    </h1>
+                    <p class="hero-subtitle">
+                        <span class="en-text">Reset your mind. Rest your eyes. Reclaim control.</span>
+                        <span class="hi-text">मन शांत करें। आँखों को आराम दें। नियंत्रण वापस लें।</span>
+                    </p>
+                    <p class="hero-transition text-white-80">
+                        <span class="en-text">Use it. Grow with it. Share it.</span>
+                        <span class="hi-text">उपयोग करें। साथ बढ़ें। साझा करें।</span>
+                    </p>
 
                     <div class="flex justify-center gap-md mt-2 flex-wrap">
-                        <a href="login.html" class="btn btn-primary" style="min-width: 180px;">Get Started</a>
-                        <a href="#" onclick="openModal('modal-hero'); return false;" class="btn btn-secondary"
-                            style="min-width: 180px;">Learn More</a>
+                        <a href="login.html" class="btn btn-primary" style="min-width: 180px;">
+                            <span class="en-text">Get Started</span>
+                            <span class="hi-text">शुरू करें</span>
+                        </a>
+                        <a href="#" onclick="openModal('modal-hero'); return false;" class="btn btn-secondary" style="min-width: 180px;">
+                            <span class="en-text">Learn More</span>
+                            <span class="hi-text">और जानें</span>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -54,22 +113,34 @@
                         style="background: white; padding: 1.5rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; width: 100%; max-width: 320px;">
                         <span class="visual-icon"
                             style="font-size: 2.5rem; margin-bottom: 1rem; display: inline-block;">🧘</span>
-                        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Take short digital breaks</h3>
-                        <p class="text-sm text-muted">Refresh your mind in just minutes.</p>
+                        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">
+                            <span class="en-text">Take short digital breaks</span><span class="hi-text">छोटे डिजिटल विराम लें</span>
+                        </h3>
+                        <p class="text-sm text-muted">
+                            <span class="en-text">Refresh your mind in just minutes.</span><span class="hi-text">बस कुछ ही मिनटों में अपना मन ताज़ा करें।</span>
+                        </p>
                     </div>
                     <div class="visual-card"
                         style="background: white; padding: 1.5rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; width: 100%; max-width: 320px;">
                         <span class="visual-icon"
                             style="font-size: 2.5rem; margin-bottom: 1rem; display: inline-block;">🌱</span>
-                        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Build your SDP circle</h3>
-                        <p class="text-sm text-muted">Grow your network responsibly.</p>
+                        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">
+                            <span class="en-text">Build your SDP circle</span><span class="hi-text">अपना SDP नेटवर्क बनाएँ</span>
+                        </h3>
+                        <p class="text-sm text-muted">
+                            <span class="en-text">Grow your network responsibly.</span><span class="hi-text">ज़िम्मेदारी से अपना नेटवर्क बढ़ाएँ।</span>
+                        </p>
                     </div>
                     <div class="visual-card"
                         style="background: white; padding: 1.5rem; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; width: 100%; max-width: 320px;">
                         <span class="visual-icon"
                             style="font-size: 2.5rem; margin-bottom: 1rem; display: inline-block;">👥</span>
-                        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Invite others responsibly</h3>
-                        <p class="text-sm text-muted">Share the gift of digital wellness.</p>
+                        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">
+                            <span class="en-text">Invite others responsibly</span><span class="hi-text">दूसरों को ज़िम्मेदारी से आमंत्रित करें</span>
+                        </h3>
+                        <p class="text-sm text-muted">
+                            <span class="en-text">Share the gift of digital wellness.</span><span class="hi-text">डिजिटल वेलनेस का उपहार साझा करें।</span>
+                        </p>
                     </div>
                 </div>
             </div>
@@ -80,36 +151,44 @@
                     style="background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%); border: 1px solid #ddd; padding: 2rem; border-radius: 16px;">
                     <div class="flex flex-col md:flex-row items-center gap-2">
                         <div class="flex-1 text-center md:text-left">
-                            <h2 class="text-primary mb-1">Your Unique Digital Frequency</h2>
+                            <h2 class="text-primary mb-1">
+                                <span class="en-text">Your Unique Digital Frequency</span><span class="hi-text">आपकी अपनी डिजिटल फ्रीक्वेंसी</span>
+                            </h2>
                             <p class="text-muted mb-1_5">
-                                SDP isn't just a timer. It's a personalized digital experience.
+                                <span class="en-text">SDP isn't just a timer. It's a personalized digital experience.</span><span class="hi-text">SDP केवल एक टाइमर नहीं है। यह एक व्यक्तिगत डिजिटल अनुभव है।</span>
                             </p>
                             <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 1rem;">
                                 <li class="flex items-start gap-1">
                                     <span style="font-size: 1.2rem;">🧬</span>
                                     <div>
-                                        <strong>One Mobile = One Identity</strong>
-                                        <p class="text-sm text-muted">Your sound and color patterns are mathematically
-                                            generated from your
-                                            unique mobile number. No two users have the exact same experience.</p>
+                                        <strong>
+                                            <span class="en-text">One Mobile = One Identity</span><span class="hi-text">एक मोबाइल = एक पहचान</span>
+                                        </strong>
+                                        <p class="text-sm text-muted">
+                                            <span class="en-text">Your sound and color patterns are mathematically generated from your unique mobile number. No two users have the exact same experience.</span><span class="hi-text">आपकी ध्वनि और रंग पैटर्न आपके मोबाइल नंबर से गणितीय रूप से उत्पन्न होते हैं। कोई भी दो उपयोगकर्ताओं का अनुभव बिल्कुल समान नहीं होता।</span>
+                                        </p>
                                     </div>
                                 </li>
                                 <li class="flex items-start gap-1">
                                     <span style="font-size: 1.2rem;">🎧</span>
                                     <div>
-                                        <strong>System Default Sound (Binaural)</strong>
-                                        <p class="text-sm text-muted">We recommend the <strong>System Default</strong>
-                                            sound. It uses
-                                            scientifically tuned Binaural Beats to help your brain enter a state of deep
-                                            relaxation quickly.</p>
+                                        <strong>
+                                            <span class="en-text">System Default Sound (Binaural)</span><span class="hi-text">सिस्टम डिफ़ॉल्ट ध्वनि (बाइनॉरल)</span>
+                                        </strong>
+                                        <p class="text-sm text-muted">
+                                            <span class="en-text">We recommend the <strong>System Default</strong> sound. It uses scientifically tuned Binaural Beats to help your brain enter a state of deep relaxation quickly.</span><span class="hi-text">हम <strong>सिस्टम डिफ़ॉल्ट</strong> ध्वनि की सलाह देते हैं। यह आपके दिमाग को तेज़ी से गहरे विश्राम की अवस्था में ले जाने के लिए वैज्ञानिक रूप से ट्यून किए गए बाइनॉरल बीट्स का उपयोग करता है।</span>
+                                        </p>
                                     </div>
                                 </li>
                                 <li class="flex items-start gap-1">
                                     <span style="font-size: 1.2rem;">🛡️</span>
                                     <div>
-                                        <strong>Personal & Secure</strong>
-                                        <p class="text-sm text-muted">To maintain this calibration, avoid sharing your
-                                            login. Your account is tuned to <em>you</em>.</p>
+                                        <strong>
+                                            <span class="en-text">Personal & Secure</span><span class="hi-text">व्यक्तिगत और सुरक्षित</span>
+                                        </strong>
+                                        <p class="text-sm text-muted">
+                                            <span class="en-text">To maintain this calibration, avoid sharing your login. Your account is tuned to <em>you</em>.</span><span class="hi-text">इस कैलिब्रेशन को बनाए रखने के लिए, अपना लॉगिन साझा करने से बचें। आपका खाता आपके लिए ट्यून किया गया है।</span>
+                                        </p>
                                     </div>
                                 </li>
                             </ul>
@@ -130,32 +209,44 @@
 
             <!-- Products -->
             <div class="container" style="margin-top: 4rem;">
-                <h2 class="text-center">Products & Pricing</h2>
+                <h2 class="text-center">
+                    <span class="en-text">Products & Pricing</span><span class="hi-text">उत्पाद और मूल्य निर्धारण</span>
+                </h2>
                 <div class="products-grid">
                     <!-- Kit 1 -->
                     <div class="product-card standard">
                         <div
                             style="background: #f1f5f9; color: #64748b; font-size: 0.75rem; font-weight: 700; display: inline-block; padding: 0.25rem 0.5rem; border-radius: 999px; margin-bottom: 0.5rem;">
-                            PERSONAL USE ONLY</div>
-                        <h3>SDP 1 Kit</h3>
+                            <span class="en-text">PERSONAL USE ONLY</span><span class="hi-text">केवल व्यक्तिगत उपयोग</span>
+                        </div>
+                        <h3>
+                            <span class="en-text">SDP 1 Kit</span><span class="hi-text">SDP १ किट</span>
+                        </h3>
                         <div class="text-muted text-2xl font-bold text-primary">₹178</div>
                         <ul style="list-style: none; margin-top: 1rem; line-height: 2;">
-                            <li>1 user</li>
-                            <li>3,650 minutes per year</li>
-                            <li>Use only</li>
+                            <li><span class="en-text">1 user</span><span class="hi-text">१ उपयोगकर्ता</span></li>
+                            <li><span class="en-text">3,650 minutes per year</span><span class="hi-text">३,६५० मिनट प्रति वर्ष</span></li>
+                            <li><span class="en-text">Use only</span><span class="hi-text">केवल उपयोग</span></li>
                         </ul>
                         <div class="flex gap-1 mt-1_5">
-                            <a href="login.html?mode=purchase&amount=178" class="btn btn-primary w-full">Buy Now</a>
-                            <a href="#" onclick="openModal('modal-178'); return false;"
-                                class="btn btn-secondary w-full">Learn More</a>
+                            <a href="login.html?mode=purchase&amount=178" class="btn btn-primary w-full">
+                                <span class="en-text">Buy Now</span><span class="hi-text">अभी खरीदें</span>
+                            </a>
+                            <a href="#" onclick="openModal('modal-178'); return false;" class="btn btn-secondary w-full">
+                                <span class="en-text">Learn More</span><span class="hi-text">और जानें</span>
+                            </a>
                         </div>
                     </div>
 
                     <!-- Family -->
                     <div class="product-card featured" style="position: relative;">
                         <span class="badge"
-                            style="position: absolute; top: 1rem; right: 1rem; background: var(--color-warning); color: white; padding: 0.4rem 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">OFFER</span>
-                        <h3>SDP Family Pack</h3>
+                            style="position: absolute; top: 1rem; right: 1rem; background: var(--color-warning); color: white; padding: 0.4rem 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                            <span class="en-text">OFFER</span><span class="hi-text">ऑफ़र</span>
+                        </span>
+                        <h3>
+                            <span class="en-text">SDP Family Pack</span><span class="hi-text">SDP फैमिली पैक</span>
+                        </h3>
 
                         <!-- Family Network Visual -->
                         <div class="network-visual"
@@ -180,24 +271,29 @@
                             <div class="text-muted text-2xl font-bold text-primary">₹580</div>
                         </div>
                         <ul style="list-style: none; margin-top: 1rem; line-height: 2;">
-                            <li>Total 4 users</li>
-                            <li>1 Primary + 3 Family</li>
-                            <li>Partner rights (Primary only)</li>
-                            <li style="color:var(--color-primary); font-weight:600;">🔔 Smart Audio Break Alarm Included
+                            <li><span class="en-text">Total 4 users</span><span class="hi-text">कुल ४ उपयोगकर्ता</span></li>
+                            <li><span class="en-text">1 Primary + 3 Family</span><span class="hi-text">१ प्राइमरी + ३ परिवार</span></li>
+                            <li><span class="en-text">Partner rights (Primary only)</span><span class="hi-text">पार्टनर अधिकार (केवल प्राइमरी)</span></li>
+                            <li style="color:var(--color-primary); font-weight:600;">
+                                <span class="en-text">🔔 Smart Audio Break Alarm Included</span><span class="hi-text">🔔 स्मार्ट ऑडियो ब्रेक अलार्म शामिल है</span>
                             </li>
                         </ul>
                         <div class="flex gap-1 mt-1_5">
-                            <a href="login.html?mode=purchase&amount=580" class="btn btn-primary w-full">Buy Now</a>
-                            <a href="#" onclick="openModal('modal-580'); return false;"
-                                class="btn btn-secondary w-full">Learn More</a>
+                            <a href="login.html?mode=purchase&amount=580" class="btn btn-primary w-full">
+                                <span class="en-text">Buy Now</span><span class="hi-text">अभी खरीदें</span>
+                            </a>
+                            <a href="#" onclick="openModal('modal-580'); return false;" class="btn btn-secondary w-full">
+                                <span class="en-text">Learn More</span><span class="hi-text">और जानें</span>
+                            </a>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="text-center" style="margin-top: 4rem; margin-bottom: 4rem;">
-                <a href="buyer.html" class="btn btn-secondary" style="border-radius: 50px; padding: 1rem 3rem;">View
-                    More Details</a>
+                <a href="buyer.html" class="btn btn-secondary" style="border-radius: 50px; padding: 1rem 3rem;">
+                    <span class="en-text">View More Details</span><span class="hi-text">अधिक विवरण देखें</span>
+                </a>
             </div>
 
         </section>
@@ -207,18 +303,36 @@
     <footer class="site-footer"
         style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 3rem 1rem 2rem; text-align: center; margin-top: auto;">
         <div class="container" style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
-            <p style="color: #64748b; font-size: 0.95rem;">This is a non-medical digital wellness experience.</p>
+            <p style="color: #64748b; font-size: 0.95rem;">
+                <span class="en-text">This is a non-medical digital wellness experience.</span><span class="hi-text">यह एक गैर-चिकित्सीय डिजिटल वेलनेस अनुभव है।</span>
+            </p>
 
             <a href="seeder.html"
-                style="color: #3b82f6; text-decoration: none; font-weight: 500; font-size: 0.95rem; display: inline-block;">Partner
-                Access</a>
+                style="color: #3b82f6; text-decoration: none; font-weight: 500; font-size: 0.95rem; display: inline-block;">
+                <span class="en-text">Partner Access</span><span class="hi-text">पार्टनर एक्सेस</span>
+            </a>
 
             <p style="color: #94a3b8; font-size: 0.8rem; margin-top: 1rem;">
-                &copy; 2026 SINAANK. All rights reserved.<br>
-                Developed by SINAANK Team
+                <span class="en-text">&copy; 2026 SINAANK. All rights reserved.</span><span class="hi-text">&copy; २०२६ सिनाँक। सर्वाधिकार सुरक्षित।</span><br>
+                <span class="en-text">Developed by SINAANK Team</span><span class="hi-text">सिनाँक टीम द्वारा विकसित</span>
             </p>
         </div>
     </footer>
+
+    <!-- Language Toggle Script -->
+    <script>
+        function setLang(lang) {
+            if (lang === 'hi') {
+                document.body.classList.add('lang-hi');
+                document.getElementById('btn-hi').classList.add('active');
+                document.getElementById('btn-en').classList.remove('active');
+            } else {
+                document.body.classList.remove('lang-hi');
+                document.getElementById('btn-en').classList.add('active');
+                document.getElementById('btn-hi').classList.remove('active');
+            }
+        }
+    </script>
 
     <!-- Dynamic Auth Logic -->
     <script src="js/store.js"></script>
