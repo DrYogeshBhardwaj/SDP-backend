@@ -415,16 +415,16 @@
             btn.disabled = true;
 
             try {
-                const res = await fetch(`${API_BASE_URL}/verify-otp`, {
+                const res = await fetch(API_BASE_URL + '/verify-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ mobile: state.mobile, otp, sessionId: state.sessionId })
+                    body: JSON.stringify({ mobile: state.mobile, otp: otp, sessionId: state.sessionId })
                 });
                 const data = await res.json();
                 
                 if (res.ok) {
-                    state.userExists = data?.data?.userExists || false;
-                    const user = data?.data?.user;
+                    state.userExists = (data && data.data && data.data.userExists) ? true : false;
+                    const user = (data && data.data && data.data.user) ? data.data.user : null;
                     
                     if (state.userExists && user) {
                         const role = user.role || '';
@@ -442,7 +442,6 @@
                     showAlert(data.message || 'Invalid OTP');
                 }
             } catch (err) {
-                console.error("OTP VE", err);
                 showAlert('Network error verifying OTP');
             } finally {
                 btn.classList.remove('loading');
