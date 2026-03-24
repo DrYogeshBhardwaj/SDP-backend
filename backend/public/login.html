@@ -423,12 +423,18 @@
                 const data = await res.json();
                 
                 if (res.ok) {
-                    state.userExists = data.data.userExists;
-                    if (state.userExists && data.data.user) {
-                        const role = data.data.user.role;
-                        if (role.includes('ADMIN') || role === 'MASTER') window.location.href = '/dashboard/admin.html';
-                        else if (role === 'SEEDER') window.location.href = '/dashboard/seeder.html';
-                        else window.location.href = '/dashboard/user.html';
+                    state.userExists = data?.data?.userExists || false;
+                    const user = data?.data?.user;
+                    
+                    if (state.userExists && user) {
+                        const role = user.role || '';
+                        if (role.indexOf('ADMIN') !== -1 || role === 'MASTER') {
+                            window.location.href = '/dashboard/admin.html';
+                        } else if (role === 'SEEDER') {
+                            window.location.href = '/dashboard/seeder.html';
+                        } else {
+                            window.location.href = '/dashboard/user.html';
+                        }
                     } else {
                         setupFinalStep();
                     }
@@ -436,6 +442,7 @@
                     showAlert(data.message || 'Invalid OTP');
                 }
             } catch (err) {
+                console.error("OTP VE", err);
                 showAlert('Network error verifying OTP');
             } finally {
                 btn.classList.remove('loading');
