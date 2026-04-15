@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sinaank Payment & Profile</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="js/config-v2.js?v=9999"></script>
+    <script src="js/i18n.js"></script>
+    <link rel="icon" href="assets/smt_logo.png">
+    <script src="js/SinaankAssistant.js"></script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #3730a3;
+            --secondary: #0ea5e9;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--background);
+            color: var(--text-main);
+            margin: 0; padding: 0;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .header-slim {
+            background: white;
+            padding: 1rem 5%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            position: sticky; top: 0; z-index: 100;
+        }
+
+        .payment-wrapper {
+            max-width: 500px;
+            margin: 3rem auto;
+            padding: 0 1.5rem;
+            flex-grow: 1;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 32px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+            animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        .form-group { text-align: left; margin-bottom: 1.5rem; position: relative; }
+        .form-label { display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem; }
+        .form-input {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            font-family: inherit;
+            box-sizing: border-box;
+            transition: 0.2s;
+        }
+        .form-input:focus { border-color: var(--primary); outline: none; background: #f8fafc; }
+
+        .pin-toggle {
+            position: absolute;
+            right: 15px;
+            top: 38px;
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .btn-register {
+            width: 100%;
+            padding: 1.25rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn-register:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(79, 70, 229, 0.2); }
+        .btn-register:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        .spinner {
+            width: 20px; height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 10px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .hidden { display: none; }
+        .error-text { color: #ef4444; font-size: 0.85rem; font-weight: 600; margin-top: 0.5rem; display: none; }
+        
+        .nav-logo-h { height: 36px; }
+        
+        .plan-summary {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .plan-summary span { font-weight: 700; color: var(--primary); }
+
+        .back-link {
+            margin-top: 1rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-decoration: underline;
+            display: block;
+        }
+
+        .demo-btn {
+            margin-top: 1.5rem;
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem;
+            border-radius: 12px;
+            width: 100%;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+        .demo-btn:hover { background: #e2e8f0; }
+    </style>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+    <div class="header-slim">
+        <a href="index.html" class="text-none">
+            <img src="/assets/smt_logo.png" alt="Sinaank Digital Therapy Logo" class="nav-logo-h">
+        </a>
+    </div>
+
+    <div class="payment-wrapper">
+        <div class="card">
+            <h2 style="margin: 0; font-size: 1.8rem; font-weight: 800;" data-i18n="join.reg.title">Profile Setup</h2>
+            <p style="color: var(--text-muted); margin-bottom: 2rem;" data-i18n="join.reg.subtitle">Enter your details to proceed to payment.</p>
+            
+            <div class="plan-summary">
+                <div style="text-align: left;">
+                    <div style="font-size: 0.75rem; opacity: 0.7;">Selected Plan</div>
+                    <div id="display-plan-name" style="font-weight: 800; font-size: 1rem;">...</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 0.75rem; opacity: 0.7;">Price</div>
+                    <div id="display-plan-price" style="font-weight: 800; font-size: 1.2rem; color: var(--primary);">₹...</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" data-i18n="join.reg.name">Full Name</label>
+                <input type="text" id="reg-name" class="form-input" placeholder="Your Legal Name" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" data-i18n="join.reg.pin">Create 4-Digit PIN</label>
+                <input type="password" id="reg-pin" class="form-input" placeholder="****" maxlength="4" pattern="\d{4}" required style="text-align: center; letter-spacing: 10px; font-weight: 800; font-size: 1.5rem;">
+                <button type="button" class="pin-toggle" onclick="togglePin('reg-pin')">SHOW</button>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" data-i18n="join.reg.confirm_pin">Confirm 4-Digit PIN</label>
+                <input type="password" id="reg-pin-confirm" class="form-input" placeholder="****" maxlength="4" pattern="\d{4}" required style="text-align: center; letter-spacing: 10px; font-weight: 800; font-size: 1.5rem;">
+                <button type="button" class="pin-toggle" onclick="togglePin('reg-pin-confirm')">SHOW</button>
+                <div id="pin-error" class="error-text">PIN match nahi hai</div>
+            </div>
+
+            <button class="btn-register" id="pay-proceed-btn">
+                <span data-i18n="join.otp.verify_proceed">Proceed to Payment</span>
+                <span id="pay-spinner" class="spinner hidden"></span>
+            </button>
+            
+            <button class="demo-btn" id="demo-skip-btn">Skip for Demo (Testing Only)</button>
+            
+            <a href="join.html" class="back-link">Change Plan / Back</a>
+        </div>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        
+        // FIX: Prioritize URL params, fallback to localStorage
+        const mobile = params.get('mobile') || localStorage.getItem("mobile");
+        const planId = params.get('plan') || localStorage.getItem("plan") || 'growth';
+        const sessionId = params.get('session') || localStorage.getItem("session");
+        const sponsorId = params.get('ref') || localStorage.getItem("ref") || '';
+
+        if (!mobile || !sessionId || !planId) {
+            console.error("Missing Session Context:", { mobile, planId, sessionId });
+            alert("Session expired or invalid. Please start again from the Registration page.");
+            window.location.href = 'join.html';
+        }
+
+        const PLANS = {
+            starter: { name: 'Starter Plan', price: 779, key: 'plans.starter.name' },
+            growth: { name: 'Growth Plan', price: 2990, key: 'plans.growth.name' },
+            basic: { name: 'Starter Plan', price: 779, key: 'plans.starter.name' },
+            business: { name: 'Growth Plan', price: 2990, key: 'plans.growth.name' }
+        };
+
+        const currentPlan = PLANS[planId] || PLANS.growth;
+
+        function init() {
+            const savedName = sessionStorage.getItem('sinaank_reg_name');
+            if (savedName) {
+                const nameInput = document.getElementById('reg-name');
+                nameInput.value = savedName;
+                nameInput.readOnly = true; // Lock it since it's verified/pre-entered
+                nameInput.style.background = "#f1f5f9";
+            }
+
+            document.getElementById('display-plan-name').textContent = window._t ? _t(currentPlan.key) : currentPlan.name;
+            document.getElementById('display-plan-price').textContent = `₹${currentPlan.price}`;
+            
+            document.getElementById('pay-proceed-btn').addEventListener('click', startPaymentProcess);
+            document.getElementById('demo-skip-btn').addEventListener('click', () => continueAsDemo());
+            
+            if (window.SinaankI18n) window.SinaankI18n.updatePage();
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+
+        function togglePin(id) {
+            const input = document.getElementById(id);
+            const btn = input.nextElementSibling;
+            if (input.type === "password") {
+                input.type = "text";
+                btn.textContent = "HIDE";
+            } else {
+                input.type = "password";
+                btn.textContent = "SHOW";
+            }
+        }
+
+        async function startPaymentProcess() {
+            const name = document.getElementById('reg-name').value;
+            const pin = document.getElementById('reg-pin').value;
+            const pinConfirm = document.getElementById('reg-pin-confirm').value;
+            const errorDiv = document.getElementById('pin-error');
+
+            if (!name) { alert("Enter Full Name"); return; }
+            if (pin.length !== 4 || !/^\d+$/.test(pin)) { alert("Enter 4-digit numeric PIN"); return; }
+            if (pin !== pinConfirm) { errorDiv.style.display = 'block'; return; }
+            errorDiv.style.display = 'none';
+
+            const btn = document.getElementById('pay-proceed-btn');
+            const spinner = document.getElementById('pay-spinner');
+            btn.disabled = true; spinner.classList.remove('hidden');
+
+            try {
+                // Map frontend plan ID to backend enum if needed
+                let apiPlanId = 'BUSINESS';
+                if (planId === 'starter' || planId === 'basic') apiPlanId = 'BASIC';
+                
+                const url = SINAANK_CONFIG.getApiUrl('payment/create-order');
+                console.log("DEBUG - Initiating payment at:", url);
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        planId: apiPlanId,
+                        amount: currentPlan.price,
+                        mobile: mobile
+                    })
+                });
+                const data = await res.json();
+                console.log("Payment Initiation Response:", data);
+                
+                if (data.success) {
+                    console.log("Using key_id:", data.key_id);
+                    initiateRazorpay(data, { name, pin });
+                } else { alert("Failed to create order: " + (data.message || "Unknown error")); }
+            } catch (err) { alert("Payment initiation failed: " + err.message); } finally { btn.disabled = false; spinner.classList.add('hidden'); }
+        }
+
+        function initiateRazorpay(orderData, userData) {
+            const options = {
+                "key": orderData.key_id,
+                "amount": orderData.order.amount,
+                "currency": orderData.order.currency,
+                "name": "Sinaank",
+                "description": `${window._t ? _t(currentPlan.key) : currentPlan.name} Activation`,
+                "order_id": orderData.order.id,
+                "handler": function (response) {
+                    verifyAndRegister(response, userData);
+                },
+                "modal": {
+                    "ondismiss": function() {
+                        alert("Payment window closed. You can retry with the 'Proceed' button.");
+                        const btn = document.getElementById('pay-proceed-btn');
+                        btn.disabled = false;
+                        btn.innerHTML = "Retry Payment";
+                    }
+                },
+                "prefill": { "contact": mobile, "name": userData.name },
+                "theme": { "color": "#4f46e5" }
+            };
+            const rzp = new Razorpay(options);
+            rzp.on('payment.failed', function (response){
+                alert("Payment Failed: " + response.error.description);
+                const btn = document.getElementById('pay-proceed-btn');
+                btn.disabled = false;
+                btn.innerHTML = "Retry Payment";
+            });
+            rzp.open();
+        }
+
+        async function continueAsDemo() {
+            localStorage.setItem("token", "SMT_TOKEN_12345");
+            localStorage.setItem("ssb_session", JSON.stringify({
+                id: 'demo_user',
+                name: 'Demo User',
+                mobile: mobile,
+                role: 'BUSINESS',
+                kit_activated: true
+            }));
+            window.location.href = "../dashboard/dashboard-business.html";
+        }
+
+        async function verifyAndRegister(paymentData, userData) {
+            const loadingOverlay = document.createElement('div');
+            loadingOverlay.style = "position:fixed; inset:0; background:rgba(255,255,255,0.9); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:9999;";
+            loadingOverlay.innerHTML = `<div class="spinner" style="border-top-color:var(--primary); width:40px; height:40px;"></div><p style="margin-top:20px; font-weight:800;">Activating Sinaank Therapy...</p>`;
+            document.body.appendChild(loadingOverlay);
+
+            try {
+                let apiPlanId = 'BUSINESS';
+                if (planId === 'starter' || planId === 'basic') apiPlanId = 'BASIC';
+
+                // Ensure paymentData includes isDemo if triggered from demo mode
+                const payload = {
+                    ...paymentData,
+                    ...userData,
+                    mobile: mobile,
+                    sponsor: sponsorId,
+                    plan_type: apiPlanId,
+                    amount: currentPlan.price
+                };
+
+                const url = SINAANK_CONFIG.getApiUrl('payment/verify');
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    localStorage.setItem('token', data.token || data.data?.token);
+                    localStorage.setItem('ssb_session', JSON.stringify(data.data.user));
+                    window.location.href = '/dashboard/dashboard.html?welcome=1';
+                } else {
+                    alert(data.message || "Registration failed. Contact Support.");
+                    loadingOverlay.remove();
+                    if (document.getElementById('demo-skip-btn')) {
+                        document.getElementById('demo-skip-btn').disabled = false;
+                        document.getElementById('demo-skip-btn').textContent = "Skip for Demo (Testing Only)";
+                    }
+                }
+            } catch (err) {
+                alert("Critical error during activation. " + err.message);
+                loadingOverlay.remove();
+            }
+        }
+    </script>
+</body>
+</html>
