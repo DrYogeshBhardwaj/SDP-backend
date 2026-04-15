@@ -1,0 +1,13 @@
+{
+  "$schema": "https://railway.app/v2/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS",
+    "rootDirectory": "backend"
+  },
+  "deploy": {
+    "startCommand": "node src/server.js",
+    "restartPolicyType": "ON_FAILURE",
+    "healthcheckPath": "/api/auth/otp/test-status",
+    "healthcheckTimeout": 30
+  }
+}
