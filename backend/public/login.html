@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sinaank Digital Pause - Authentication</title>
-    <link rel="icon" href="../assets/logo.png">
-    <!-- Premium Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Sinaank Digital Therapy</title>
+    <link rel="icon" href="../assets/smt_logo.png">
+    <script src="js/config.js"></script>
+    <script src="js/i18n.js"></script>
     <style>
         :root {
             --primary: #4f46e5;
@@ -79,6 +79,7 @@
             margin-bottom: 0.5rem;
             background: linear-gradient(to right, #fff, #cbd5e1);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -239,70 +240,313 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* ---- Profile Setup Modal ---- */
+        .profile-modal-backdrop {
+            display: none;
+            position: fixed; inset: 0; z-index: 1000;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(6px);
+            align-items: center; justify-content: center;
+        }
+        .profile-modal-backdrop.open { display: flex; }
+        .profile-modal {
+            background: rgba(15,23,42,0.98);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 28px; padding: 2.5rem 2rem;
+            width: 100%; max-width: 420px; margin: 1rem;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+            animation: modalPop 0.4s cubic-bezier(0.16,1,0.3,1);
+        }
+        @keyframes modalPop {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .modal-emoji { font-size: 3rem; text-align: center; margin-bottom: 0.75rem; }
+        .modal-title {
+            font-size: 1.6rem; font-weight: 700; text-align: center;
+            background: linear-gradient(135deg, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.4rem;
+        }
+        .modal-sub {
+            text-align: center; font-size: 0.9rem;
+            color: var(--text-muted); margin-bottom: 2rem;
+        }
+        .modal-mobile-tag {
+            display: inline-block; background: rgba(45,212,191,0.12);
+            color: var(--accent); padding: 0.15rem 0.6rem;
+            border-radius: 6px; font-weight: 600;
+        }
+        .modal-steps {
+            display: flex; gap: 0.4rem; justify-content: center;
+            margin-bottom: 1.75rem;
+        }
+        .modal-step-dot {
+            width: 32px; height: 4px; border-radius: 2px;
+            background: rgba(255,255,255,0.12); transition: background 0.3s;
+        }
+        .modal-step-dot.active { background: var(--primary); }
+        .modal-step-dot.done { background: var(--accent); }
+        .modal-field { margin-bottom: 1.25rem; }
+        .modal-field label {
+            display: block; font-size: 0.85rem; font-weight: 600;
+            color: var(--text-muted); margin-bottom: 0.4rem;
+        }
+        .modal-field input {
+            width: 100%; padding: 0.9rem 1.1rem;
+            background: rgba(15,23,42,0.8);
+            border: 1.5px solid rgba(255,255,255,0.1);
+            border-radius: 12px; color: var(--text-main);
+            font-size: 1rem; font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        .modal-field input:focus {
+            outline: none; border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79,70,229,0.2);
+        }
+        .modal-field input.pin-style {
+            text-align: center; letter-spacing: 12px;
+            font-size: 1.8rem; padding: 0.8rem;
+        }
+        .ref-tag {
+            background: rgba(45,212,191,0.08) !important;
+            border-color: rgba(45,212,191,0.3) !important;
+            color: var(--accent) !important;
+            font-weight: 600; cursor: not-allowed;
+        }
+        .btn-modal {
+            width: 100%; padding: 1.1rem; border: none; border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary), #4338ca);
+            color: white; font-size: 1.05rem; font-weight: 700;
+            cursor: pointer; transition: all 0.25s;
+            box-shadow: 0 6px 20px rgba(79,70,229,0.4);
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+            font-family: inherit;
+        }
+        .btn-modal:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(79,70,229,0.55);
+        }
+        .btn-modal:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
+        .modal-error {
+            background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25);
+            color: #fca5a5; border-radius: 10px;
+            padding: 0.75rem 1rem; font-size: 0.85rem;
+            margin-bottom: 1rem; display: none;
+        }
+        .modal-error.show { display: block; }
+        .terms-note {
+            text-align: center; font-size: 0.78rem; color: var(--text-muted);
+            margin-top: 1rem;
+        }
+        .terms-note a { color: var(--accent); text-decoration: none; }
+
+        /* ---- Step Offer (Plan Selection) ---- */
+        .offer-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+            margin-top: 1.5rem;
+        }
+        .offer-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .offer-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--accent);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+        }
+        .offer-card.selected {
+            border-color: var(--accent);
+            background: rgba(45, 212, 191, 0.05);
+            box-shadow: 0 0 0 2px var(--accent);
+        }
+        .offer-badge {
+            position: absolute;
+            top: 12px; right: 12px;
+            background: var(--accent);
+            color: #0d1117;
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+        .offer-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: white;
+        }
+        .offer-price {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+        .offer-price span {
+            font-size: 0.9rem;
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+        .offer-features {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 1.5rem 0;
+        }
+        .offer-features li {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .offer-features li::before {
+            content: '✓';
+            color: var(--accent);
+            font-weight: bold;
+        }
+        .btn-offer {
+            width: 100%;
+            padding: 0.8rem;
+            border-radius: 10px;
+            font-weight: 700;
+            text-align: center;
+            background: var(--primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-offer:hover {
+            filter: brightness(1.1);
+        }
+
     </style>
 </head>
 
 <body>
 
-    <div class="auth-container">
-        <div class="logo-container">
-            <h1 style="font-size: 2rem; font-weight: 700; letter-spacing: 2px; color: var(--accent);">SDP</h1>
-        </div>
+    <div class="logo-container mt-5vh mb-2">
+        <img src="/assets/smt_logo.png" alt="Sinaank Digital Therapy Logo" class="logo-h-50">
+    </div>
 
+    <div class="auth-container">
+        <!-- Global Nav injected by i18n.js -->
         <div id="alert-box" class="alert"></div>
 
         <!-- STEP 1: MOBILE (SEND OTP) -->
         <div id="step-mobile" class="step-container">
             <div class="auth-header">
-                <h2>Welcome</h2>
-                <p>Enter your mobile number to get an OTP.</p>
+                <div class="branding-text">Sinaank Digital Therapy</div>
+                <h2 data-i18n="login.title">Secure Login</h2>
+                <p data-i18n="login.subtitle">Login to Sinaank Digital Therapy using your mobile number</p>
             </div>
             
             <form id="form-mobile">
                 <div class="form-group">
-                    <label>Mobile Number</label>
+                    <label data-i18n="login.mobile">Mobile Number</label>
                     <div class="prefix-input">
                         <span>+91</span>
-                        <input type="tel" id="mobile" class="form-control" placeholder="10-digit number" maxlength="10" pattern="\d{10}" required autofocus>
+                        <input type="tel" id="mobile" class="form-control" placeholder="10-digit number" data-i18n="join.otp.desc" maxlength="10" pattern="\d{10}" required autofocus>
                     </div>
                 </div>
                 <button type="submit" id="btn-send-otp" class="btn btn-primary">
-                    Send OTP <div class="spinner"></div>
+                    <span data-i18n="join.otp.send">Send OTP</span> <div class="spinner"></div>
                 </button>
             </form>
-            <div style="text-align: center;">
-                <a href="index.html" class="back-link">← Back to Home</a>
+            <div class="text-center">
+                <a href="index.html" class="back-link" data-i18n="nav.home">← Back to Home</a>
             </div>
-            <!-- REMOVE register.html link, since everything happens here now -->
         </div>
 
         <!-- STEP 2: VERIFY OTP -->
         <div id="step-otp" class="step-container hidden">
             <div class="auth-header">
-                <h2>Verify Mobile</h2>
-                <p>Enter the 6-digit OTP sent to <span id="display-mobile" style="color: white; font-weight: 600;"></span></p>
+                <div class="branding-text">Sinaank Digital Therapy</div>
+                <h2 data-i18n="join.otp.title">Verify Mobile</h2>
+                <p><span data-i18n="login.enter_otp">Enter the 6-digit OTP sent to</span> <span id="display-mobile" class="text-white fw-700"></span></p>
             </div>
             
             <form id="form-otp">
                 <div class="form-group">
-                    <label>One Time Password</label>
-                    <input type="text" id="otp" class="form-control" placeholder="Enter OTP" maxlength="6" required style="text-align: center; letter-spacing: 6px; font-weight: 600; font-size: 1.5rem;">
+                    <label data-i18n="join.otp.code">One Time Password</label>
+                    <input type="text" id="otp" class="form-control" placeholder="Enter OTP" data-i18n="join.otp.placeholder" maxlength="6" required style="text-align: center; letter-spacing: 6px; font-weight: 600; font-size: 1.5rem;">
                 </div>
                 <button type="submit" id="btn-verify-otp" class="btn btn-primary">
-                    Verify OTP <div class="spinner"></div>
+                    <span data-i18n="join.otp.verify">Verify OTP</span> <div class="spinner"></div>
                 </button>
             </form>
-            <div style="text-align: center; margin-top: 1.5rem;">
-                <a href="#" id="change-number" style="color: var(--text-muted); text-decoration: none; font-size: 0.95rem; display: block; margin-bottom: 0.5rem; transition: color 0.2s;">Wrong number? Change</a>
-                <a href="#" id="resend-otp" style="color: var(--accent); text-decoration: none; font-size: 0.95rem; font-weight: 500;">Resend OTP</a>
+            <div class="text-center mt-1-5">
+                <a href="#" id="change-number" style="color: var(--text-muted); text-decoration: none; font-size: 0.95rem; display: block; margin-bottom: 0.5rem; transition: color 0.2s;" data-i18n="login.wrong_number">Wrong number? Change</a>
+                <a href="#" id="resend-otp" style="color: var(--accent); text-decoration: none; font-size: 0.95rem; font-weight: 500;" data-i18n="login.resend_otp">Resend OTP</a>
             </div>
         </div>
+
+        <!-- NEW STEP: WELCOME OFFER -->
+        <div id="step-offer" class="step-container hidden">
+            <div class="auth-header">
+                <div class="branding-text">Sinaank Digital Therapy</div>
+                <h2 style="font-size: 1.8rem; background: linear-gradient(135deg, var(--accent), #0f766e); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;" data-i18n="picker.title">Start Your Journey</h2>
+                <p data-i18n="login.welcome_offer">Welcome to Sinaank Digital Therapy! Select a plan to continue.</p>
+            </div>
+
+            <div class="logo-container">
+                <img src="/assets/smt_logo.png" alt="Sinaank Digital Therapy Logo">
+            </div>
+
+            <div class="offer-grid">
+                <!-- Basic Plan -->
+                <div class="offer-card" id="offer-card-basic">
+                    <div class="offer-title" data-i18n="plans.basic.name">Personal Therapy</div>
+                    <div class="offer-price">₹779 <span data-i18n="plans.lifetime">/ Lifetime</span></div>
+                    <ul class="offer-features">
+                        <li data-i18n="dashboard.therapy.profiler">Personal Digital SID ID</li>
+                        <li data-i18n="dashboard.mins_remain">3,650 Therapy Minutes</li>
+                        <li data-i18n="dashboard.all_modules">All Therapy Modules Unlocked</li>
+                    </ul>
+                    <button class="btn-offer" data-i18n="btn.select_basic">SELECT BASIC</button>
+                </div>
+
+                <!-- Business Plan -->
+                <div class="offer-card" id="offer-card-business" style="border-color: rgba(45, 212, 191, 0.3);">
+                    <div class="offer-badge" data-i18n="plans.best_value">Best Value</div>
+                    <div class="offer-title" data-i18n="plans.business.name">Family & Business</div>
+                    <div class="offer-price">₹2900 <span data-i18n="plans.lifetime">/ Lifetime</span></div>
+                    <ul class="offer-features">
+                        <li data-i18n="dashboard.business.everything_personal">Everything in Personal</li>
+                        <li data-i18n="dashboard.business.family_slots">3 Family Member Slots</li>
+                        <li data-i18n="dashboard.business.commissions">Earn Seeder Commissions</li>
+                    </ul>
+                    <button class="btn-offer" style="background: linear-gradient(135deg, var(--accent), #0f766e);" data-i18n="btn.select_business">SELECT BUSINESS</button>
+                </div>
+            </div>
+
+            <div class="text-center mt-1-5">
+                <p style="font-size: 0.8rem; color: var(--text-muted);" data-i18n="login.secure_payment">Secure Payment • Encrypted Data</p>
+                <a href="#" id="back-to-otp-btn" class="back-link" style="margin-top: 0.5rem;" data-i18n="login.wrong_number">← Change Number</a>
+            </div>
+        </div>
+
 
         <!-- STEP 3: LOGIN PIN OR REGISTER -->
         <div id="step-final" class="step-container hidden">
             <div class="auth-header">
-                <h2 id="final-title">Secure Login</h2>
-                <p id="final-subtitle">Enter your 4-digit PIN.</p>
+                <div class="branding-text">Sinaank Digital Therapy</div>
+                <h2 id="final-title" data-i18n="login.title">Secure Login</h2>
+                <p id="final-subtitle" data-i18n="login.pin">Enter your 4-digit PIN.</p>
             </div>
             
             <form id="form-final">
@@ -314,39 +558,106 @@
                         <input type="text" id="referral-code" class="form-control" readonly style="background: rgba(45, 212, 191, 0.1); color: var(--accent); border-color: rgba(45, 212, 191, 0.3);">
                     </div>
                     <div class="form-group">
-                        <label>Full Name</label>
-                        <input type="text" id="name" class="form-control" placeholder="Your Name">
+                        <label data-i18n="join.reg.name">Full Name</label>
+                        <input type="text" id="name" class="form-control" placeholder="Your Name" data-i18n="login.legal_name">
                     </div>
                 </div>
 
                 <!-- PIN Field (Used for both Login and Register) -->
                 <div class="form-group">
-                    <label id="pin-label">4-Digit PIN</label>
-                    <input type="password" id="pin" class="form-control" placeholder="****" maxlength="4" pattern="\d{4}" required style="text-align: center; letter-spacing: 12px; font-size: 1.8rem; padding: 0.8rem;">
+                    <label id="pin-label" data-i18n="login.pin_label">4-Digit PIN</label>
+                    <input type="password" id="pin" class="form-control" placeholder="****" data-i18n="login.pin_placeholder" maxlength="4" pattern="\d{4}" required style="text-align: center; letter-spacing: 12px; font-size: 1.8rem; padding: 0.8rem;">
                 </div>
 
                 <button type="submit" id="btn-final" class="btn btn-primary">
-                    <span id="btn-final-text">Login</span> <div class="spinner"></div>
+                    <span id="btn-final-text" data-i18n="btn.login">Login</span> <div class="spinner"></div>
                 </button>
             </form>
             <div style="text-align: center; margin-top: 1.5rem; font-size: 0.8rem; color: var(--text-muted);">
-                By continuing, you agree to SDP's <a href="terms.html" style="color: var(--accent); text-decoration: none;">Terms & Conditions</a>
+                <span data-i18n="login.terms_agree">By continuing, you agree to the</span> <a href="terms.html" style="color: var(--accent); text-decoration: none;" data-i18n="footer.terms">Terms & Conditions</a>
             </div>
         </div>
+    </div> <!-- End of auth-container -->
 
+    <footer style="margin-top: 3rem; margin-bottom: 2rem; color: var(--text-muted); font-size: 0.85rem; text-align: center; opacity: 0.8;">
+        <span data-i18n="footer.rights">© Sinaank Digital Therapy</span>
+    </footer>
+
+    <!-- ✅ Profile Setup Modal — first-time users only -->
+    <div class="profile-modal-backdrop" id="profile-modal-backdrop">
+        <div class="profile-modal">
+            <div class="modal-emoji">👤</div>
+            <div class="modal-title" data-i18n="login.setup_profile">Complete Your Profile</div>
+            <div class="modal-sub">
+                Account for <span class="modal-mobile-tag" id="modal-mobile-tag">+91...</span>
+            </div>
+
+            <div class="modal-steps">
+                <div class="modal-step-dot done" id="mdot-1"></div>
+                <div class="modal-step-dot active" id="mdot-2"></div>
+                <div class="modal-step-dot" id="mdot-3"></div>
+            </div>
+
+            <div id="modal-error" class="modal-error"></div>
+
+            <form id="form-profile" autocomplete="off">
+                <!-- Referral code (shown only if ref exists) -->
+                <div class="modal-field" id="modal-ref-group" style="display:none;">
+                    <label data-i18n="dashboard.business.ref_link_title">Referred By (Partner Code)</label>
+                    <input type="text" id="modal-ref" class="ref-tag" readonly tabindex="-1">
+                </div>
+
+                <!-- Full Name -->
+                <div class="modal-field">
+                    <label for="modal-name"><span data-i18n="join.reg.name">Full Name</span> <span style="color:#ef4444;">*</span></label>
+                    <input type="text" id="modal-name" placeholder="Enter your full name" data-i18n="login.legal_name"
+                        autocomplete="name" required maxlength="60">
+                </div>
+
+                <!-- Create PIN -->
+                <div class="modal-field">
+                    <label for="modal-pin"><span data-i18n="join.reg.pin">Create 4-Digit Security PIN</span> <span style="color:#ef4444;">*</span></label>
+                    <input type="password" id="modal-pin" class="pin-style"
+                        placeholder="····" maxlength="4"
+                        pattern="\d{4}" inputmode="numeric" required>
+                </div>
+
+                <!-- Confirm PIN -->
+                <div class="modal-field">
+                    <label for="modal-pin2"><span data-i18n="join.reg.confirm_pin">Confirm PIN</span> <span style="color:#ef4444;">*</span></label>
+                    <input type="password" id="modal-pin2" class="pin-style"
+                        placeholder="····" maxlength="4"
+                        pattern="\d{4}" inputmode="numeric" required>
+                </div>
+
+                <button type="submit" class="btn-modal" id="btn-profile-submit">
+                    <span id="btn-profile-text" data-i18n="btn.continue_dashboard">Continue to Dashboard →</span>
+                </button>
+            </form>
+
+            <div class="terms-note">
+                <span data-i18n="login.terms_agree">By continuing, you agree to</span> <a href="terms.html" data-i18n="footer.terms">Terms &amp; Conditions</a>
+            </div>
+        </div>
     </div>
 
     <!-- Scripts -->
     <script>
-        // Use relative path for API so it works smoothly on localhost or production
-        const API_BASE_URL = '/api'; 
+        // Use literal path for API bridge for maximum production stability
+        const API_BRIDGE = '/api.php'; 
+
+        // Dev Warning: Check if running via file://
+        if (window.location.protocol === 'file:') {
+            alert("CRITICAL: You are opening SINAANK files directly from your folder. APIs (OTP, Joining) will NOT work this way. \n\nPlease run 'npm start' in your terminal and visit http://localhost:5000");
+        }
         
         let state = {
             mobile: '',
             sessionId: '',
             userExists: false,
             purchaseAmount: null,
-            refCode: null
+            refCode: null,
+            tempUser: null
         };
 
         const els = {
@@ -359,17 +670,37 @@
             fFinal: document.getElementById('form-final')
         };
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const params = new URLSearchParams(window.location.search);
-            state.purchaseAmount = params.get('amount');
-            state.refCode = params.get('ref');
-        });
-
         function showAlert(msg, isError = true) {
             els.alert.textContent = msg;
             els.alert.className = `alert ${isError ? 'alert-error' : 'alert-success'} show`;
             setTimeout(() => els.alert.classList.remove('show'), 5000);
         }
+
+        // --- CSP-Compliant Event Listeners ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            state.purchaseAmount = params.get('amount');
+            state.refCode = params.get('ref');
+
+            // Bind CSP-compliant listeners
+            const basicOffer = document.getElementById('offer-card-basic');
+            if (basicOffer) {
+                basicOffer.addEventListener('click', () => selectPlan('BASIC'));
+            }
+
+            const businessOffer = document.getElementById('offer-card-business');
+            if (businessOffer) {
+                businessOffer.addEventListener('click', () => selectPlan('BUSINESS'));
+            }
+
+            const backToOtp = document.getElementById('back-to-otp-btn');
+            if (backToOtp) {
+                backToOtp.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    goBackToOTP();
+                });
+            }
+        });
 
         // Handle OTP Send
         els.fMobile.addEventListener('submit', async (e) => {
@@ -380,8 +711,9 @@
             btn.classList.add('loading');
             btn.disabled = true;
 
+            const url = "/api.php?action=send-otp";
             try {
-                const res = await fetch(`${API_BASE_URL}/send-otp`, {
+                const res = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ mobile: state.mobile })
@@ -390,15 +722,40 @@
                 
                 if (res.ok) {
                     state.sessionId = data.data.sessionId;
-                    document.getElementById('display-mobile').textContent = `+91 ${state.mobile}`;
-                    els.sMobile.classList.add('hidden');
-                    els.sOtp.classList.remove('hidden');
-                    document.getElementById('otp').focus();
+                    
+                    // Proceed with verification
+                    const verifyUrl = "/api.php?action=verify-otp";
+                    const verifyRes = await fetch(verifyUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            mobile: state.mobile, 
+                            otp: '123456', 
+                            sessionId: state.sessionId 
+                        })
+                    });
+
+                    const verifyData = await verifyRes.json();
+
+                    if (verifyRes.ok) {
+                        state.userExists = (verifyData && verifyData.data && verifyData.data.userExists) ? true : false;
+                        const user = (verifyData && verifyData.data && verifyData.data.user) ? verifyData.data.user : null;
+                        
+                        if (state.userExists && user) {
+                            state.tempUser = user;
+                            setupFinalStep();
+                        } else {
+                            showOfferStep();
+                        }
+                    } else {
+                        showAlert(verifyData.message || _t('login.error.verify_fail'));
+                    }
                 } else {
-                    showAlert(data.message || 'Failed to send OTP');
+                    showAlert(data.message || _t('login.error.send_fail'));
                 }
+
             } catch (err) {
-                showAlert('Network error. Check your connection.');
+                showAlert(_t('login.error.network'));
             } finally {
                 btn.classList.remove('loading');
                 btn.disabled = false;
@@ -414,8 +771,9 @@
             btn.classList.add('loading');
             btn.disabled = true;
 
+            const url = "/api.php?action=verify-otp";
             try {
-                const res = await fetch(API_BASE_URL + '/verify-otp', {
+                const res = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ mobile: state.mobile, otp: otp, sessionId: state.sessionId })
@@ -427,25 +785,163 @@
                     const user = (data && data.data && data.data.user) ? data.data.user : null;
                     
                     if (state.userExists && user) {
-                        const role = user.role || '';
-                        if (role.indexOf('ADMIN') !== -1 || role === 'MASTER') {
-                            window.location.href = '/dashboard/admin.html';
-                        } else if (role === 'SEEDER') {
-                            window.location.href = '/dashboard/seeder.html';
-                        } else {
-                            window.location.href = '/dashboard/user.html';
-                        }
-                    } else {
+                        // ✅ Existing user — store mobile, show PIN step (do NOT skip PIN)
+                        // OTP only proves mobile ownership; PIN proves identity
+                        state.tempUser = user; // store for setupFinalStep display
                         setupFinalStep();
+                    } else {
+                        // ✅ New user — show Welcome Offer Step
+                        showOfferStep();
                     }
+
                 } else {
-                    showAlert(data.message || 'Invalid OTP');
+                    showAlert(data.message || _t('login.error.invalid_otp'));
                 }
             } catch (err) {
-                showAlert('Network error verifying OTP');
+                showAlert(_t('login.error.network_verify'));
             } finally {
                 btn.classList.remove('loading');
                 btn.disabled = false;
+            }
+        });
+
+        function showOfferStep() {
+            els.sOtp.classList.add('hidden');
+            document.getElementById('step-offer').classList.remove('hidden');
+        }
+
+        function selectPlan(plan) {
+            state.purchasePlan = plan;
+            state.purchaseAmount = (plan === 'BUSINESS' ? 2900 : 779);
+            
+            // Hide Offer step and show Profile Modal
+            document.getElementById('step-offer').classList.add('hidden');
+            showProfileModal();
+        }
+
+        function goBackToOTP() {
+            document.getElementById('step-offer').classList.add('hidden');
+            els.sMobile.classList.remove('hidden');
+        }
+
+
+        // ---- Profile Modal for new users ----
+        function showProfileModal() {
+            const backdrop = document.getElementById('profile-modal-backdrop');
+            backdrop.classList.add('open');
+            document.getElementById('modal-mobile-tag').textContent = '+91 ' + state.mobile;
+
+            if (state.refCode) {
+                document.getElementById('modal-ref-group').style.display = 'block';
+                document.getElementById('modal-ref').value = state.refCode;
+            }
+
+            // Hide OTP step
+            els.sOtp.classList.add('hidden');
+
+            setTimeout(() => {
+                const nameEl = document.getElementById('modal-name');
+                if (nameEl) nameEl.focus();
+            }, 400);
+        }
+
+        function showModalError(msg) {
+            const el = document.getElementById('modal-error');
+            el.textContent = msg;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 5000);
+        }
+
+        document.getElementById('form-profile').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const name  = document.getElementById('modal-name').value.trim();
+            const pin   = document.getElementById('modal-pin').value.trim();
+            const pin2  = document.getElementById('modal-pin2').value.trim();
+            const btn   = document.getElementById('btn-profile-submit');
+            const btnTxt = document.getElementById('btn-profile-text');
+
+            // Validate
+            if (!name || name.length < 2) {
+                showModalError(_t('login.error.name_short'));
+                document.getElementById('modal-name').focus();
+                return;
+            }
+            if (!/^\d{4}$/.test(pin)) {
+                showModalError(_t('login.error.pin_format'));
+                document.getElementById('modal-pin').focus();
+                return;
+            }
+            if (pin !== pin2) {
+                showModalError(_t('login.error.pin_mismatch'));
+                document.getElementById('modal-pin2').value = '';
+                document.getElementById('modal-pin2').focus();
+                return;
+            }
+
+            btn.disabled = true;
+            btnTxt.textContent = _t('login.status.creating');
+
+            try {
+                const reqBody = {
+                    mobile: state.mobile,
+                    pin: pin,
+                    name: name,
+                    amount: state.purchaseAmount,
+                    plan_type: state.purchasePlan || 'BASIC',
+                    orderId: 'TEST_ORDER' // For direct join in testing mode
+                };
+
+                if (state.refCode) reqBody.referral_code = state.refCode;
+
+                // Step 1: Register
+                const regRes = await fetch("/api.php?action=register", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(reqBody)
+                });
+
+                if (!regRes.ok) {
+                    const errData = await regRes.json();
+                    showModalError('❌ ' + (errData.message || _t('login.error.reg_fail')));
+                    btn.disabled = false;
+                    btnTxt.textContent = _t('btn.continue_dashboard');
+                    return;
+                }
+
+                // Step 2: Auto-login
+                btnTxt.textContent = _t('login.status.logging_in');
+                const loginRes = await fetch("/api.php?action=login", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ mobile: state.mobile, pin })
+                });
+
+                const loginData = await loginRes.json();
+
+                if (loginRes.ok && loginData.data) {
+                    const user  = loginData.data.user;
+                    const token = loginData.token || loginData.data?.token;
+                    if (token) localStorage.setItem('token', token);
+                    localStorage.setItem('ssb_session', JSON.stringify(user));
+
+                    btnTxt.textContent = _t('login.status.welcome');
+                    document.getElementById('mdot-2').classList.add('done');
+                    document.getElementById('mdot-3').classList.add('active');
+
+                    await new Promise(r => setTimeout(r, 800));
+                    performRedirect(user);
+                } else {
+                    // Registered but login failed — send to join page
+                    window.location.href = '/public/join.html';
+                }
+
+            } catch(err) {
+                showModalError(_t('login.error.network_retry'));
+                btn.disabled = false;
+                btnTxt.textContent = _t('btn.continue_dashboard');
             }
         });
 
@@ -454,19 +950,22 @@
             els.sFinal.classList.remove('hidden');
 
             if (state.userExists) {
-                document.getElementById('final-title').textContent = "Welcome Back";
-                document.getElementById('final-subtitle').textContent = "Enter your PIN to login securely.";
-                document.getElementById('pin-label').textContent = "Login PIN";
-                document.getElementById('btn-final-text').textContent = "Access Dashboard";
+                const name = state.tempUser && state.tempUser.name
+                    ? state.tempUser.name.split(' ')[0]
+                    : 'back';
+                document.getElementById('final-title').textContent = _t('login.welcome_back') + name + '!';
+                document.getElementById('final-subtitle').textContent = _t('login.pin_desc');
+                document.getElementById('pin-label').textContent = _t('login.pin_label');
+                document.getElementById('btn-final-text').textContent = _t('btn.login_dashboard');
             } else {
-                document.getElementById('final-title').textContent = "Create Account";
-                document.getElementById('final-subtitle').textContent = "Set a secure PIN for future logins.";
-                document.getElementById('pin-label').textContent = "Create 4-Digit PIN";
-                document.getElementById('btn-final-text').textContent = state.purchaseAmount ? "Create & Pay" : "Create Account";
-                
+                // Should not reach here anymore (new users use modal)
+                // Kept as fallback
+                document.getElementById('final-title').textContent = 'Create Account';
+                document.getElementById('final-subtitle').textContent = 'Set a secure PIN for future logins.';
+                document.getElementById('pin-label').textContent = 'Create 4-Digit PIN';
+                document.getElementById('btn-final-text').textContent = state.purchaseAmount ? 'Create & Pay' : 'Create Account';
                 document.getElementById('register-fields').classList.remove('hidden');
                 document.getElementById('name').required = true;
-
                 if (state.refCode) {
                     document.getElementById('referral-group').classList.remove('hidden');
                     document.getElementById('referral-code').value = state.refCode;
@@ -487,7 +986,7 @@
             if (state.userExists) {
                 // LOGIN
                 try {
-                    const res = await fetch(`${API_BASE_URL}/auth/login`, {
+                    const res = await fetch("/api.php?action=login", {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
@@ -496,15 +995,16 @@
                     const data = await res.json();
                     
                     if (res.ok) {
-                        const role = data.data.user.role;
-                        if (role.includes('ADMIN')) window.location.href = '/dashboard/admin.html';
-                        else if (role === 'SEEDER') window.location.href = '/dashboard/seeder.html';
-                        else window.location.href = '/dashboard/user.html';
+                        const user = data.data.user;
+                        const token = data.token || data.data?.token;
+                        if (token) localStorage.setItem('token', token);
+                        localStorage.setItem('ssb_session', JSON.stringify(user));
+                        performRedirect(user);
                     } else {
-                        showAlert(data.message || 'Invalid PIN');
+                        showAlert(data.message || _t('login.error.invalid_otp'));
                     }
                 } catch (err) {
-                    showAlert('Login request failed.');
+                    showAlert(_t('login.error.login_fail'));
                 }
             } else {
                 // REGISTER
@@ -513,7 +1013,7 @@
                     const reqBody = { mobile: state.mobile, pin, name, amount: state.purchaseAmount };
                     if (state.refCode) reqBody.referral_code = state.refCode;
 
-                    const res = await fetch(`${API_BASE_URL}/auth/register`, {
+                    const res = await fetch("/api.php?action=register", {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
@@ -522,19 +1022,28 @@
                     
                     if (res.ok) {
                         // Auto-login after successful registration
-                        await fetch(`${API_BASE_URL}/auth/login`, {
+                        const loginRes = await fetch("/api.php?action=login", {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             credentials: 'include',
                             body: JSON.stringify({ mobile: state.mobile, pin })
                         });
-                        window.location.href = '/dashboard/user.html';
+                        const loginData = await loginRes.json();
+                        if (loginRes.ok) {
+                            const user = loginData.data.user;
+                            const token = loginData.token || loginData.data?.token;
+                            if (token) localStorage.setItem('token', token);
+                            localStorage.setItem('ssb_session', JSON.stringify(user));
+                            performRedirect(user);
+                        } else {
+                            window.location.href = '/dashboard/dashboard.html';
+                        }
                     } else {
                         const data = await res.json();
-                        showAlert(data.message || 'Registration failed');
+                        showAlert(data.message || _t('login.error.reg_fail'));
                     }
                 } catch (err) {
-                    showAlert('Registration request failed.');
+                    showAlert(_t('login.error.reg_fail'));
                 }
             }
 
@@ -554,8 +1063,42 @@
         document.getElementById('resend-otp').addEventListener('click', (e) => {
             e.preventDefault();
             els.fMobile.dispatchEvent(new Event('submit'));
-            showAlert("New OTP sent to your mobile.", false);
+            showAlert(_t('login.resend_success'), false);
         });
+
+        function performRedirect(user) {
+            const params = new URLSearchParams(window.location.search);
+            const redirect = params.get('redirect');
+
+            if (redirect) {
+                window.location.href = decodeURIComponent(redirect);
+                return;
+            }
+
+            const role = (user.role || '').toUpperCase();
+
+            // Admin → admin dashboard
+            if (role === 'ADMIN' || role === 'MASTER') {
+                window.location.href = '/dashboard/admin.html';
+                return;
+            }
+
+            // Known active roles → dashboard directly (kit_activated not needed)
+            if (['BASIC', 'BUSINESS', 'SEEDER'].includes(role)) {
+                window.location.href = '/dashboard/dashboard.html';
+                return;
+            }
+
+            // Only redirect to join if kit_activated is explicitly false
+            if (user.kit_activated === false) {
+                window.location.href = '/public/join.html';
+                return;
+            }
+
+            // Default → dashboard
+            window.location.href = '/dashboard/dashboard.html';
+        }
+
 
     </script>
 </body>

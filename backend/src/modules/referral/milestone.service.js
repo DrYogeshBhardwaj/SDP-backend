@@ -8,37 +8,53 @@ const { PrismaClient } = require('@prisma/client');
  * @param {object} tx - The Prisma transaction object
  */
 const checkAndAwardMilestones = async (userId, tx) => {
-    // 1. Calculate Direct Referrals (Level 1)
-    const directCount = await tx.referral.count({
-        where: {
-            referrerId: userId,
-            level: 1,
-            status: 'ACTIVE'
-        }
-    });
-
-    // 2. Calculate Network Referrals (All Levels where referrerId is the user)
-    // In our 2-depth system, this includes level 1 and level 2.
-    const networkCount = await tx.referral.count({
+    // 1. Fetch all active referrals where this user is the referrer
+    const networkReferrals = await tx.referral.findMany({
         where: {
             referrerId: userId,
             status: 'ACTIVE'
+        },
+        include: {
+            referredUser: {
+                select: { role: true }
+            }
         }
     });
 
-    // 3. Fetch all active ranks
+    // 2. Calculate Total Points
+    // Weight: BASIC = 1, BUSINESS/SEEDER = 4
+    let totalPoints = 0;
+    for (const ref of networkReferrals) {
+        const role = ref.referredUser.role;
+        if (role === 'BUSINESS' || role === 'SEEDER') {
+            totalPoints += 4;
+        } else {
+            totalPoints += 1;
+        }
+    }
+
+    // 3. Fetch achieving user's role to determine reward type
+    const user = await tx.user.findUnique({
+        where: { id: userId },
+        select: { role: true }
+    });
+    const isBusinessAchiever = (user.role === 'BUSINESS' || user.role === 'SEEDER');
+
+    // 4. Fetch all active ranks
     const allRanks = await tx.rankConfig.findMany({
         where: { active: true },
-        orderBy: { bonusAmount: 'asc' } // Lowest to highest bonus
+        orderBy: { pointsRequired: 'asc' }
     });
 
-    // 4. Determine achieved ranks purely mathematically
+    // 5. Determine and award achieved ranks
     for (const rank of allRanks) {
-        // Skip base ranks with no bonus to distribute
-        if (rank.bonusAmount <= 0) continue;
+        if (totalPoints >= rank.pointsRequired) {
+            // Determine bonus amount based on achiever's role
+            const bonusAmount = isBusinessAchiever ? rank.businessBonus : rank.basicBonus;
+            
+            if (bonusAmount <= 0) continue;
 
-        if (directCount >= rank.directRequired && networkCount >= rank.networkRequired) {
-            // User mathematically qualifies. Check if they already achieved it.
+            // Check if already achieved
             const existingUserRank = await tx.userRank.findUnique({
                 where: {
                     userId_rankId: {
@@ -49,23 +65,24 @@ const checkAndAwardMilestones = async (userId, tx) => {
             });
 
             if (!existingUserRank) {
-                // Not achieved yet! strictly award the milestone.
-
-                // A. Credit Wallet Cash
+                // Award the milestone!
+                
+                // A. Anchor Wallet (Derived Wallet Balance handles credits)
                 await tx.walletCash.upsert({
                     where: { userId: userId },
-                    update: { balance: { increment: rank.bonusAmount } },
-                    create: { userId: userId, balance: rank.bonusAmount }
+                    update: { },
+                    create: { userId: userId }
                 });
 
-                // B. Create BONUS Transaction Log
+                // B. Create Transaction Log (Using txStatus)
                 await tx.transaction.create({
                     data: {
                         userId: userId,
                         type: 'BONUS',
-                        amount: rank.bonusAmount,
-                        description: `Milestone Bonus Achieved: ${rank.name}`,
-                        status: 'COMPLETED'
+                        amount: bonusAmount,
+                        credit: bonusAmount,
+                        description: `Milestone Bonus: ${rank.name} rank achieved!`,
+                        txStatus: 'COMPLETED'
                     }
                 });
 
@@ -73,13 +90,14 @@ const checkAndAwardMilestones = async (userId, tx) => {
                 await tx.bonusLedger.create({
                     data: {
                         userId: userId,
-                        amount: rank.bonusAmount,
+                        amount: bonusAmount,
                         type: 'MILESTONE',
-                        sourceUserId: null // System bonus
+                        sourceUserId: null,
+                        incomeStatus: 'PAID'
                     }
                 });
 
-                // D. Stigmatize UserRank (Enforces duplicate protection)
+                // D. Record Achievement
                 await tx.userRank.create({
                     data: {
                         userId: userId,
@@ -87,18 +105,15 @@ const checkAndAwardMilestones = async (userId, tx) => {
                     }
                 });
 
-                // E. Write immutable SystemLog for Audit (Using master admin alias)
-                const masterAdmin = await tx.user.findFirst({
-                    where: { role: 'ADMIN' }
-                });
-
+                // E. System Log
+                const masterAdmin = await tx.user.findFirst({ where: { role: 'ADMIN' } });
                 if (masterAdmin) {
                     await tx.systemLog.create({
                         data: {
                             adminId: masterAdmin.id,
                             actionType: 'MILESTONE_BONUS',
                             targetUserId: userId,
-                            description: `System auto-credited ${rank.name} milestone bonus of ₹${rank.bonusAmount}`
+                            description: `Auto-credited ${rank.name} milestone bonus of ₹${bonusAmount} (Points: ${totalPoints})`
                         }
                     });
                 }
@@ -106,6 +121,7 @@ const checkAndAwardMilestones = async (userId, tx) => {
         }
     }
 };
+
 
 module.exports = {
     checkAndAwardMilestones

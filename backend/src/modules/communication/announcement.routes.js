@@ -1,11 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const { getAnnouncements } = require('./announcement.controller');
+const { 
+    getAnnouncements, 
+    getLatestAnnouncement, 
+    markAnnouncementSeen 
+} = require('./announcement.controller');
 const { authMiddleware } = require('../../middlewares/authMiddleware');
 
+// Publicly available (for authenticated users)
 router.use(authMiddleware);
 
-// Visible to SEEDER and ADMIN
 router.get('/', getAnnouncements);
+router.get('/latest', getLatestAnnouncement);
+router.post('/seen/:id', markAnnouncementSeen);
 
 module.exports = router;

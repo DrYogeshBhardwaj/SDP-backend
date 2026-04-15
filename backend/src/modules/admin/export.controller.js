@@ -98,7 +98,7 @@ const exportTransactions = async (req, res) => {
                         type: true,
                         amount: true,
                         description: true,
-                        status: true,
+                        txStatus: true,
                         transactionDate: true,
                         user: {
                             select: { id: true, name: true, mobile: true, cid: true }
@@ -115,7 +115,7 @@ const exportTransactions = async (req, res) => {
                     tx.type,
                     tx.amount,
                     tx.description,
-                    tx.status,
+                    tx.txStatus,
                     tx.transactionDate.toISOString()
                 ]);
             }
@@ -147,7 +147,7 @@ const exportPayouts = async (req, res) => {
                     select: {
                         id: true,
                         amount: true,
-                        status: true,
+                        payoutStatus: true,
                         requested_at: true,
                         processed_at: true,
                         remarks: true,
@@ -164,7 +164,7 @@ const exportPayouts = async (req, res) => {
                     p.user.mobile,
                     p.user.cid,
                     p.amount,
-                    p.status,
+                    p.payoutStatus,
                     p.requested_at.toISOString(),
                     p.processed_at ? p.processed_at.toISOString() : '',
                     p.remarks

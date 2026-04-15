@@ -1,14 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const otpController = require('./otp.controller');
-const { otpIpLimiter, otpMobileLimiter, otpCooldownLimiter } = require('../../middlewares/rateLimiter');
+const { checkLimit } = require('../../middlewares/dbRateLimiter');
 
 // Expected route: POST /api/send-otp
-// TEMPORARILY DISABLED RATE LIMITERS FOR TESTING
-// router.post('/send-otp', otpIpLimiter, otpMobileLimiter, otpCooldownLimiter, otpController.sendOtp);
-router.post('/send-otp', otpController.sendOtp);
+router.post('/send-otp', checkLimit('otp'), otpController.sendOtp);
 
 // Expected route: POST /api/verify-otp
-router.post('/verify-otp', otpController.verifyOtp);
+router.post('/verify-otp', checkLimit('otp'), otpController.verifyOtp);
 
 module.exports = router;

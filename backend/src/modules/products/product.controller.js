@@ -20,176 +20,151 @@ const purchaseProduct = async (req, res) => {
             return errorResponse(res, 404, 'Product not found or inactive');
         }
 
-        let referrer = null;
-        if (referral_code) {
-            referrer = await prisma.user.findUnique({
-                where: { referral_code },
-                include: { referredBy: true }
-            });
+        // 1. Determine rewards based on product
+        let levelRewards = [0, 0, 0];
+        let newRole = 'BASIC';
 
-            if (!referrer) {
-                return errorResponse(res, 400, 'Invalid referral code');
-            }
-            if (referrer.id === userId) {
-                return errorResponse(res, 400, 'Cannot use your own referral code');
-            }
-            if (referrer.role !== 'SEEDER' || referrer.status !== 'ACTIVE') {
-                console.error(`Referral Validation Failed: Role=${referrer.role}, Status=${referrer.status}`);
-                return errorResponse(res, 400, 'Referral code is not active or valid');
-            }
-
-            // Check if user already has a referrer
-            const existingReferral = await prisma.referral.findFirst({
-                where: { referredUserId: userId, level: 1 }
-            });
-            if (existingReferral) {
-                return errorResponse(res, 400, 'User already has a referrer');
-            }
+        if (product.name === 'Basic Plan') {
+            levelRewards = [120, 80, 50];
+            newRole = 'BASIC';
+        } else if (product.name === 'Business Plan' || product.name === 'Upgrade to Business') {
+            levelRewards = [450, 250, 150];
+            newRole = 'BUSINESS';
         }
 
-        // Role mapping based on product type
-        const newRole = product.type === 'FAMILY' ? 'USER_580' : 'USER_178';
+        const isRenewal = product.name.includes('Renewal');
 
-        await prisma.$transaction(async (tx) => {
-            // 1. Update user role
-            await tx.user.update({
-                where: { id: userId },
-                data: { role: newRole }
+        // 2. Fetch current user for validity extension and role update
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { validity_expiry: true, role: true }
+        });
+
+        // 3. Handle Referral Logic (Iterative 3-level)
+        const referralActions = async (tx, buyerId, startReferralCode) => {
+            if (!startReferralCode || isRenewal) return;
+
+            let currentReferrer = await tx.user.findUnique({
+                where: { referral_code: startReferralCode },
+                include: { referredBy: { where: { level: 1 } } }
             });
 
-            // 2. Reset wallet minutes strictly to product allocated amount
-            await tx.walletMinute.upsert({
-                where: { userId },
-                update: { balance: product.minutes_allocated },
-                create: {
-                    userId,
-                    balance: product.minutes_allocated
+            for (let level = 1; level <= 3; level++) {
+                if (!currentReferrer) break;
+                
+                // Security checks for Level 1
+                if (level === 1) {
+                    if (currentReferrer.id === buyerId) break;
+                    // Seeders/Active users only
+                    if (currentReferrer.role !== 'SEEDER' || currentReferrer.status !== 'ACTIVE') break;
+                    
+                    const existingRef = await tx.referral.findFirst({
+                        where: { referredUserId: buyerId, level: 1 }
+                    });
+                    if (existingRef) break;
+                }
+
+                const amount = levelRewards[level - 1];
+                if (amount <= 0) break;
+
+                // A. Create PENDING Referral Mapping
+                await tx.referral.create({
+                    data: {
+                        referrerId: currentReferrer.id,
+                        referredUserId: buyerId,
+                        level: level,
+                        status: 'PENDING'
+                    }
+                });
+
+                // B. Create PENDING Transaction Log
+                await tx.transaction.create({
+                    data: {
+                        userId: currentReferrer.id,
+                        type: 'BONUS',
+                        amount: amount,
+                        credit: amount,
+                        source: user.mobile || buyerId,
+                        description: `Level ${level} Bonus (Pending Kit Activation) from ${req.user?.name || 'User'}`,
+                        status: 'PENDING'
+                    }
+                });
+
+                // C. Create PENDING Bonus Ledger Entry
+                await tx.bonusLedger.create({
+                    data: {
+                        userId: currentReferrer.id,
+                        amount: amount,
+                        type: level === 1 ? 'DIRECT' : (level === 2 ? 'LEVEL2' : 'LEVEL3'),
+                        sourceUserId: buyerId,
+                        status: 'PENDING'
+                    }
+                });
+
+                // Move to next referrer in chain
+                const parentRef = await tx.referral.findFirst({
+                    where: { referredUserId: currentReferrer.id, level: 1 },
+                    include: { referrer: true }
+                });
+                
+                if (parentRef && parentRef.referrer) {
+                    currentReferrer = parentRef.referrer;
+                } else {
+                    currentReferrer = null;
+                }
+            }
+        };
+
+        await prisma.$transaction(async (tx) => {
+            // A. Update user role and validity
+            let nextExpiry = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+            if (isRenewal && user.validity_expiry) {
+                const currentExpiry = new Date(user.validity_expiry);
+                const baseDate = currentExpiry > new Date() ? currentExpiry : new Date();
+                nextExpiry = new Date(baseDate.getTime() + 365 * 24 * 60 * 60 * 1000);
+            }
+
+            await tx.user.update({
+                where: { id: userId },
+                data: { 
+                    role: newRole,
+                    validity_expiry: nextExpiry
                 }
             });
 
-            // 3. Create transaction log (Append only)
+            // B. Reset wallet minutes
+            await tx.walletMinute.upsert({
+                where: { userId },
+                update: { balance: product.minutes_allocated },
+                create: { userId, balance: product.minutes_allocated }
+            });
+
+            // C. Create transaction log
             await tx.transaction.create({
                 data: {
                     userId,
                     type: 'PURCHASE',
                     amount: product.price,
-                    description: `Purchased ${product.name} plan`,
-                    status: 'COMPLETED'
+                    description: `Purchase: ${product.name}${isRenewal ? ' (Renewal)' : ''}`,
+                    txStatus: 'COMPLETED'
                 }
             });
 
-            // 4. Handle Referral & Cash Wallet Logic
-            if (referrer) {
-                // Level 1: Direct Referral
-                const level1Amount = 220;
-
-                // Upsert Cash Wallet for Level 1
-                await tx.walletCash.upsert({
-                    where: { userId: referrer.id },
-                    update: { balance: { increment: level1Amount } },
-                    create: { userId: referrer.id, balance: level1Amount }
-                });
-
-                // Add Bonus Transaction for Level 1
-                await tx.transaction.create({
-                    data: {
-                        userId: referrer.id,
-                        type: 'BONUS',
-                        amount: level1Amount,
-                        description: `Level 1 Referral Bonus from ${req.user.name || 'User'}`,
-                        status: 'COMPLETED'
-                    }
-                });
-
-                // Add Bonus Ledger Entry for Level 1
-                await tx.bonusLedger.create({
-                    data: {
-                        userId: referrer.id,
-                        amount: level1Amount,
-                        type: 'DIRECT',
-                        sourceUserId: userId
-                    }
-                });
-
-                // Add Referral mapping for Level 1
-                await tx.referral.create({
-                    data: {
-                        referrerId: referrer.id,
-                        referredUserId: userId,
-                        level: 1
-                    }
-                });
-
-                // Trigger Milestone checks for Level 1
-                await checkAndAwardMilestones(referrer.id, tx);
-
-                // Level 2: Indirect Referral
-                const level1Referral = referrer.referredBy.find(r => r.level === 1);
-                if (level1Referral) {
-                    const level2ReferrerId = level1Referral.referrerId;
-                    const level2Amount = 150;
-
-                    // Check if level 2 referrer is an ACTIVE SEEDER
-                    const level2Referrer = await tx.user.findUnique({
-                        where: { id: level2ReferrerId }
-                    });
-
-                    if (level2Referrer && level2Referrer.role === 'SEEDER' && level2Referrer.status === 'ACTIVE') {
-                        // Upsert Cash Wallet for Level 2
-                        await tx.walletCash.upsert({
-                            where: { userId: level2ReferrerId },
-                            update: { balance: { increment: level2Amount } },
-                            create: { userId: level2ReferrerId, balance: level2Amount }
-                        });
-
-                        // Add Bonus Transaction for Level 2
-                        await tx.transaction.create({
-                            data: {
-                                userId: level2ReferrerId,
-                                type: 'BONUS',
-                                amount: level2Amount,
-                                description: `Level 2 Referral Bonus from ${req.user.name || 'User'}`,
-                                status: 'COMPLETED'
-                            }
-                        });
-
-                        // Add Bonus Ledger Entry for Level 2
-                        await tx.bonusLedger.create({
-                            data: {
-                                userId: level2ReferrerId,
-                                amount: level2Amount,
-                                type: 'LEVEL2',
-                                sourceUserId: userId
-                            }
-                        });
-
-                        // Add Referral mapping for Level 2
-                        await tx.referral.create({
-                            data: {
-                                referrerId: level2ReferrerId,
-                                referredUserId: userId,
-                                level: 2
-                            }
-                        });
-
-                        // Trigger Milestone checks for Level 2
-                        await checkAndAwardMilestones(level2ReferrerId, tx);
-                    }
-                }
-            }
+            // D. Referral Chain
+            await referralActions(tx, userId, referral_code);
         });
 
         return successResponse(res, 200, 'Purchase successful', {
             product: product.name,
-            minutes_allocated: product.minutes_allocated,
             new_role: newRole
         });
 
     } catch (error) {
-        console.error("Purchase 500 error:", error);
-        return res.status(500).json({ success: false, message: 'Purchase failed', error: error.message, stack: error.stack });
+        console.error("Purchase error:", error);
+        return errorResponse(res, 500, error.message);
     }
 };
+
 
 module.exports = {
     purchaseProduct

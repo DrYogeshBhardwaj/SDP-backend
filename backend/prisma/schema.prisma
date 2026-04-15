@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,60 +7,362 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id                    String          @id @default(uuid())
+  mobile                String          @unique
+  cid                   String          @unique
+  name                  String?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  country_code          String          @default("+91")
+  pin_hash              String
+  status                Status          @default(PENDING)
+  role                  Role            @default(BASIC)
+  referral_code         String?         @unique
+  city                  String?
+  country               String?         @default("India")
+
+  // Persistent Digital SID (SINAANK ID)
+  sid_id                String?         @unique // Unique Numeric ID (e.g., "7421")
+  sid_combo_id          String?         // Link to SidColorCombo.id
+  sid_color1            Int?            // Base Hue (C01 hue - legacy sync)
+  sid_color2            Int?            // Secondary Hue (C05 hue - legacy sync)
+  sid_left_hz           Int?            // Range 174-396
+  sid_right_hz          Int?            // Range 174-396
+  sid_seed              String?         // Audit random seed
+  sid_created_at        DateTime?       @default(now())
+  sid_history           SidHistory[]
+
+  familyOwnerId         String?
+  kit_activated         Boolean         @default(false)
+  pincode               String?
+  profile_photo         String?
+  upi_id                String?
+  validity_expiry       DateTime?
+  age_group             String?
+  upgradeIncluded       Boolean         @default(false)
+  state                 String?
+  sds_imagination_index Int             @default(1)
+  
+  // Production Unified Fields
+  plan_type             String?         @default("BASIC")
+  plan_amount           Float?          @default(0)
+  join_type             String?         @default("DIRECT")
+  activated_at          DateTime?
+  sponsor_id            String?
+  level1_id             String?
+  level2_id             String?
+  level3_id             String?
+
+  active_sdm_start      DateTime?
+  active_sdm_last_ping  DateTime?
+  active_sdd_start      DateTime?
+  active_sdd_last_ping  DateTime?
+  active_sdb_start      DateTime?
+  active_sdb_last_ping  DateTime?
+  active_sde_start      DateTime?
+  active_sde_last_ping  DateTime?
+  active_sdp_start      DateTime?
+  active_sdp_last_ping  DateTime?
+  last_active_at        DateTime        @default(now())
+  last_login_at         DateTime?
+  seen_announcement_id  String?
+  announcements         Announcement[]  @relation("AdminAnnouncements")
+  bonusSource           BonusLedger[]   @relation("BonusSourceUser")
+  bonus                 BonusLedger[]   @relation("BonusUser")
+  receivedMessages      Message[]       @relation("ReceivedMessages")
+  sentMessages          Message[]       @relation("SentMessages")
+  payouts               Payout[]
+  referredBy            Referral[]      @relation("ReferredUser")
+  referrals             Referral[]      @relation("Referrer")
+  expenses              SystemExpense[] @relation("AdminExpenses")
+  adminLogs             SystemLog[]     @relation("AdminLogs")
+  targetLogs            SystemLog[]     @relation("TargetLogs")
+  transactions          Transaction[]
+  therapySessions       TherapySession[]
+  familyOwner           User?           @relation("FamilyMembers", fields: [familyOwnerId], references: [id])
+  familyMembers         User[]          @relation("FamilyMembers")
+  ranks                 UserRank[]
+  cash                  WalletCash?
+  minutes               WalletMinute?
+}
+
+model TherapySession {
+  id          String        @id @default(uuid())
+  userId      String
+  module      String        // SDP, SDB, SDM, SDS, SDD, SDE
+  status      SessionStatus @default(ACTIVE)
+  startedAt   DateTime      @default(now())
+  lastPingAt  DateTime      @default(now())
+  endedAt     DateTime?
+  minutesUsed Int           @default(0)
+  user        User          @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([startedAt])
+}
+
+model Product {
+  id                String      @id @default(uuid())
+  name              String      @unique
+  price             Float
+  description       String?
+  isActive          Boolean     @default(true)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  minutes_allocated Int
+  type              ProductType
+}
+
+model WalletMinute {
+  id      Int    @id @default(autoincrement())
+  userId  String @unique
+  balance Int    @default(0)
+  user    User   @relation(fields: [userId], references: [id])
+}
+
+model WalletCash {
+  id             Int     @id @default(autoincrement())
+  userId         String  @unique
+  balance        Float   @default(0)
+  activePayoutId String? @unique
+  updatedAt      DateTime @updatedAt @default(now())
+  user           User    @relation(fields: [userId], references: [id])
+}
+
+model Transaction {
+  id              Int             @id @default(autoincrement())
+  userId          String
+  amount          Float           @default(0)   // For convenience, but credit/debit are priority
+  credit          Float           @default(0)
+  debit           Float           @default(0)
+  txStatus        String          @default("PENDING")
+  referenceId     String?
+  source          String?         // Where did it come from (e.g. Upgrade, Referral CID_XXXX)
+  transactionDate DateTime        @default(now())
+  description     String?
+  type            TransactionType
+  user            User            @relation(fields: [userId], references: [id])
+
+  // Production Unified Fields
+  from_user_id    String?
+  level           Int?
+  plan_type       String?
+  plan_amount     Float?
+
+  @@index([transactionDate])
+  @@index([userId])
+  @@index([txStatus])
+}
+
+model Payout {
+  id                     String       @id @default(uuid())
+  userId                 String
+  amount                 Float
+  wallet_before          Float?
+  wallet_after           Float?
+  system_wallet_snapshot Float?
+  processed_at           DateTime?
+  processed_by           String?
+  remarks                String?
+  requested_at           DateTime     @default(now())
+  payoutStatus           PayoutStatus @default(PENDING)
+  user                   User         @relation(fields: [userId], references: [id])
+
+  @@index([requested_at])
+  @@index([userId])
+  @@index([payoutStatus])
+}
+
+model SidHistory {
+  id              String   @id @default(uuid())
+  userId          String
+  old_sid_id      String?
+  old_combo_id    String?
+  color1          Int
+  color2          Int
+  leftHz          Int
+  rightHz         Int
+  seed            String?
+  adminId         String?  // Who triggered the change
+  archivedAt      DateTime @default(now())
+  
+  user            User     @relation(fields: [userId], references: [id])
+  @@index([userId])
+}
+
+model SidColorMaster {
+  code      String   @id // C01, C02...
+  name      String
+  hue       Int      // 0-360
+  hex       String   // #3BA7FF
+  active    Boolean  @default(true)
+  combos1   SidColorCombo[] @relation("Color1")
+  combos2   SidColorCombo[] @relation("Color2")
+}
+
+model SidColorCombo {
+  id           String   @id // CC01, CC02...
+  color1Code   String
+  color2Code   String
+  active       Boolean  @default(true)
+  
+  color1       SidColorMaster @relation("Color1", fields: [color1Code], references: [code])
+  color2       SidColorMaster @relation("Color2", fields: [color2Code], references: [code])
+}
+
+model Referral {
+  id             String   @id @default(uuid())
+  referrerId     String
+  referredUserId String
+  level          Int      @default(1)
+  referralStatus String   @default("PENDING")
+  createdAt      DateTime @default(now())
+  referredUser   User     @relation("ReferredUser", fields: [referredUserId], references: [id])
+  referrer       User     @relation("Referrer", fields: [referrerId], references: [id])
+
+  @@unique([referredUserId, level])
+  @@index([referralStatus])
+}
+
+model BonusLedger {
+  id           String       @id @default(uuid())
+  userId       String
+  amount       Float
+  type         String
+  createdAt    DateTime     @default(now())
+  sourceUserId String?
+  incomeStatus IncomeStatus @default(PENDING)
+  sourceUser   User?        @relation("BonusSourceUser", fields: [sourceUserId], references: [id])
+  user         User         @relation("BonusUser", fields: [userId], references: [id])
+
+  // Production Unified Fields
+  plan         String?
+  level        Int?
+
+  @@unique([sourceUserId, type])
+  @@index([createdAt])
+  @@index([userId])
+}
+
+model SystemSetting {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String
+}
+
+model SystemLog {
+  id           String   @id @default(uuid())
+  adminId      String
+  actionType   String
+  targetUserId String?
+  description  String
+  createdAt    DateTime @default(now())
+  admin        User     @relation("AdminLogs", fields: [adminId], references: [id])
+  targetUser   User?    @relation("TargetLogs", fields: [targetUserId], references: [id])
+}
+
+model RankConfig {
+  id              Int        @id @default(autoincrement())
+  name            String     @unique
+  directRequired  Int
+  networkRequired Int
+  bonusAmount     Float
+  active          Boolean    @default(true)
+  basicBonus      Float      @default(0)
+  businessBonus   Float      @default(0)
+  pointsRequired  Int        @default(25)
+  users           UserRank[]
+}
+
+model UserRank {
+  id         String     @id @default(uuid())
+  userId     String
+  rankId     Int
+  achievedAt DateTime   @default(now())
+  rank       RankConfig @relation(fields: [rankId], references: [id])
+  user       User       @relation(fields: [userId], references: [id])
+
+  @@unique([userId, rankId])
+}
+
+model SystemExpense {
+  id          String   @id @default(uuid())
+  adminId     String
+  category    String
+  amount      Float
+  description String
+  date        DateTime
+  createdAt   DateTime @default(now())
+  admin       User     @relation("AdminExpenses", fields: [adminId], references: [id])
+
+  @@index([date])
+  @@index([adminId])
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  senderId   String
+  receiverId String
+  content    String
+  status     String   @default("UNREAD")
+  isAI       Boolean  @default(false)
+  isResolved Boolean  @default(false)
+  type       String   @default("SUPPORT") // SUPPORT, SYSTEM
+  createdAt  DateTime @default(now())
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+
+}
+
+model Announcement {
+  id         String           @id @default(uuid())
+  title      String
+  message    String
+  priority   AnnouncementPriority @default(NORMAL)
+  created_by String
+  createdAt  DateTime         @default(now())
+  creator    User             @relation("AdminAnnouncements", fields: [created_by], references: [id])
+}
+
+model PaymentOrder {
+  id         String    @id @default(uuid())
+  mobile     String?
+  plan_type  String    // BASIC / BUSINESS
+  amount     Float
+  status     String    @default("CREATED") // CREATED, PAID, FAILED
+  payment_id String?   @unique // Gateway Payment ID
+  order_id   String    @unique // Gateway Order ID
+  used       Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime?
+}
+
+model RateLimit {
+  id            String    @id @default(uuid())
+  key           String    // Can be IP, mobile, or userId
+  type          String    // otp_send, otp_verify, login, payment
+  count         Int       @default(0)
+  failures      Int       @default(0)
+  blocked_until DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([key, type])
+}
+
 enum Role {
-  USER_178
-  USER_580
+  BASIC
+  BUSINESS
   SEEDER
   ADMIN
 }
 
 enum Status {
+  PENDING
   ACTIVE
   BLOCKED
-}
-
-model User {
-  id            String   @id @default(uuid())
-  mobile        String   @unique
-  country_code  String   @default("+91")
-  pin_hash      String
-  cid           String   @unique
-  referral_code String?  @unique
-  name          String?
-  role          Role     @default(USER_178)
-  status        Status   @default(ACTIVE)
-  
-  // KYC / Seeder Profile Data
-  upi_id        String?
-  profile_photo String?   @db.Text // Can be long base64 or URL
-  pincode       String?
-  city          String?
-  country       String?  @default("India")
-
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  
-  // Relations
-  transactions Transaction[]
-  payouts      Payout[]
-  referrals    Referral[]    @relation("Referrer")
-  referredBy   Referral[]    @relation("ReferredUser")
-  minutes      WalletMinute?
-  cash         WalletCash?
-  bonus        BonusLedger[] @relation("BonusUser")
-  bonusSource  BonusLedger[] @relation("BonusSourceUser")
-  adminLogs    SystemLog[]   @relation("AdminLogs")
-  targetLogs   SystemLog[]   @relation("TargetLogs")
-  ranks            UserRank[]
-  sentMessages     Message[]       @relation("SentMessages")
-  receivedMessages Message[]       @relation("ReceivedMessages")
-  expenses         SystemExpense[] @relation("AdminExpenses")
-  announcements    Announcement[]  @relation("AdminAnnouncements")
-  
-  // Family Management
-  familyOwnerId    String?
-  familyOwner      User?           @relation("FamilyMembers", fields: [familyOwnerId], references: [id])
-  familyMembers    User[]          @relation("FamilyMembers")
 }
 
 enum ProductType {
@@ -85,163 +381,25 @@ enum PayoutStatus {
   PENDING
   APPROVED
   REJECTED
+  PAID
 }
 
-model Product {
-  id                String      @id @default(uuid())
-  name              String      @unique
-  price             Float
-  type              ProductType
-  minutes_allocated Int
-  description       String?
-  isActive          Boolean     @default(true)
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
+enum IncomeStatus {
+  PENDING
+  APPROVED
+  PAID
 }
 
-model WalletMinute {
-  id      Int    @id @default(autoincrement())
-  userId  String @unique
-  user    User   @relation(fields: [userId], references: [id])
-  balance Int    @default(0)
+enum AnnouncementPriority {
+  NORMAL
+  IMPORTANT
+  CRITICAL
 }
 
-model WalletCash {
-  id             Int     @id @default(autoincrement())
-  userId         String  @unique
-  user           User    @relation(fields: [userId], references: [id])
-  balance        Float   @default(0.0)
-  activePayoutId String? @unique
-}
-
-model Transaction {
-  id              Int             @id @default(autoincrement())
-  userId          String
-  user            User            @relation(fields: [userId], references: [id])
-  type            TransactionType // PURCHASE, MINUTE_DEDUCT, BONUS
-  amount          Float
-  description     String?
-  status          String          @default("COMPLETED")
-  referenceId     String?
-  transactionDate DateTime        @default(now())
-
-  @@index([transactionDate])
-  @@index([userId])
-  @@index([status])
-}
-
-model Payout {
-  id           String       @id @default(uuid())
-  userId       String
-  user         User         @relation(fields: [userId], references: [id])
-  amount       Float
-  status       PayoutStatus @default(PENDING)
-  requested_at DateTime     @default(now())
-  processed_at DateTime?
-  processed_by String?
-  remarks      String?
-
-  @@index([requested_at])
-  @@index([userId])
-  @@index([status])
-}
-
-model Referral {
-  id             String   @id @default(uuid())
-  referrerId     String
-  referrer       User     @relation("Referrer", fields: [referrerId], references: [id])
-  referredUserId String
-  referredUser   User     @relation("ReferredUser", fields: [referredUserId], references: [id])
-  level          Int      @default(1) // 1 or 2 only
-  status         String   @default("ACTIVE")
-  createdAt      DateTime @default(now())
-  
-  @@unique([referredUserId, level])
-}
-
-model BonusLedger {
-  id             String   @id @default(uuid())
-  userId         String
-  user           User     @relation("BonusUser", fields: [userId], references: [id])
-  amount         Float
-  type           String   // e.g., "DIRECT", "LEVEL2"
-  sourceUserId   String?  // The user whose purchase generated this bonus
-  sourceUser     User?    @relation("BonusSourceUser", fields: [sourceUserId], references: [id])
-  createdAt      DateTime @default(now())
-
-  @@index([createdAt])
-  @@index([userId])
-  @@unique([sourceUserId, type])
-}
-
-model SystemSetting {
-  id    Int    @id @default(autoincrement())
-  key   String @unique
-  value String
-}
-
-model SystemLog {
-  id           String   @id @default(uuid())
-  adminId      String
-  admin        User     @relation("AdminLogs", fields: [adminId], references: [id])
-  actionType   String
-  targetUserId String?
-  targetUser   User?    @relation("TargetLogs", fields: [targetUserId], references: [id])
-  description  String
-  createdAt    DateTime @default(now())
-}
-
-model RankConfig {
-  id              Int        @id @default(autoincrement())
-  name            String     @unique
-  directRequired  Int
-  networkRequired Int
-  bonusAmount     Float
-  active          Boolean    @default(true)
-  users           UserRank[]
-}
-
-model UserRank {
-  id         String     @id @default(uuid())
-  userId     String
-  user       User       @relation(fields: [userId], references: [id])
-  rankId     Int
-  rank       RankConfig @relation(fields: [rankId], references: [id])
-  achievedAt DateTime   @default(now())
-
-  @@unique([userId, rankId])
-}
-
-model SystemExpense {
-  id          String   @id @default(uuid())
-  adminId     String
-  admin       User     @relation("AdminExpenses", fields: [adminId], references: [id])
-  category    String
-  amount      Float
-  description String
-  date        DateTime
-  createdAt   DateTime @default(now())
-
-  @@index([date])
-  @@index([adminId])
-}
-
-model Message {
-  id         String   @id @default(uuid())
-  senderId   String
-  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
-  receiverId String
-  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
-  content    String
-  status     String   @default("UNREAD") // READ/UNREAD
-  createdAt  DateTime @default(now())
-}
-
-model Announcement {
-  id         String   @id @default(uuid())
-  title      String
-  message    String
-  created_by String
-  creator    User     @relation("AdminAnnouncements", fields: [created_by], references: [id])
-  createdAt  DateTime @default(now())
+enum SessionStatus {
+  ACTIVE
+  ENDED
+  COMPLETED
+  ABANDONED
+  TIMEOUT
 }

@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SINAANK Live Monitor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --primary: #3b82f6;
+            --accent: #8b5cf6;
+            --success: #10b981;
+            --warning: #fbbf24;
+            --danger: #ef4444;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem 1.5rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* --- Header --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+        }
+
+        .title-group h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.75rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .title-group p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .last-updated {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-align: right;
+        }
+
+        #refresh-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 0.6rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #refresh-btn:hover { background: rgba(255, 255, 255, 0.1); transform: rotate(45deg); }
+
+        /* --- Metrics Grid --- */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        @media (min-width: 768px) {
+            .metrics-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+
+        .metric-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1.75rem;
+            border-radius: 24px;
+            text-align: center;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .metric-card:hover { transform: translateY(-5px); border-color: rgba(255, 255, 255, 0.1); }
+
+        .metric-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+        }
+
+        .metric-value {
+            font-size: 2.25rem;
+            font-weight: 800;
+            font-family: 'Outfit', sans-serif;
+            margin-bottom: 4px;
+        }
+
+        .metric-sub { font-size: 0.7rem; color: var(--text-muted); }
+
+        /* --- Color Variations --- */
+        .color-demo { color: #60a5fa; }
+        .color-join { color: #34d399; }
+        .color-conv { color: var(--warning); }
+        .color-rev { color: #f472b6; }
+
+        /* --- Insight Strip --- */
+        .insight-strip {
+            background: rgba(59, 130, 246, 0.05);
+            border: 1px dashed rgba(59, 130, 246, 0.2);
+            padding: 1.25rem;
+            border-radius: 16px;
+            text-align: center;
+            font-size: 0.95rem;
+            color: #93c5fd;
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+
+        /* --- Alert Box --- */
+        #alert-box {
+            padding: 1.5rem;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .alert-red { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #fca5a5; }
+        .alert-green { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: #6ee7b7; }
+        .alert-yellow { background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.2); color: #fde68a; }
+
+        .alert-icon { font-size: 1.5rem; }
+        .alert-content h4 { font-size: 1rem; margin-bottom: 2px; }
+        .alert-content p { font-size: 0.85rem; opacity: 0.8; }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hidden { display: none !important; }
+
+        /* --- Footer --- */
+        footer {
+            margin-top: 4rem;
+            text-align: center;
+            padding: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-live-control {
+            background: linear-gradient(to right, #3b82f6, #8b5cf6);
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            cursor: pointer;
+            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+        }
+
+        .loader {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="title-group">
+                <h1>SINAANK Live Monitor</h1>
+                <p>Real-time scaling & conversion tracking</p>
+            </div>
+            <div class="header-actions">
+                <div class="last-updated">
+                    <div>Last Updated</div>
+                    <div id="update-time" style="color: white; font-weight: 600;">--:--:--</div>
+                </div>
+                <button id="refresh-btn" title="Refresh Now">
+                    <span id="refresh-icon">🔄</span>
+                    <div id="refresh-loader" class="loader hidden"></div>
+                </button>
+            </div>
+        </header>
+
+        <section class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-label">Demo Views</div>
+                <div class="metric-value color-demo" id="val-demo">0</div>
+                <div class="metric-sub">आज के demo views</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Successful Joins</div>
+                <div class="metric-value color-join" id="val-join">0</div>
+                <div class="metric-sub">आज के successful registrations</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Conversion Rate</div>
+                <div class="metric-value" id="val-conv">0%</div>
+                <div class="metric-sub" id="conv-status">Calculating...</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Today Revenue</div>
+                <div class="metric-value color-rev" id="val-revenue">₹0</div>
+                <div class="metric-sub">आज की total income</div>
+            </div>
+        </section>
+
+        <div class="insight-strip" id="insight-text">
+            डेटा लोड किया जा रहा है...
+        </div>
+
+        <section id="alert-box" class="hidden">
+            <div class="alert-icon" id="alert-icon">🚨</div>
+            <div class="alert-content">
+                <h4 id="alert-title">Decision Alert</h4>
+                <p id="alert-msg">Checking system performance...</p>
+            </div>
+        </section>
+
+        <footer>
+            <button class="btn-live-control" onclick="window.location.reload()">Refresh Monitor View</button>
+            <p style="margin-top: 1.5rem; color: var(--text-muted); font-size: 0.75rem;">SINAANK SMT Protocol v4.0 • Authorized Personnel Only</p>
+        </footer>
+    </div>
+
+    <script>
+        async function updateMonitor() {
+            const btn = document.getElementById('refresh-btn');
+            const icon = document.getElementById('refresh-icon');
+            const loader = document.getElementById('refresh-loader');
+
+            btn.disabled = true;
+            icon.classList.add('hidden');
+            loader.classList.remove('hidden');
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api.php?action=stats', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const res = await response.json();
+
+                if (response.ok && res.success) {
+                    const data = res.data;
+                    document.getElementById('val-demo').innerText = data.demoCount || 0;
+                    document.getElementById('val-join').innerText = data.joinCount || 0;
+                    document.getElementById('val-revenue').innerText = '₹' + (data.revenue || 0).toLocaleString();
+                    
+                    const conv = parseFloat(data.conversion || 0);
+                    const convEl = document.getElementById('val-conv');
+                    convEl.innerText = conv + '%';
+                    
+                    // Color Logic
+                    const alertBox = document.getElementById('alert-box');
+                    const alertTitle = document.getElementById('alert-title');
+                    const alertMsg = document.getElementById('alert-msg');
+                    const alertIcon = document.getElementById('alert-icon');
+                    alertBox.className = ''; 
+                    alertBox.classList.remove('hidden');
+
+                    if (conv < 15) {
+                        convEl.style.color = '#ef4444'; // Red
+                        alertBox.classList.add('alert-red');
+                        alertTitle.innerText = "🚨 CRITICAL: Conversion is Low";
+                        alertMsg.innerText = "Demo results are weak. Improve first 5 seconds or voice impact immediately.";
+                        alertIcon.innerText = "🚨";
+                    } else if (conv >= 15 && conv <= 25) {
+                        convEl.style.color = '#fbbf24'; // Yellow
+                        alertBox.classList.add('alert-yellow');
+                        alertTitle.innerText = "🟡 AVERAGE: Conversion is Stable";
+                        alertMsg.innerText = "System is average. Test small tweaks to cross 25%. Traffic restricted.";
+                        alertIcon.innerText = "⚠️";
+                    } else {
+                        convEl.style.color = '#10b981'; // Green
+                        alertBox.classList.add('alert-green');
+                        alertTitle.innerText = "🟢 EXCELLENT: System is Strong";
+                        alertMsg.innerText = "Conversion looks good. TRAFFIC को फुल बढ़ाओ! Scale Now.";
+                        alertIcon.innerText = "✅";
+                    }
+
+                    document.getElementById('insight-text').innerText = `आज ${data.demoCount} लोगों ने demo देखा, जिनमें से ${data.joinCount} लोगों ने join किया।`;
+                    document.getElementById('update-time').innerText = new Date().toLocaleTimeString();
+                } else {
+                    console.error("Stats fetch failed:", res.message);
+                }
+            } catch (err) {
+                console.error("Monitor error:", err);
+            } finally {
+                btn.disabled = false;
+                icon.classList.remove('hidden');
+                loader.classList.add('hidden');
+            }
+        }
+
+        // Auto Refresh every 30s as per rules
+        setInterval(updateMonitor, 30000);
+        document.getElementById('refresh-btn').onclick = updateMonitor;
+
+        // Initial Load
+        window.onload = updateMonitor;
+    </script>
+</body>
+</html>

@@ -1,476 +1,464 @@
-window.i18nData = {
+const TEXT = {
     en: {
-        'home.hero.title': 'Sinaank Digital Pause (SDP)',
-        'home.hero.subtitle': 'Reset your mind. Rest your eyes. Reclaim control.',
-        'home.hero.transition': 'Before digital stress sets in, Sinaank Digital Pause (SDP) is essential for all ages.',
-        'home.growth.title': 'SDP Growth Concept',
-        'home.growth.desc': 'SDP works like a digital seed. Use it personally or grow your SDP circle by sharing responsibly.',
-        'home.icon.use': 'Take short digital pauses',
-        'home.icon.grow': 'Build your SDP circle',
-        'home.icon.share': 'Invite others responsibly',
-        'btn.getstarted': 'Get Started',
-        'btn.learnmore': 'Learn More',
-        'footer.safety': 'SDP is a digital wellness service. Not a medical product or investment scheme.',
-        'nav.home': 'Home',
-        'nav.login': 'Login',
-        'nav.dashboard': 'Dashboard',
-        'nav.admin': 'Admin',
-        'nav.logout': 'Logout',
-        'sec.whatis.title': 'What happens during an SDP Session?',
-        'sec.whatis.p1': 'Guided calming audio',
-        'sec.whatis.p2': 'Soothing, eye-friendly screen colors',
-        'sec.whatis.p3': 'No notifications, no content, no ads',
-        'sec.whatis.p4': 'Automatic start and end',
-        'sec.prod.title': 'Products & Pricing',
-        'prod.kit1.title': 'SDP 1 Kit',
-        'prod.kit1.price': '₹178',
-        'prod.kit1.f1': '1 user',
-        'prod.kit1.f2': '3,650 minutes per year',
-        'prod.kit1.f3': 'Use only',
-        'prod.family.title': 'SDP Family Pack',
-        'prod.family.price': '₹580',
-        'prod.family.f1': 'Total 4 users',
-        'prod.family.f2': '1 Primary + 3 Family',
-        'prod.family.f3': 'Partner rights (Primary only)',
-        'login.title': 'Login',
-        'login.mobile': 'Mobile Number',
-        'login.pin': '4-Digit PIN',
-        'login.btn': 'Secure Login',
-        'dashboard.welcome': 'Welcome',
-        'dashboard.balance': 'Your Minutes Balance',
-        'dashboard.wallet': 'Wallet Balance',
-        'dashboard.start_break': 'Start Pause',
-        'dashboard.active_id': 'Active ID:',
-        'partner.title': '👑 Partner Access',
-        'partner.desc': 'You have a Family Pack. You can activate your Partner Dashboard to share licenses and earn.',
-        'partner.btn_activate': 'Activate Partner Dashboard',
-        'partner.upgrade.title': 'Join the Seeder Program',
-        'partner.upgrade.subtitle': 'Exclusively for Family Pack members. Turn your digital wellness journey into a growing income.',
-        'partner.feat.share.title': 'Share the Gift',
-        'partner.feat.share.desc': 'Introduce others to a healthier digital lifestyle.',
-        'partner.feat.earn.title': 'Earn Rewards',
-        'partner.feat.earn.desc': 'Get ₹140 for every Family Pack referral you make.',
-        'partner.feat.grow.title': 'Grow Network',
-        'partner.feat.grow.desc': 'Track your impact and earnings in real-time.',
-        'learn.back': '← Back',
-        'learn.back_home': '← Back to Home',
-        'learn.back_dashboard': '← Back to Dashboard',
-        'partner.btn.activate': 'Activate Seeder Account Now',
-        'partner.btn.learn_more': 'Learn More About Seeder Program', /* NEW */
-        'partner.terms': 'By continuing, you agree to the Terms & Conditions.',
-        'partner.link': 'Copy Referral Link',
-        'partner.team': 'My Team',
-        'partner.desc': 'You have a Family Pack. You can activate your Partner Dashboard to share licenses and earn.',
-        'partner.btn_activate': 'Activate Partner Dashboard',
-        'demo.overlay.text': 'This is a sample experience. Full sessions are available after login.',
-        'demo.active': 'Breathe... Relax...',
-        'demo.close': 'Exit Demo',
-        'footer.demo': 'Experience a Sample Pause',
-        'modal.reg.title': 'Welcome to SDP',
-        'modal.reg.subtitle': 'Please register to complete your purchase.',
-        'modal.reg.name': 'Name',
-        'modal.reg.mobile': 'Mobile',
-        'modal.reg.pin': 'Create PIN',
-        'modal.reg.agree': 'I agree to the ',
-        'modal.reg.terms': 'Terms & Conditions',
+        'hero.title': 'Sinaank Digital Therapy',
+        'hero.subtitle': 'First Complete Digital Therapy',
+        'hero.desc': 'AI-Guided Mobile Therapy for a Balanced Digital Life',
+        'hero.cta.start': 'Start Your Journey',
+        'hero.cta.business': 'Growth Plan',
+        'hero.cta.guide': '✨ Experience Sinaank Therapy',
+        'btn.get_started': 'Get Started',
+        'btn.join': 'Get Started',
+        'btn.login': 'Login',
+        'btn.dashboard': 'Dashboard',
+        'btn.guide': 'AI Guide',
         'btn.cancel': 'Cancel',
-        'btn.complete': 'Complete Purchase',
-        'btn.close': 'Close',
-        'modal.seeder.title': 'Become a Seeder',
-        'modal.seeder.subtitle': 'Complete your profile to unlock earnings.',
-        'modal.seeder.photo': 'Upload Photo (Optional)',
-        'modal.seeder.photo_note': 'Default image used if skipped.',
-        'modal.seeder.pic': 'Profile Photo',
-        'modal.seeder.upi': 'UPI ID (For Payouts)',
-        'modal.seeder.address_short': 'Address (Short)',
-        'modal.seeder.fullname': 'Full Name',
-        'modal.seeder.fullname_ph': 'Enter Full Name',
-        'modal.seeder.address': 'Address Details',
-        'modal.seeder.pin_ph': 'Enter PIN Code',
-        'modal.seeder.po_ph': 'Select Post Office',
-        'modal.seeder.hno_ph': 'House No/Apt',
-        'modal.seeder.street_ph': 'Street/Colony',
-        'modal.seeder.agree': 'I agree to the',
-        'modal.seeder.terms': 'Partner Terms & Conditions',
-        'btn.activate_account': 'Activate Account',
-        'modal.terms.title': 'Terms & Conditions',
-        'modal.terms.1.title': '1. Introduction',
-        'modal.terms.1.text': 'By registering for SDP (Sinaank Digital Pause), you agree to these terms.',
-        'modal.terms.2.title': '2. Services',
-        'modal.terms.2.text': 'SDP provides digital wellness tools. Usage is personal unless a commercial license is purchased.',
-        'modal.terms.3.title': '3. Seeder Program',
-        'modal.terms.3.text': 'Purchasing the Family Pack grants you "Seeder" status, allowing you to refer others and earn a commission sharing as per the Profit Slab.',
-        'modal.terms.4.title': '4. Payments & Refunds',
-        'modal.terms.4.text': 'All purchases are final. No refunds are provided once a Kit is activated.',
-        'modal.terms.5.title': '5. Privacy',
-        'modal.terms.5.text': 'We respect your privacy. Your data (Name, Mobile) is used for account management and referral tracking only.',
-        'modal.family.title': 'Add Family Member',
-        'modal.family.subtitle': 'Create a new account for your family member.',
-        'btn.add': 'Add Member',
-        'dashboard.unit': 'mins',
-        'footer.copyright': '© 2026 Sinaank SDP',
-        'partner.dashboard': 'Seeder Dashboard',
-        'partner.id': 'Seeder ID',
-        'partner.wallet': 'Wallet Balance',
-        'partner.auto': 'Auto-allocated from team sales.',
-        'partner.units': 'My SSS Units (Seeds)',
-        'partner.unit': 'Unit',
-        'partner.parent': 'Parent',
-        'partner.copy': 'Copy Link',
-        'partner.nounits': 'No active SSS units.',
-        'partner.loading': 'Team data loading...',
-
-        // Learn More - EN
-        'learn.back': '← Back to Home',
-        'learn.guide': 'Read the short explanation below to understand SDP.',
-        'learn.whatis.title': 'What is SDP?',
-        'learn.whatis.text': 'SDP (Sinaank Digital Pause) is a digital wellness system that reduces screen fatigue using special color and sound combinations. It resets your eyes and mind from the screen in just 2–5–10 minute short pauses and helps regain focus.',
-        'learn.how.title': 'How to use SDP',
-        'learn.how.li1': 'Click on "Start Pause"',
-        'learn.how.li2': 'Choose a 2 / 5 / 10 minute pause',
-        'learn.how.li3': 'Stay away from the screen and experience the sound and color',
-        'learn.how.li4': 'Return to your work with a fresh mind after the pause',
-        'learn.family.title': 'For Family & Sharing',
-        'learn.family.text': 'SDP Family Pack is available for ₹580, which allows both usage and sharing with your family.',
-        'learn.partner.title': 'Simple meaning of SDP Partner',
-        'learn.partner.li1': 'You use SDP yourself',
-        'learn.partner.li2': 'And if you want, you can suggest it to your friends, family, or group',
-        'learn.partner.li3': 'The company gives you a thank-you benefit for people who take SDP through you',
-        'learn.partner.li4': 'No force, no target pressure',
-        'learn.tip': '💡 Helpful Tip: Use SDP yourself first. Only suggest it to others when you understand its benefits.',
-        'learn.mobile_note': '⚠️ Note: Every mobile number has its own unique color and sound combination, so a different kit is required for every new mobile number.',
-        'learn.cta': 'Get Started Now (Login / Choose SDP Kit)',
-
-        // Admin - EN
-        'admin.title': 'Admin Panel',
-        'admin.subtitle': 'User Management & Manual Transactions',
-        'admin.tab.users': 'Users',
-        'admin.tab.seeders': 'Seeder List',
-        'admin.tab.cash': 'Transaction History',
-        'admin.tab.bin': 'Recycle Bin',
-        'admin.table.id': 'ID',
-        'admin.table.name': 'Name',
-        'admin.table.mobile': 'Mobile',
-        'admin.table.role': 'Role',
-        'admin.table.balance': 'Balance',
-        'admin.table.earnings': 'Earnings',
-        'admin.table.action': 'Action',
-        'admin.table.date': 'Date',
-        'admin.table.type': 'Type',
-        'admin.table.desc': 'Description',
-        'admin.table.amount': 'Amount',
-        'admin.stats.revenue': 'Total Revenue',
-        'admin.stats.system': 'System Share',
-        'admin.stats.sales': 'Sales Count',
-        'admin.btn.edit': 'Edit',
-        'admin.btn.del': 'Del',
-        'admin.btn.restore': 'Restore',
-        'admin.btn.delete_forever': 'Delete Forever',
-        'admin.msg.no_seeders': 'No Seeder Found',
-        'admin.msg.bin_empty': 'Bin is empty.',
-        'admin.msg.no_txns': 'No transactions found',
-        'admin.msg.rec_bin': 'Recycle Bin (Reserved Items)',
-        'partner.wallet': 'Estimated Earnings',
-        'partner.upi': 'UPI ID (For Payouts)',
-        'partner.upi_ph': 'e.g. mobile@upi',
-        'partner.save_upi': 'Save UPI Details',
-        'admin.btn.payout': 'Record Payout',
-        'admin.btn.export': 'Export Verification Sheet',
-        'admin.modal.payout.title': 'Record Manual Payout',
-        'admin.lbl.ref': 'UPI Reference ID',
-        'admin.lbl.amount': 'Amount Paid',
-        'partner.btn.request': 'Request Payout',
-        'partner.status.pending': 'Payment Requested',
-        'partner.msg.request_sent': 'Payout request sent! Admin will verify and pay shortly.',
-        'partner.msg.avail_bal': 'Available for Payout',
-        'alarm.msg.set': 'Reminder Set! Keep this tab open (even in background) to receive the alert.',
-        'alarm.title_flash': '🔔 TIME FOR BREAK! 🔔',
-        'alarm.alert': 'It\'s time for a break!',
-        'alarm.title': 'Set Reminder',
-        'alarm.notify.title': 'Sinaank Break Reminder',
-        'break.confirm': 'End session?',
-        'break.complete': 'Thank you for taking a short digital break.',
-        'break.relax_text': 'Relax... Focus on your breath.',
-        'btn.end_session': 'End Session',
-        'how.relax': 'Relax',
-        'how.listen': 'Listen',
-        'how.recharge': 'Recharge',
-        'dashboard.recent': 'Recent Sessions'
+        'nav.home': 'Home',
+        'nav.plans': 'Plans',
+        'nav.support': 'Support',
+        'footer.rights': 'All rights reserved.',
+        'plans.title': 'Choose Your Therapy Path',
+        'plans.starter.name': 'Starter Plan',
+        'plans.starter.price': '₹779',
+        'plans.growth.name': 'Growth Plan',
+        'plans.growth.price': '₹2990',
+        'income.l1': 'Direct',
+        'income.l2': 'Level 2',
+        'income.l3': 'Level 3',
+        'join.verif_req': 'Verification Required',
+        'join.secure_pay': 'Secure Payment via Razorpay',
+        'join.req_mobile': 'Verified Mobile & Profile Required',
+        'join.otp.title': 'Verify Mobile',
+        'join.otp.desc': 'Enter your 10-digit mobile number',
+        'join.otp.send': 'Send OTP',
+        'join.otp.placeholder': 'Enter 6-digit OTP',
+        'join.otp.verify_proceed': 'Verify & Proceed',
+        'join.resend_in': 'Resend OTP in',
+        'join.error.invalid_mobile': 'Please enter a valid 10-digit mobile number',
+        'join.reg.title': 'Profile Setup',
+        'join.reg.subtitle': 'Enter your details to proceed to payment.',
+        'join.reg.name': 'Full Name',
+        'join.reg.pin': 'Create 4-Digit PIN',
+        'join.reg.confirm_pin': 'Confirm 4-Digit PIN',
+        'dashboard.welcome': 'Welcome',
+        'dashboard.logout': 'Logout',
+        'dashboard.referral_title': 'Referral ID & Earnings',
+        'dashboard.withdraw_bal': 'Withdrawal Balance',
+        'dashboard.copy_link': 'Copy Link',
+        'dashboard.withdraw': 'Withdraw',
+        'dashboard.ledger': 'Ledger',
+        'dashboard.therapy_title': 'Sinaank Mobile Therapy',
+        'dashboard.min_rem': 'Minutes Remaining',
+        'dashboard.min_desc': 'One year of therapeutic recovery from your activation date.',
+        'dashboard.all_modules': 'Access All Modules',
+        'dashboard.start_title': 'Start Sinaank Therapy',
+        'dashboard.start_desc': 'Begin your personalized daily session based on your AI Health Report.',
+        'dashboard.smart_therapy': 'Start Smart Therapy',
+        'dashboard.self_session': 'Self-Timed Session',
+        'dashboard.history_title': 'Recent Sessions',
+        'dashboard.date': 'Date',
+        'dashboard.time': 'Time',
+        'dashboard.duration': 'Duration',
+        'dashboard.status': 'Status',
+        'dashboard.partner': 'Partner',
+        'dashboard.welcome_badge': '🎉 Welcome to Sinaank Digital Therapy',
+        'dashboard.hello': 'Hello',
+        'dashboard.choose_action': 'Choose what you want to do today.',
+        'dashboard.card_therapy_title': 'Sinaank Mobile Therapy',
+        'dashboard.card_therapy_desc': 'Access all digital therapy modules designed for your mental and physical wellness.',
+        'dashboard.card_therapy_btn': '🚀 Start Therapy',
+        'dashboard.card_business_title': 'Business Dashboard',
+        'dashboard.card_business_desc': 'Manage your referral network, track income, and grow your Sinaank partner team.',
+        'dashboard.card_business_btn': '💰 Open Business',
+        'dashboard.stat_wallet': 'Wallet Balance',
+        'dashboard.stat_team': 'Team Members',
+        'dashboard.stat_plan': 'Current Plan',
+        'dashboard.stat_ref': 'Referral Code',
+        'business.title': 'Business Dashboard',
+        'business.subtitle': 'Partner Network & Income',
+        'business.upgrade_title': 'Upgrade to Growth Plan',
+        'business.upgrade_desc': 'Unlock full income tracking and higher payouts.',
+        'business.stat_wallet': 'Wallet Balance',
+        'business.stat_total': 'Total Earned',
+        'business.stat_team': 'Team Size',
+        'business.stat_plan': 'Your Plan',
+        'business.ref_title': 'Your Referral Network',
+        'business.ref_desc': 'Share your unique link or QR code — every person who joins via your invitation becomes your Level 1 partner.',
+        'business.ref_bonus': 'Direct Bonus: ₹120 per join',
+        'business.copy_link': 'Copy Link',
+        'business.download_qr': 'Download QR',
+        'business.income_title': 'Income Per Referral',
+        'business.level1': 'Level 1 (Direct)',
+        'business.level2': 'Level 2',
+        'business.level3': 'Level 3',
+        'business.my_network': 'My Network (Level 1)',
+        'business.refresh': 'Refresh',
+        'business.payout_title': 'Request Payout',
+        'business.payout_desc': 'Minimum withdrawal: ₹100. Processed within 48–72 hours.',
+        'business.amount_label': 'Amount (₹)',
+        'business.upi_label': 'UPI ID',
+        'business.request_btn': 'Request Payout',
+        'business.partners': 'partners',
+        'business.no_partners': 'No partners in your network yet.',
+        'support.title': 'Sinaank AI Support',
+        'support.subtitle': 'Instant Digital Assistance',
+        'support.ai_label': 'Sinaank AI',
+        'support.admin_label': 'ADMIN',
+        'support.welcome_msg': 'Hello! I am your Sinaank Assistant. How can I help you today?',
+        'support.placeholder': 'Ask about SID, Plans, Income...',
+        'therapy.billing.r6': '60-minute limit per session.',
+        'therapy.setup.start': 'Start SID Session',
+        'therapy.setup.headphones': '🎧 Headphones recommended',
+        'therapy.setup.warning_digestion': 'Wait 10 minutes after eating.',
+        'therapy.sdb.desc_internal': 'Experience natural breathing in Focus Mode. Disconnect and Relax.',
+        'therapy.sde.desc_internal': 'Passive eye recovery in Focus Mode. Recalibrate your ocular focus.',
+        'therapy.sdm.desc_internal': 'Guided movement and physical re-alignment in Focus Mode.',
+        'therapy.sds.desc_internal': 'Deep and restful sleep preparation in Focus Mode.',
+        'therapy.sdd.desc_internal': 'Support your metabolic and digestive rhythm in Focus Mode.',
+        'therapy.sdp.desc_internal': 'Pause and rebalance based on your digital usage DNA.',
+        'btn.upgrade_now': 'Upgrade Now',
+        'loading': 'Loading...',
+        'plans.upgrade.name': 'Upgrade to Growth Plan',
+        'dashboard.ready_continue': 'Ready to continue?',
+        'dashboard.ready_desc': 'Return to the Therapy Hub anytime.',
+        'dashboard.return_hub': 'Back to Therapy →',
+        'dashboard.topup_success': 'Activation Successful!',
+        // Demo Scaling Keys
+        'guide.intro': 'You are about to relax your mind in just 20 seconds...',
+        'guide.experience_title': 'Choose your experience',
+        'guide.join_trigger': 'To feel like this every day, join Sinaank now.',
+        'guide.btn_cta': 'Start My Therapy',
+        'guide.trust_signal': 'Works on mobile | Instant start | No app needed'
     },
     hi: {
-        'home.hero.title': 'SDP – एक छोटा डिजिटल ब्रेक',
-        'home.hero.subtitle': 'मन को विराम दें। आँखों को आराम दें। स्क्रीन पर नियंत्रण वापस पाएं।',
-        'home.hero.transition': 'उपयोग करें। बढ़ाएँ। साझा करें।',
-        'home.growth.title': 'SDP ग्रोथ कॉन्सेप्ट',
-        'home.growth.desc': 'SDP एक डिजिटल बीज की तरह काम करता है। इसे स्वयं उपयोग करें या जिम्मेदारी से साझा कर अपना SDP सर्कल बढ़ाएँ।',
-        'home.icon.use': 'छोटे डिजिटल पॉज़ (Pause) लें',
-        'home.icon.grow': 'अपना SDP सर्कल बनाएं',
-        'home.icon.share': 'दूसरों को जिम्मेदारी से जोड़ें',
-        'btn.getstarted': 'शुरू करें',
-        'btn.learnmore': 'और जानें',
-        'footer.safety': 'SDP एक डिजिटल वेलनेस सेवा है। यह कोई मेडिकल उत्पाद या निवेश योजना नहीं है।',
-        'nav.home': 'होम',
-        'nav.login': 'लॉगिन',
-        'nav.dashboard': 'डैशबोर्ड',
-        'nav.admin': 'एडमिन',
-        'nav.logout': 'लॉगआउट',
-        'sec.whatis.title': 'SDP सेशन के दौरान क्या मिलता है?',
-        'sec.whatis.p1': 'शांत करने वाला गाइडेड ऑडियो',
-        'sec.whatis.p2': 'आँखों के लिए आरामदायक स्क्रीन रंग',
-        'sec.whatis.p3': 'न नोटिफिकेशन, न कंटेंट, न विज्ञापन',
-        'sec.whatis.p4': 'सेशन अपने आप शुरू और खत्म',
-        'sec.prod.title': 'उत्पाद और मूल्य',
-        'prod.kit1.title': 'SDP 1 किट',
-        'prod.kit1.price': '₹178',
-        'prod.kit1.f1': '1 उपयोगकर्ता',
-        'prod.kit1.f2': '3,650 मिनट / वर्ष',
-        'prod.kit1.f3': 'केवल उपयोग',
-        'prod.family.title': 'SDP फैमिली पैक',
-        'prod.family.price': '₹580',
-        'prod.family.f1': 'कुल 4 उपयोगकर्ता',
-        'prod.family.f2': '1 मुख्य + 3 परिवार',
-        'prod.family.f3': 'पार्टनर अधिकार (केवल मुख्य)',
-        'login.title': 'लॉगिन',
-        'login.mobile': 'मोबाइल नंबर',
-        'login.pin': '4-अंकीय पिन',
-        'login.btn': 'सुरक्षित लॉगिन',
-        'dashboard.welcome': 'स्वागत है',
-        'dashboard.balance': 'आपका मिनट बैलेंस',
-        'dashboard.start_break': 'ब्रेक शुरू करें',
-        'partner.title': '👑 पार्टनर एक्सेस',
-        'partner.desc': 'आपके पास फ़ैमिली पैक है। लाइसेंस शेयर करके कमाई करने के लिए अपना पार्टनर डैशबोर्ड सक्रिय करें।',
-        'partner.btn_activate': 'पार्टनर डैशबोर्ड सक्रिय करें',
-        'partner.upgrade': 'पार्टनर बनें',
-        'partner.upgrade.text': 'अपने अकाउंट को पार्टनर स्टेटस में अपग्रेड करें और अपनी टीम बनाएं। कमाई केवल मुख्य उपयोगकर्ता से जुड़ी होती है।',
-        'partner.terms': 'आगे बढ़कर आप नियम व शर्तों से सहमति देते हैं।',
-        'partner.link': 'रेफरल लिंक कॉपी करें',
-        'partner.team': 'मेरी टीम',
-        'demo.overlay.text': 'यह एक नमूना अनुभव है। पूर्ण सत्र लॉगिन के बाद उपलब्ध हैं।',
-        'demo.active': 'साँस लें... शांत रहें...',
-        'demo.close': 'डेमो बंद करें',
-        'footer.demo': 'एक नमूना ब्रेक अनुभव करें',
-        'modal.reg.title': 'SDP में स्वागत है',
-        'modal.reg.subtitle': 'कृपया अपनी खरीदारी पूरी करने के लिए पंजीकरण करें।',
-        'modal.reg.name': 'नाम',
-        'modal.reg.mobile': 'मोबाइल',
-        'modal.reg.pin': 'पिन बनाएं',
-        'modal.reg.agree': 'मैं सहमत हूँ ',
-        'modal.reg.terms': 'नियम और शर्तों से',
+        'hero.title': 'Sinaank Digital Therapy',
+        'hero.subtitle': 'पहली पूरी Digital Therapy',
+        'hero.desc': 'AI-Guided Mobile Therapy for a Balanced Digital Life',
+        'hero.cta.start': 'अपनी Journey शुरू करें',
+        'hero.cta.business': 'Growth Plan चुनें',
+        'hero.cta.guide': '✨ Experience Sinaank Therapy',
+        'btn.get_started': 'शुरू करें',
+        'btn.join': 'अभी जुड़ें',
+        'btn.login': 'Login करें',
+        'btn.dashboard': 'डैशबोर्ड',
+        'btn.guide': 'AI गाइड',
         'btn.cancel': 'रद्द करें',
-        'btn.complete': 'खरीदारी पूरी करें',
-        'btn.close': 'बंद करें',
-        'modal.terms.title': 'नियम और शर्तें',
-        'modal.terms.1.title': '1. परिचय',
-        'modal.terms.1.text': 'SDP (Sinaank Digital Pause) के लिए पंजीकरण करके, आप इन शर्तों से सहमत होते हैं।',
-        'modal.terms.2.title': '2. सेवाएं',
-        'modal.terms.2.text': 'SDP डिजिटल वेलनेस टूल प्रदान करता है। उपयोग व्यक्तिगत है जब तक कि वाणिज्यिक लाइसेंस न लिया गया हो।',
-        'modal.terms.3.title': '3. सीडर प्रोग्राम',
-        'modal.terms.3.text': 'फैमिली पैक खरीदने से आपको "सीडर" का दर्जा मिलता है, जिससे आप दूसरों को रेफर कर सकते हैं और प्रॉफिट स्लैब के अनुसार कमीशन कमा सकते हैं।',
-        'modal.terms.4.title': '4. भुगतान और रिफंड',
-        'modal.terms.4.text': 'सभी खरीदारी अंतिम हैं। किट सक्रिय होने के बाद कोई रिफंड नहीं दिया जाता है।',
-        'modal.terms.5.title': '5. गोपनीयता',
-        'modal.terms.5.text': 'हम आपकी गोपनीयता का सम्मान करते हैं। आपके डेटा (नाम, मोबाइल) का उपयोग केवल खाता प्रबंधन और रेफरल ट्रैकिंग के लिए किया जाता है।',
-        'modal.family.title': 'परिवार के सदस्य को जोड़ें',
-        'modal.family.subtitle': 'अपने परिवार के सदस्य के लिए एक नया खता बनाएं।',
-        'btn.add': 'सदस्य जोड़ें',
-        'partner.upgrade.title': 'सीडर प्रोग्राम में शामिल हों',
-        'partner.upgrade.subtitle': 'सिर्फ फैमिली पैक सदस्यों के लिए। अपनी डिजिटल वेलनेस यात्रा को एक बढ़ती आय में बदलें।',
-        'partner.feat.share.title': 'उपहार साझा करें',
-        'partner.feat.share.desc': 'दूसरों को एक स्वस्थ डिजिटल जीवनशैली से परिचित कराएं।',
-        'partner.feat.earn.title': 'इनाम पाएं',
-        'partner.feat.earn.desc': 'आपके द्वारा किए गए हर फैमिली पैक रेफरल पर ₹140 प्राप्त करें।',
-        'partner.feat.grow.title': 'नेटवर्क बढ़ाएं',
-        'partner.feat.grow.desc': 'अपने प्रभाव और कमाई को रियल-टाइम में ट्रैक करें।',
-        'partner.feat.grow.desc': 'अपने प्रभाव और कमाई को रियल-टाइम में ट्रैक करें।',
-        'partner.btn.activate': 'अभी सीडर अकाउंट सक्रिय करें',
-        'partner.btn.learn_more': 'सीडर प्रोग्राम के बारे में और जानें', /* NEW */
-        'modal.seeder.title': 'सीडर बनें',
-        'modal.seeder.subtitle': 'कमाई शुरू करने के लिए अपना प्रोफाइल पूरा करें।',
-        'modal.seeder.photo': 'फ़ोटो अपलोड करें (वैकल्पिक)',
-        'modal.seeder.photo_note': 'यदि छोड़ दिया गया तो डिफ़ॉल्ट छवि का उपयोग किया जाएगा।',
-        'modal.seeder.fullname': 'पूरा नाम',
-        'modal.seeder.fullname_ph': 'पूरा नाम दर्ज करें',
-        'modal.seeder.address': 'पता विवरण',
-        'modal.seeder.pin_ph': 'पिन कोड दर्ज करें',
-        'modal.seeder.pic': 'प्रोफ़ाइल फ़ोटो',
-        'modal.seeder.upi': 'UPI आईडी (पेआउट के लिए)',
-        'modal.seeder.address': 'पता (संक्षिप्त)',
-        'modal.seeder.po_ph': 'डाकघर चुनें',
-        'modal.seeder.hno_ph': 'मकान नंबर / अपार्टमेंट',
-        'modal.seeder.street_ph': 'सड़क / कॉलोनी',
-        'modal.seeder.agree': 'मैं सहमत हूँ',
-        'modal.seeder.terms': 'पार्टनर नियम और शर्तों से',
-        'btn.activate_account': 'अकाउंट सक्रिय करें',
-        "family.title": "मेरा परिवार",
-        "family.subtitle": "आप 3 परिवार के सदस्यों को जोड़ सकते हैं। प्रत्येक सदस्य को 3650 मिनट के साथ अपना अकाउंट मिलता है।",
-        "family.add_btn": "सदस्य जोड़ें",
-        "family.modal_title": "परिवार के सदस्य को जोड़ें",
-        "family.allocated_mins": "3650 मिनट आवंटित",
-        'family.slots.left': 'बचे हैं',
-        'family.max.reached': 'अधिकतम सदस्य पूरे हुए',
-        'family.desc': 'आप 3 परिवार के सदस्यों को जोड़ सकते हैं। प्रत्येक सदस्य को 3650 मिनट के साथ अपना अकाउंट मिलता है।',
-        'family.no.members': 'अभी तक कोई परिवार का सदस्य नहीं जोड़ा गया।',
-        'modal.freq.title': 'बाइनॉरल कॉन्फ़िगरेशन',
-        'modal.freq.text': 'ये अलग-अलग फ्रीक्वेंसी आपके सत्र के लिए एक अद्वितीय बाइनॉरल बीट बनाती हैं।',
-        'modal.freq.note': 'गणना हो रही है...',
-        'btn.proceed': 'पॉज़ के लिए आगे बढ़ें',
-        'dashboard.unit': 'मिनट',
-        'footer.copyright': '© 2026 Sinaank SDP',
-        'partner.dashboard': 'सीडर डैशबोर्ड',
-        'partner.id': 'सीडर आईडी',
-        'partner.wallet': 'वॉलेट बैलेंस',
-        'partner.auto': 'टीम बिक्री से ऑटो-आवंटित।',
-        'partner.units': 'मेरी SSS यूनिट्स (सीड्स)',
-        'partner.unit': 'यूनिट',
-        'partner.parent': 'पैरेंट',
-        'partner.copy': 'लिंक कॉपी करें',
-        'partner.nounits': 'कोई सक्रिय SSS यूनिट नहीं।',
-        'partner.loading': 'टीम डेटा लोड हो रहा है...',
-
-        // Learn More - HI
-        'learn.back': '← होम पर वापस',
-        'learn.guide': 'SDP को समझने के लिए नीचे दिया गया संक्षिप्त विवरण पढ़ें।',
-        'learn.whatis.title': 'SDP क्या है?',
-        'learn.whatis.text': 'SDP (Sinaank Digital Pause) एक डिजिटल वेलनेस सिस्टम है जो विशेष रंग और ध्वनि संयोजन के जरिए स्क्रीन की थकान कम करता है। सिर्फ 2–5–10 मिनट के छोटे पॉज़ (Pause) में आँखों और दिमाग को स्क्रीन से रिसेट करता है और फोकस वापस लाने में मदद करता है।',
-        'learn.how.title': 'SDP का उपयोग कैसे करें',
-        'learn.how.li1': '"पॉज़ शुरू करें" पर क्लिक कीजिये',
-        'learn.how.li2': '2 / 5 / 10 मिनट का पॉज़ चुनिये',
-        'learn.how.li3': 'स्क्रीन से दूर रहकर ध्वनि और रंग का अनुभव कीजिये',
-        'learn.how.li4': 'पॉज़ के बाद अपने काम पर ताज़ा दिमाग के साथ वापस आइये',
-        'learn.alarm.title': 'नई सुविधा: पॉज़ अलार्म और रिमाइंडर',
-        'learn.alarm.text': 'अपने अगले पॉज़ के लिए रिमाइंडर सेट करें। यदि आप किसी दूसरी वेबसाइट पर काम कर रहे हैं, तो भी ब्राउज़र टैब "🔔 TIME FOR PAUSE!" फ्लैश करेगा, ताकि आपका सत्र कभी न छूटे।',
-        'alarm.msg.set': 'रिमाइंडर सेट! अलर्ट पाने के लिए इस टैब को खुला रखें।',
-        'alarm.title_flash': '🔔 पॉज़ का समय! 🔔',
-        'learn.family.title': 'परिवार और शेयरिंग के लिए',
-        'learn.family.text': 'SDP फैमिली पैक ₹580 में उपलब्ध है, जिससे परिवार के साथ उपयोग और शेयरिंग दोनों की जा सकती है।',
-        'learn.partner.title': 'SDP पार्टनर का सरल मतलब',
-        'learn.partner.li1': 'आप SDP का खुद उपयोग भी करते हैं',
-        'learn.partner.li2': 'और अगर चाहें तो अपने दोस्तों, परिवार या ग्रुप में सुझाव भी दे सकते हैं',
-        'learn.partner.li3': 'जो लोग आपके माध्यम से SDP लेते हैं, उस पर कंपनी आपको थैंक-यू बेनिफिट देती है',
-        'learn.partner.li4': 'कोई ज़बरदस्ती नहीं, कोई टारगेट प्रेशर नहीं',
-        'learn.tip': '💡 उपयोगी सुझाव: पहले SDP को खुद यूज़ कीजिये। जब आपको फायदा समझ आये, तब ही किसी और को सजेस्ट कीजिये।',
-        'learn.mobile_note': '⚠️ नोट: हर मोबाइल नंबर का अपना अनूठा रंग और ध्वनि संयोजन होता है, इसलिए हर नए मोबाइल नंबर के लिए एक अलग किट की आवश्यकता होती है।',
-        'learn.cta': 'अभी शुरू करें (लॉगिन / SDP किट चुनें)',
-
-        // Admin - HI
-        'admin.title': 'एडमिन पैनल',
-        'admin.subtitle': 'उपयोगकर्ता प्रबंधन और मैनुअल लेनदेन',
-        'admin.tab.users': 'उपयोगकर्ता',
-        'admin.tab.seeders': 'सीडर सूची',
-        'admin.tab.cash': 'लेनदेन इतिहास',
-        'admin.tab.bin': 'रीसाइकिल बिन',
-        'admin.table.id': 'आईडी',
-        'admin.table.name': 'नाम',
-        'admin.table.mobile': 'मोबाइल',
-        'admin.table.role': 'भूमिका',
-        'admin.table.balance': 'शेष',
-        'admin.table.earnings': 'कमाई',
-        'admin.table.action': 'कार्रवाई',
-        'admin.table.date': 'तारीख',
-        'admin.table.type': 'प्रकार',
-        'admin.table.desc': 'विवरण',
-        'admin.table.amount': 'राशि',
-        'admin.stats.revenue': 'कुल राजस्व',
-        'admin.stats.system': 'सिस्टम शेयर',
-        'admin.stats.sales': 'बिक्री संख्या',
-        'admin.btn.edit': 'संपादित करें',
-        'admin.btn.del': 'हटाएं',
-        'admin.btn.restore': 'पुनर्स्थापित करें',
-        'admin.btn.delete_forever': 'हमेशा के लिए हटाएं',
-        'admin.msg.no_seeders': 'कोई सीडर नहीं मिला',
-        'admin.msg.bin_empty': 'बिन खाली है।',
-        'admin.msg.no_txns': 'कोई लेनदेन नहीं मिला',
-        'admin.msg.rec_bin': 'रीसाइकिल बिन (आरक्षित आइटम)',
-        'partner.wallet': 'अनुमानित आय',
-        'partner.upi': 'UPI आईडी (भुगतान के लिए)',
-        'partner.upi_ph': 'उदाहरण mobile@upi',
-        'partner.save_upi': 'UPI विवरण सहेजें',
-        'admin.btn.payout': 'भुगतान दर्ज करें',
-        'admin.btn.export': 'सत्यापन शीट निर्यात करें',
-        'admin.modal.payout.title': '\u092E\u0948\u0928\u0941\u0905\u0932 \u092D\u0941\u0917\u0924\u093E\u0928 \u0926\u0930\u094D\u091C \u0915\u0930\u0947\u0902',
-        'admin.lbl.ref': 'UPI \u0938\u0902\u0926\u0930\u094D\u092D \u0906\u0908\u0921\u0940',
-        'admin.lbl.amount': '\u092D\u0941\u0917\u0924\u093E\u0928 \u0915\u0940 \u0917\u0908 \u0930\u093E\u0936\u093F',
-        'partner.btn.request': '\u092A\u0947\u0906\u0909\u091F \u0915\u093E \u0905\u0928\u0941\u0930\u094B\u0927 \u0915\u0930\u0947\u0902',
-        'partner.status.pending': '\u092D\u0941\u0917\u0924\u093E\u0928 \u0905\u0928\u0941\u0930\u094B\u0927 \u0932\u0902\u092C\u093F\u0924',
-        'partner.msg.request_sent': '\u092A\u0947\u0906\u0909\u091F \u0905\u0928\u0941\u0930\u094B\u0927 \u092D\u0947\u091C\u093E \u0917\u092F\u093E! \u090ED\u092E\u093F\u0928 \u091C\u0932\u094D\u0926 \u0939\u0940 \u0938\u0924\u094D\u092F\u093E\u092A\u0928 \u0914\u0930 \u092D\u0941\u0917\u0924\u093E\u0928 \u0915\u0930\u0947\u0917\u093E\u0964',
-        'partner.msg.avail_bal': '\u092A\u0947\u0906\u0909\u091F \u0915\u0947 \u0932\u093F\u090F \u0909\u092A\u0932\u092C\u094D\u0927',
-        'alarm.msg.set': '\u0930\u093F\u092E\u093E\u0907\u0902\u0921\u0930 \u0938\u0947\u091F! \u0905\u0932\u0930\u094D\u091F \u092A\u093E\u0928\u0947 \u0915\u0947 \u0932\u093F\u090F \u0907\u0938 \u091F\u0948\u092C \u0915\u094B \u0916\u0941\u0932\u093E \u0930\u0916\u0947\u0902\u0964',
-        'alarm.title_flash': '\uD83D\uDD14 \u092C\u094D\u0930\u0947\u0915 \u0915\u093E \u0938\u092E\u092F! \uD83D\uDD14',
-        'alarm.alert': '\u092C\u094D\u0930\u0947\u0915 \u0932\u0947\u0928\u0947 \u0915\u093E \u0938\u092E\u092F \u0939\u094B \u0917\u092F\u093E \u0939\u0948!',
-        'alarm.title': '\u0930\u093F\u092E\u093E\u0907\u0902\u0921\u0930 \u0938\u0947\u091F \u0915\u0930\u0947\u0902',
-        'alarm.notify.title': 'Sinaank \u092C\u094D\u0930\u0947\u0915 \u0930\u093F\u092E\u093E\u0907\u0902\u0921\u0930',
-        'quote.daily': '"\u0936\u093E\u0902\u0924 \u092E\u0928 \u0921\u0930 \u0938\u0947 \u090A\u092A\u0930 \u0905\u0902\u0924\u0930\u094D\u091C\u094D\u091E\u093E\u0928 \u0938\u0941\u0928 \u0938\u0915\u0924\u093E \u0939\u0948\u0964"',
-        'break.confirm': '\u0915\u094D\u092F\u093E \u0906\u092A \u0938\u0924\u094D\u0930 \u0938\u092E\u093E\u092A\u094D\u0924 \u0915\u0930\u0928\u093E \u091A\u093E\u0939\u0924\u0947 \u0939\u0948\u0902?',
-        'break.complete': '\u0927\u0928\u094D\u092F\u0935\u093E\u0926\u0964 \u0906\u092A\u0928\u0947 \u0905\u092A\u0928\u0947 \u0932\u093F\u090F \u090F\u0915 \u091B\u094B\u091F\u093E \u0921\u093F\u091C\u093F\u091F\u0932 \u092C\u094D\u0930\u0947\u0915 \u0932\u093F\u092F\u093E\u0964',
-        'break.relax_text': '\u0906\u0930\u093E\u092E \u0915\u0930\u0947\u0902... \u0905\u092A\u0928\u0940 \u0938\u093E\u0901\u0938\u094B\u0902 \u092A\u0930 \u0927\u094D\u092F\u093E\u0928 \u0926\u0947\u0902\u0964',
-        'btn.end_session': '\u0938\u0924\u094D\u0930 \u0938\u092E\u093E\u092A\u094D\u0924 \u0915\u0930\u0947\u0902',
-        'how.relax': '\u0906\u0930\u093E\u092E \u0915\u0930\u0947\u0902',
-        'how.listen': '\u0938\u0941\u0928\u0947\u0902',
-        'how.recharge': '\u0930\u093F\u091A\u093E\u0930\u094D\u091C \u0915\u0930\u0947\u0902',
-        'dashboard.recent': '\u0939\u093E\u0932\u093F\u092F\u093E \u0938\u0924\u094D\u0930'
+        'nav.home': 'मुख्य पृष्ठ',
+        'nav.plans': 'प्लान्स',
+        'nav.support': 'सहायता',
+        'footer.rights': 'सर्वाधिकार सुरक्षित।',
+        'plans.title': 'अपनी थेरेपी का रास्ता चुनें',
+        'plans.starter.name': 'स्टार्टर प्लान',
+        'plans.starter.price': '₹779',
+        'plans.growth.name': 'ग्रोथ प्लान',
+        'plans.growth.price': '₹2990',
+        'income.l1': 'Direct',
+        'income.l2': 'लेवल 2',
+        'income.l3': 'लेवल 3',
+        'join.verif_req': 'सत्यापन आवश्यक',
+        'join.secure_pay': 'Razorpay के माध्यम से सुरक्षित भुगतान',
+        'join.req_mobile': 'Verified मोबाइल और प्रोफाइल आवश्यक',
+        'join.otp.title': 'मोबाइल सत्यापित करें',
+        'join.otp.desc': 'अपना 10-अंकीय मोबाइल नंबर दर्ज करें',
+        'join.otp.send': 'OTP भेजें',
+        'join.otp.placeholder': '6-अंकीय OTP दर्ज करें',
+        'join.otp.verify_proceed': 'सत्यापित करें और आगे बढ़ें',
+        'join.resend_in': 'OTP दोबारा भेजें',
+        'join.error.invalid_mobile': 'कृपया एक वैध 10-अंकीय मोबाइल नंबर दर्ज करें',
+        'join.reg.title': 'प्रोफाइल सेटअप',
+        'join.reg.subtitle': 'भुगतान के लिए अपनी जानकारी दर्ज करें।',
+        'join.reg.name': 'पूरा नाम',
+        'join.reg.pin': '4-अंकीय PIN बनाएँ',
+        'join.reg.confirm_pin': 'PIN की पुष्टि करें',
+        'dashboard.welcome': 'स्वागत है',
+        'dashboard.logout': 'Logout करें',
+        'dashboard.referral_title': 'रेफरल ID और कमाई',
+        'dashboard.withdraw_bal': 'निकासी बैलेंस',
+        'dashboard.copy_link': 'लिंक कॉपी करें',
+        'dashboard.withdraw': 'पैसे निकालें',
+        'dashboard.ledger': 'लेजर',
+        'dashboard.therapy_title': 'Sinaank Mobile Therapy',
+        'dashboard.min_rem': 'मिनट शेष हैं',
+        'dashboard.min_desc': 'सक्रियण तिथि से एक वर्ष तक की रिकवरी अवधि।',
+        'dashboard.all_modules': 'सभी मॉड्यूल्स खोलें',
+        'dashboard.start_title': 'सिनांक थेरेपी शुरू करें',
+        'dashboard.start_desc': 'अपनी AI हेल्थ रिपोर्ट के आधार पर सत्र शुरू करें।',
+        'dashboard.smart_therapy': 'स्मार्ट थेरेपी शुरू करें',
+        'dashboard.self_session': 'सेल्फ-टाइम्ड सत्र',
+        'dashboard.history_title': 'हाल के सत्र',
+        'dashboard.date': 'तारीख',
+        'dashboard.time': 'समय',
+        'dashboard.duration': 'अवधि',
+        'dashboard.status': 'स्थिति',
+        'dashboard.partner': 'पार्टनर',
+        'dashboard.welcome_badge': '🎉 Sinaank Digital Therapy में आपका स्वागत है',
+        'dashboard.hello': 'नमस्ते',
+        'dashboard.choose_action': 'चुनें कि आप आज क्या करना चाहते हैं।',
+        'dashboard.card_therapy_title': 'Sinaank Mobile Therapy',
+        'dashboard.card_therapy_desc': 'आपके मानसिक और शारीरिक स्वास्थ्य के लिए डिज़ाइन किए गए थेरेपी मॉड्यूल्स।',
+        'dashboard.card_therapy_btn': '🚀 थेरेपी शुरू करें',
+        'dashboard.card_business_title': 'Business डैशबोर्ड',
+        'dashboard.card_business_desc': 'अपने नेटवर्क को मैनेज करें और अपनी पार्टनर टीम बढ़ाएं।',
+        'dashboard.card_business_btn': '💰 Business खोलें',
+        'dashboard.stat_wallet': 'Wallet बैलेंस',
+        'dashboard.stat_team': 'टीम मेंबर्स',
+        'dashboard.stat_plan': 'वर्तमान प्लान',
+        'dashboard.stat_ref': 'रेफरल कोड',
+        'business.title': 'Business डैशबोर्ड',
+        'business.subtitle': 'पार्टनर नेटवर्क और कमाई',
+        'business.upgrade_title': 'Growth Plan में Upgrade करें',
+        'business.upgrade_desc': 'पूरी इनकम ट्रैकिंग और ज़्यादा पेआउट अनलॉक करें।',
+        'business.stat_wallet': 'Wallet बैलेंस',
+        'business.stat_total': 'कुल कमाई',
+        'business.stat_team': 'टीम का आकार',
+        'business.stat_plan': 'आपका प्लान',
+        'business.ref_title': 'आपका रेफरल नेटवर्क',
+        'business.ref_desc': 'अपना लिंक शेयर करें — हर जुड़ने वाला व्यक्ति आपका लेवल 1 पार्टनर बनेगा।',
+        'business.ref_bonus': 'Direct बोनस: ₹120 प्रति जॉइनिंग',
+        'business.copy_link': 'लिंक कॉपी करें',
+        'business.download_qr': 'QR डाउनलोड करें',
+        'business.income_title': 'प्रति रेफरल कमाई',
+        'business.level1': 'लेवल 1 (Direct)',
+        'business.level2': 'लेवल 2',
+        'business.level3': 'लेवल 3',
+        'business.my_network': 'मेरा नेटवर्क (लेवल 1)',
+        'business.refresh': 'रिफ्रेश करें',
+        'business.payout_title': 'पेआउट का अनुरोध करें',
+        'business.payout_desc': 'न्यूनतम निकासी: ₹100। 48-72 घंटों में प्रोसेस होगा।',
+        'business.amount_label': 'राशि (₹)',
+        'business.upi_label': 'UPI ID',
+        'business.request_btn': 'पेआउट मांगें',
+        'business.partners': 'पार्टनर्स',
+        'business.no_partners': 'अभी आपके नेटवर्क में कोई पार्टनर नहीं है।',
+        'support.title': 'सिनांक AI सहायता',
+        'support.subtitle': 'त्वरित डिजिटल सहायता',
+        'support.ai_label': 'सिनांक AI',
+        'support.admin_label': 'एडमिन',
+        'support.welcome_msg': 'नमस्ते! मैं आपका सिनांक असिस्टेंट हूँ। मैं आपकी क्या मदद कर सकता हूँ?',
+        'support.placeholder': 'SID, प्लान्स, इनकम के बारे में पूछें...',
+        'therapy.billing.r6': '60 मिनट की सत्र सीमा।',
+        'therapy.setup.start': 'SID सत्र शुरू करें',
+        'therapy.setup.headphones': '🎧 हेडफोन की सलाह दी जाती है',
+        'therapy.setup.warning_digestion': 'खाना खाने के 10 मिनट बाद शुरू करें।',
+        'therapy.sdb.desc_internal': 'फोकस मोड में प्राकृतिक सांस लेने का अनुभव करें।',
+        'therapy.sde.desc_internal': 'फोकस मोड में आँखों की रिकवरी।',
+        'therapy.sdm.desc_internal': 'निर्देशित हलचल और शारीरिक re-alignment।',
+        'therapy.sds.desc_internal': 'फोकस मोड में गहरी और सुखद नींद।',
+        'therapy.sdd.desc_internal': 'अपनी पाचन और मेटाबॉलिक लय का समर्थन करें।',
+        'therapy.sdp.desc_internal': 'अपने डिजिटल DNA के आधार पर पॉज़ लें और रीबैलेंस करें।',
+        'btn.upgrade_now': 'अभी अपग्रेड करें',
+        'loading': 'लोड हो रहा है...',
+        'plans.upgrade.name': 'Growth Plan में अपग्रेड करें',
+        'dashboard.ready_continue': 'क्या आप तैयार हैं?',
+        'dashboard.ready_desc': 'थेरेपी हब पर कभी भी वापस जाएँ।',
+        'dashboard.return_hub': 'थेरेपी पर वापस जाएँ →',
+        'dashboard.topup_success': 'सक्रियण सफल रहा!',
+        // Demo Scaling Keys (Transliterated for Voice Impact)
+        'guide.intro': 'Aap abhi apne dimaag ko 20 second me relax karne wale hain...',
+        'guide.experience_title': 'चुनें कि आप अभी क्या अनुभव करना चाहते हैं',
+        'guide.join_trigger': 'Jo aap abhi feel kar rahe hain, ise roz paane ke liye abhi join karein',
+        'guide.btn_cta': 'Start My Therapy',
+        'guide.trust_signal': 'Mobile par chalega | Turant shuru | Koi app nahi'
     }
 };
 
-class I18n {
+class SinaankI18n {
     constructor() {
-        this.lang = localStorage.getItem('ssb_lang') || 'en';
-        this.data = window.i18nData;
+        this.lang = localStorage.getItem('lang') || null;
+        this.data = TEXT;
+        
+        // Global alias for simpler use
+        window._t = (key) => this.t(key);
+        
+        // Auto-inject CSS
+        this.injectCSS();
+        
+        // Handle first load
+        if (!this.lang) {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => this.showLanguagePicker());
+            } else {
+                this.showLanguagePicker();
+            }
+        } else {
+            const runInitialization = () => {
+                this.injectTopNav();
+                this.injectFooter();
+                this.updatePage();
+            };
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', runInitialization);
+            } else {
+                runInitialization();
+            }
+        }
 
-        // Ensure English default exists
-        if (this.data.en && !this.data.en['quote.daily']) {
-            this.data.en['quote.daily'] = '"A quiet mind is able to hear intuition over fear."';
+        // Centralized Click Listener (Event Delegation)
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-sinaank-setlang]');
+            if (btn) {
+                const lang = btn.getAttribute('data-sinaank-setlang');
+                this.setLanguage(lang);
+            }
+        });
+    }
+
+    injectCSS() {
+        if (!document.querySelector('link[href*="nav.css"]')) {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = '/css/nav.css';
+            document.head.appendChild(link);
         }
     }
 
+    showLanguagePicker() {
+        const picker = document.createElement('div');
+        picker.id = 'Sinaank-lang-picker';
+        
+        picker.innerHTML = `
+            <div class="picker-bg">
+                <div class="bg-orb orb-1"></div>
+                <div class="bg-orb orb-2"></div>
+                <div class="bg-orb orb-3"></div>
+            </div>
+            <div class="picker-container">
+                <img src="/assets/smt_logo.png" class="picker-logo" alt="SMT Logo">
+                <h1 class="picker-brand-name">Sinaank Mobile Therapy</h1>
+                
+                <div class="picker-options">
+                    <button class="picker-btn" data-sinaank-setlang="hi">
+                        <span class="btn-lang">हिन्दी</span>
+                    </button>
+                    <button class="picker-btn" data-sinaank-setlang="en">
+                        <span class="btn-lang">English</span>
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(picker);
+        document.body.style.overflow = 'hidden';
 
+        // Direct Listener Attachment with Immediate Feedback
+        picker.querySelectorAll('[data-sinaank-setlang]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const lang = btn.getAttribute('data-sinaank-setlang');
+                this.setLanguage(lang);
+            });
+        });
+    }
 
     setLanguage(lang) {
-        console.log("Switching Language to:", lang);
-        if (!this.data[lang]) {
-            console.error("Language data missing for:", lang);
-            return;
-        }
         this.lang = lang;
-        localStorage.setItem('ssb_lang', lang);
-        this.updatePage();
-        this.renderSwitcher();
-    }
+        localStorage.setItem('lang', lang);
+        
+        const picker = document.getElementById('Sinaank-lang-picker');
+        if (picker) picker.remove();
+        document.body.style.overflow = 'auto';
 
-    t(key) {
-        return this.data[this.lang][key] || key;
+        this.injectTopNav();
+        this.injectFooter();
+        this.updateSwitcherUI();
+        this.updatePage();
     }
 
     updatePage() {
+        const currentData = this.data[this.lang];
+        if (!currentData) return;
+
         document.querySelectorAll('[data-i18n]').forEach(el => {
             const key = el.getAttribute('data-i18n');
-            if (this.data[this.lang][key]) {
+            if (currentData[key]) {
                 if (el.tagName === 'INPUT' && el.getAttribute('placeholder')) {
-                    el.placeholder = this.data[this.lang][key];
+                    el.placeholder = currentData[key];
                 } else {
-                    el.textContent = this.data[this.lang][key];
+                    // Non-destructive update: find the first text node or use innerHTML if no children
+                    let textNode = null;
+                    for (let node of el.childNodes) {
+                        if (node.nodeType === 3) { // Text node
+                            textNode = node;
+                            break;
+                        }
+                    }
+
+                    if (textNode) {
+                        textNode.textContent = currentData[key];
+                    } else if (el.children.length === 0) {
+                        el.innerHTML = currentData[key];
+                    }
                 }
             }
         });
         document.documentElement.lang = this.lang;
-        this.renderSwitcher();
     }
 
-    renderSwitcher() {
-        const container = document.getElementById('lang-switch');
-        if (!container) return;
+    injectTopNav() {
+        if (document.getElementById('Sinaank-top-nav')) return;
 
-        const otherLang = this.lang === 'en' ? 'hi' : 'en';
-        const label = this.lang === 'en' ? 'हिन्दी' : 'English';
+        const nav = document.createElement('nav');
+        nav.id = 'Sinaank-top-nav';
+        nav.className = 'Sinaank-top-bar';
 
-        // Changed to btn-secondary for visibility
-        container.innerHTML = `
-            <button class="btn btn-sm btn-secondary" onclick="i18n.setLanguage('${otherLang}')">
-                🌐 ${label}
-            </button>
+        const token = localStorage.getItem('token');
+        const homeTarget = token ? '/dashboard/dashboard.html' : '/index.html';
+        const isHomePage = window.location.pathname === '/index.html' || window.location.pathname === '/' || window.location.pathname.endsWith('/');
+        const joinTarget = token ? '/dashboard/dashboard.html' : (isHomePage ? '#plans' : '/join.html?plan=growth');
+
+        nav.innerHTML = `
+            <div class="Sinaank-nav-left">
+                <a href="${homeTarget}" class="Sinaank-home-link" title="Home">
+                    <img src="/assets/smt_logo.png" alt="Sinaank Digital Therapy" class="smt-logo-header">
+                </a>
+            </div>
+            <div class="Sinaank-nav-right">
+                <div class="Sinaank-auth-links">
+                    ${!token ? `<a href="/login.html" class="nav-btn nav-btn-outline" data-i18n="btn.login">${this.t('btn.login')}</a>` : ''}
+                    <a href="${joinTarget}" class="nav-btn nav-btn-primary">
+                        ${token ? this.t('btn.dashboard') : this.t('btn.get_started')}
+                    </a>
+                </div>
+                <div class="Sinaank-lang-switcher">
+                    <button class="switcher-btn ${this.lang === 'hi' ? 'active' : ''}" data-sinaank-setlang="hi">हिन्दी</button>
+                    <span class="switcher-sep">|</span>
+                    <button class="switcher-btn ${this.lang === 'en' ? 'active' : ''}" data-sinaank-setlang="en">English</button>
+                </div>
+            </div>
         `;
+        document.body.prepend(nav);
+        this.updateSwitcherUI();
+    }
+
+    updateSwitcherUI() {
+        const btns = document.querySelectorAll('.switcher-btn');
+        btns.forEach(btn => {
+            if (btn.getAttribute('data-sinaank-setlang') === this.lang) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+
+    t(key) {
+        if (!this.lang || !this.data[this.lang]) return key;
+        return this.data[this.lang][key] || key;
+    }
+
+    injectFooter() {
+        if (document.getElementById('Sinaank-footer')) return;
+        const footer = document.createElement('footer');
+        footer.id = 'Sinaank-footer';
+        footer.className = 'Sinaank-universal-footer';
+        footer.innerHTML = `
+            <div class="footer-content">
+                <p>&copy; ${new Date().getFullYear()} Sinaank Digital Therapy. All rights reserved.</p>
+            </div>
+        `;
+        document.body.appendChild(footer);
     }
 }
 
-window.i18n = new I18n();
-// Auto-init on load
-document.addEventListener('DOMContentLoaded', () => i18n.updatePage());
+// Initialize Global Instance
+window.SinaankI18n = new SinaankI18n();
+
+// Global t shortcut
+window._t = (key) => window.SinaankI18n.t(key);

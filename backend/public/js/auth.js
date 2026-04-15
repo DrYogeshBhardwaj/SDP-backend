@@ -100,7 +100,7 @@ class AuthApp {
         }
     }
 
-    handleLogin(e) {
+    async handleLogin(e) {
         e.preventDefault();
         console.log("Login sequence started"); // Debug
         const mobile = document.getElementById('login-mobile').value;
@@ -108,69 +108,30 @@ class AuthApp {
         let identityId = cidElement ? cidElement.value : null;
         const pin = document.getElementById('login-pin').value;
 
-        if (!identityId) {
-            // Fallback: If no identity ID selected (or hidden), try using Mobile directly
-            const mobileInput = document.getElementById('login-mobile');
-            if (mobileInput && mobileInput.value.length === 10) {
-                identityId = mobileInput.value;
-            } else {
-                alert("Please enter a valid 10-digit Mobile Number.");
-                return;
-            }
-        }
-
         try {
-            if (typeof store === 'undefined') {
-                console.error("Critical: Window.store is undefined");
-                alert("System Error: Store not loaded. Please refresh.");
-                return;
-            }
+            console.log(`Attempting backend login for mobile: ${mobile}`);
 
-            console.log(`Attempting login for: ${identityId} with PIN length: ${pin.length}`);
+            const res = await fetch('/api.php?action=login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mobile, pin })
+            });
+            const data = await res.json();
 
-            // Authenticate using Identity ID to ensure we log into specific account
-            const user = store.authenticate(identityId, pin);
+            if (data.success) {
+                // Set Backend Token & Session
+                localStorage.setItem('token', data.token || data.data?.token);
+                localStorage.setItem('ssb_session', JSON.stringify(data.data.user));
 
-            if (user) {
-                // Set Active Identity in Session
-                user.activeIdentityId = identityId;
-                localStorage.setItem('ssb_session', JSON.stringify(user));
-
-                // Redirect based on Role/Identity Type
-                const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.get('mode') === 'purchase') {
-                    // Redirect back to index with same params to trigger purchase modal
-                    window.location.href = `index.html${window.location.search}`;
-                    return;
-                }
-
-                let identity = user.identities.find(i => i.id === identityId);
-                if (!identity && user.identities.length > 0) {
-                    // Fallback: Use the first identity or active one if specific ID match fails
-                    identity = user.identities[0];
-                }
-
-                if (!identity) throw new Error("No valid identity found for this user.");
-
-                if (user.role === 'ADMIN' && identity.type === 'ADMIN') {
-                    window.location.href = 'admin_panel.html';
-                } else if (identity.type === 'SID') {
-                    window.location.href = 'seeder.html';
-                } else {
-                    // Buyer Logic: Check Plan Type
-                    if (user.hasFamilyPlan) {
-                        window.location.href = 'dashboard_580.html';
-                    } else {
-                        window.location.href = 'dashboard_178.html';
-                    }
-                }
+                // Redirect to the choice page (mandatory)
+                window.location.href = '../dashboard/dashboard.html';
             } else {
-                console.warn("Login Failed: Invalid credentials or user not found.");
-                alert("Login Failed: Invalid Mobile or PIN.");
+                console.warn("Login Failed:", data.message);
+                alert("Login Failed: " + (data.message || "Invalid Mobile or PIN"));
             }
         } catch (err) {
-            console.error(err);
-            alert("Login Error: " + err.message);
+            console.error("Login Error:", err);
+            alert("Login System Error. Check connection.");
         }
     }
 }

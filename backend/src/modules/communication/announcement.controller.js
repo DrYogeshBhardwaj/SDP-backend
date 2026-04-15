@@ -4,67 +4,95 @@ const { successResponse, errorResponse } = require('../../utils/response');
 
 const createAnnouncement = async (req, res) => {
     try {
-        const { title, message } = req.body;
+        const { title, message, priority } = req.body;
         const created_by = req.user.id;
 
         if (!title || !message) {
             return errorResponse(res, 400, 'Title and message are required');
         }
 
-        // Basic sanitization (No raw HTML allowed)
         const sanitizedTitle = title.replace(/</g, "&lt;").replace(/>/g, "&gt;");
         const sanitizedMessage = message.replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
         const announcement = await prisma.announcement.create({
-            data: {
-                title: sanitizedTitle,
-                message: sanitizedMessage,
-                created_by
-            }
+            data: { title: sanitizedTitle, message: sanitizedMessage, created_by, priority: priority || 'NORMAL' }
         });
 
         return successResponse(res, 201, 'Announcement created successfully', { announcement });
     } catch (error) {
-        console.error("Create Announcement Error:", error);
-        return errorResponse(res, 500, 'Failed to create announcement', error.message);
+        return errorResponse(res, 500, 'Failed to create announcement');
     }
 };
 
 const getAnnouncements = async (req, res) => {
     try {
-        const role = req.user.role;
-
-        // Allowed roles: SEEDER, ADMIN
-        if (role !== 'ADMIN' && role !== 'SEEDER') {
-            return errorResponse(res, 403, 'Unauthorized to view announcements');
-        }
-
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
-        const skip = (page - 1) * limit;
-
         const announcements = await prisma.announcement.findMany({
             orderBy: { createdAt: 'desc' },
-            skip,
-            take: limit,
-            include: {
-                creator: { select: { id: true, name: true, role: true } }
-            }
+            take: 20
+        });
+        return successResponse(res, 200, 'Announcements retrieved', announcements);
+    } catch (error) {
+        return errorResponse(res, 500, 'Failed to fetch announcements');
+    }
+};
+
+/**
+ * Get Latest Unseen/Critical Announcement for current user
+ */
+const getLatestAnnouncement = async (req, res) => {
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: req.user.id },
+            select: { seen_announcement_id: true }
         });
 
-        return successResponse(res, 200, 'Announcements retrieved', {
-            page,
-            limit,
-            count: announcements.length,
-            announcements
+        const latest = await prisma.announcement.findFirst({
+            orderBy: { createdAt: 'desc' }
+        });
+
+        if (!latest) return successResponse(res, 200, 'No announcements', null);
+
+        // Logic based on Priority:
+        // NORMAL -> Never pop up
+        // IMPORTANT -> Pop up if not seen
+        // CRITICAL -> Always pop up (force until dismissed)
+        
+        let shouldPopup = false;
+        if (latest.priority === 'CRITICAL') {
+            shouldPopup = true;
+        } else if (latest.priority === 'IMPORTANT') {
+            shouldPopup = user.seen_announcement_id !== latest.id;
+        }
+
+        return successResponse(res, 200, 'Latest announcement status', {
+            announcement: latest,
+            shouldPopup,
+            isSeen: user.seen_announcement_id === latest.id
         });
     } catch (error) {
-        console.error("Get Announcements Error:", error);
-        return errorResponse(res, 500, 'Failed to fetch announcements', error.message);
+        return errorResponse(res, 500, 'Failed to fetch latest announcement');
+    }
+};
+
+/**
+ * Mark announcement as seen to prevent recurrent popups
+ */
+const markAnnouncementSeen = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await prisma.user.update({
+            where: { id: req.user.id },
+            data: { seen_announcement_id: id }
+        });
+        return successResponse(res, 200, 'Announcement marked as seen');
+    } catch (error) {
+        return errorResponse(res, 500, 'Failed to mark announcement as seen');
     }
 };
 
 module.exports = {
     createAnnouncement,
-    getAnnouncements
+    getAnnouncements,
+    getLatestAnnouncement,
+    markAnnouncementSeen
 };

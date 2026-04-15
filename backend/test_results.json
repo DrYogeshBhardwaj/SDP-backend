@@ -12,11 +12,11 @@
   },
   {
     "msg": "Created Admin:",
-    "data": "d4cd0d19-ea58-4a19-9500-2308de50ae45"
+    "data": "e9c8842c-5aa6-4976-9a90-a31f1be2fbc0"
   },
   {
     "msg": "Created Seeder:",
-    "data": "4e18f4bf-1ee4-463f-97ba-0b8762b15a0c with ₹500 balance"
+    "data": "d83541d6-6803-42fd-9a80-fcb57f497843 with ₹500 balance"
   },
   {
     "msg": "\n[Test 1] Requesting Payout of ₹500 for SEEDER...",
@@ -28,7 +28,7 @@
       "success": true,
       "message": "Payout requested successfully",
       "data": {
-        "payout_id": "e7fee52b-b5f4-46dc-be10-6aa60c304a7d",
+        "payout_id": "080c3f9c-1977-4f22-b273-88ec88d9f1c9",
         "requested_amount": 500,
         "status": "PENDING"
       }
@@ -58,7 +58,7 @@
     "data": 1
   },
   {
-    "msg": "\n[Test 4] Admin Rejecting Payout ID: e7fee52b-b5f4-46dc-be10-6aa60c304a7d",
+    "msg": "\n[Test 4] Admin Rejecting Payout ID: 080c3f9c-1977-4f22-b273-88ec88d9f1c9",
     "data": null
   },
   {
@@ -81,11 +81,11 @@
     "data": null
   },
   {
-    "msg": "New Payout Created ID: 4ef5008a-5341-4ecd-9da7-55e3b3ad4932",
+    "msg": "New Payout Created ID: 6d094808-bbe8-4336-98d9-a495d474947d",
     "data": null
   },
   {
-    "msg": "\n[Test 6] Admin Approving Payout ID: 4ef5008a-5341-4ecd-9da7-55e3b3ad4932",
+    "msg": "\n[Test 6] Admin Approving Payout ID: 6d094808-bbe8-4336-98d9-a495d474947d",
     "data": null
   },
   {

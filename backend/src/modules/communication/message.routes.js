@@ -1,24 +1,25 @@
 const express = require('express');
 const router = express.Router();
-const { sendMessage, getThread, markAsRead, getInbox } = require('./message.controller');
+const { sendMessage, getThread, getInbox, resolveThread } = require('./message.controller');
 const { authMiddleware } = require('../../middlewares/authMiddleware');
 
 // Protect all routes with JWT
 router.use(authMiddleware);
 
-// Create Message (Append-only)
-router.post('/', sendMessage);
+// Send Message (User -> Admin AI / Admin -> User)
+router.post('/send', sendMessage);
 
-// Get All Conversations (Inbox)
-router.get('/admin/inbox', getInbox);
+// Get Statistics/Inbox Overview (Admin only)
+router.get('/inbox', getInbox);
 
-// Get current user thread with Admin
+// Get User's own support thread (Non-admin)
 router.get('/thread', getThread);
 
-// Get paginated thread with a specific user (Admin only or explicitly targets Admin UUID)
-router.get('/:userId', getThread);
+// Get specific user thread (Admin only)
+router.get('/thread/:userId', getThread);
 
-// Mark specific message as read
-router.put('/:id/read', markAsRead);
+// Resolve support thread (Admin only)
+router.post('/resolve-thread/:userId', resolveThread);
 
 module.exports = router;
+

@@ -24,298 +24,39 @@ class Store {
             localStorage.setItem('ssb_db_version', this.DB_VERSION.toString());
         }
 
-        // 2. Robust Seed: Ensure Admin A and Admin B exist (Critical for Split Roles)
-        // REMOVED: Old Super Admin (9999999999)
-
-        const adminsToCheck = [
-            {
-                id: 'u_admin_a', name: 'Finance Admin', mobile: '9999999991', role: 'ADMIN_A', pin: '1234', minutesBalance: 99999,
-                identities: [{ id: 'ADM_A', type: 'ADMIN_A', walletBalance: 0, minutesBalance: 99999 }]
-            },
-            {
-                id: 'u_admin_b', name: 'System Admin', mobile: '9999999992', role: 'ADMIN_B', pin: '1234', minutesBalance: 99999,
-                identities: [{ id: 'ADM_B', type: 'ADMIN_B', walletBalance: 0, minutesBalance: 99999 }]
-            }
-        ];
-
-        let currentUsers = [];
-        try {
-            currentUsers = JSON.parse(localStorage.getItem('ssb_users') || '[]');
-        } catch (e) {
-            console.error("Critical Data Corruption. Resetting.");
-            currentUsers = [];
-        }
-        if (!Array.isArray(currentUsers)) currentUsers = [];
-
-        // Remove Old Admin if exists
-        const oldAdminIdx = currentUsers.findIndex(u => u.mobile === '9999999999');
-        if (oldAdminIdx !== -1) {
-            currentUsers.splice(oldAdminIdx, 1);
-        }
-
-        let usersUpdated = false;
-        adminsToCheck.forEach(admin => {
-            if (!currentUsers.find(u => u.mobile === admin.mobile)) {
-                // console.log(`Seeding missing admin: ${admin.name}`);
-                currentUsers.push(admin);
-                usersUpdated = true;
-            }
-        });
-
-        if (usersUpdated || oldAdminIdx !== -1) {
-            localStorage.setItem('ssb_users', JSON.stringify(currentUsers));
-        }
-
-        // Force cleanup of old sessions if they match the deleted admin
-        const session = JSON.parse(localStorage.getItem('ssb_session') || 'null');
-        if (session && session.mobile === '9999999999') {
-            localStorage.removeItem('ssb_session');
-        }
-
-        // Original Seeding for Test Users (Seeder/Buyer)
-        if (this.getUsers().length === 0 || !this.getUser('8888888888')) {
-            console.log("Checking/Initializing Default Seeder/Buyer...");
-            const defaults = [
-                {
-                    id: 'u_seeder', name: 'Seeder User', mobile: '8888888888', role: 'SEEDER', pin: '1234', minutesBalance: 3650,
-                    identities: [{ id: 'SID001', type: 'SID', walletBalance: 500 }, { id: 'CID002', type: 'CID', minutesBalance: 3650 }]
-                },
-                {
-                    id: 'u_buyer', name: 'Buyer User', mobile: '7777777777', role: 'BUYER', pin: '1234', minutesBalance: 3650,
-                    identities: [{ id: 'CID003', type: 'CID', minutesBalance: 3650 }]
-                }
-            ];
-
-            let added = false;
-            defaults.forEach(def => {
-                if (!currentUsers.find(u => u.mobile === def.mobile)) {
-                    currentUsers.push(def);
-                    added = true;
-                }
-            });
-
-            if (added) this.saveUsers(currentUsers);
-        }
+        // MOCK DATA REMOVED: All auth now via backend API
     }
 
-    // --- User Management ---
+    // --- User Management (DEPRECATED: Use Backend API) ---
 
     getUsers(includeDeleted = false) {
-        let users = [];
-        try {
-            users = JSON.parse(localStorage.getItem('ssb_users') || '[]');
-        } catch (e) {
-            console.error("Data Corruption in getUsers. Returning empty list.");
-            return [];
-        }
-        // Filter out nulls/undefined instantly to prevent crashes
-        const validUsers = users.filter(u => u && typeof u === 'object');
-        if (includeDeleted) return validUsers;
-        return validUsers.filter(u => !u.deleted);
-    }
-
-    getDeletedUsers() {
-        const users = JSON.parse(localStorage.getItem('ssb_users') || '[]');
-        return users.filter(u => u.deleted);
+        console.warn("Store.getUsers is DEPRECATED. Use /api/admin/users");
+        return [];
     }
 
     saveUsers(users) {
-        localStorage.setItem('ssb_users', JSON.stringify(users));
-    }
-
-    // Helper to find which user owns a specific CID/SID
-    findUserByIdentity(identityId) {
-        // Search ACTIVE users only by default
-        return this.getUsers().find(u => u.identities && u.identities.some(i =>
-            i.id === identityId || (i.previousIds && i.previousIds.includes(identityId))
-        ));
+        // No-op to prevent accidental localStorage writes
     }
 
     getUser(mobile) {
-        return this.getUsers().find(u => u.mobile === mobile);
-    }
-
-    // Get all CIDs/SIDs associated with a mobile
-    getIdentitiesByMobile(mobile) {
-        const user = this.getUser(mobile);
-        return user ? user.identities : [];
-    }
-
-    getCidsByMobile(mobile) {
-        // Deprecated but kept for compatibility during migration
-        const identities = this.getIdentitiesByMobile(mobile);
-        const user = this.getUser(mobile);
-        return identities.map(i => ({
-            cid: i.id,
-            name: user ? user.name : 'User',
-            type: i.type,
-            minutesBalance: i.minutesBalance,
-            walletBalance: i.walletBalance
-        }));
-    }
-
-    getByCid(cid) {
-        // Updated to search inside identities
-        return this.findUserByIdentity(cid);
-    }
-
-    getById(id) {
-        // Allow finding extended info? Usually for admin.
-        return this.getUsers().find(u => u.id === id);
-    }
-
-    createUser(user) {
-        const users = this.getUsers(true); // check against ALL to avoid dupes
-
-        // Generate Sequential CID
-        const cid = this.generateNextCID();
-
-        // 1. Check for duplicate mobile
-        if (users.find(u => u.mobile === user.mobile && !u.deleted)) {
-            // Already exists logic
-        }
-
-        // Actually, safer to check ACTIVE users.
-        if (this.getUser(user.mobile)) {
-            throw new Error(`User with mobile ${user.mobile} already exists.`);
-        }
-
-        const newUser = {
-            id: 'u_' + Date.now() + '_' + Math.floor(Math.random() * 1000),
-            mobile: user.mobile,
-            pin: user.pin,
-            name: user.name,
-            role: 'BUYER',
-            minutesBalance: 3650,
-            identities: [
-                {
-                    id: cid,
-                    type: 'CID',
-                    units: [],
-                    walletBalance: 0,
-                    minutesBalance: 3650
-                }
-            ],
-            createdAt: new Date().toISOString(),
-            deleted: false
-        };
-        // We need to push to the FULL list
-        const allUsers = this.getUsers(true);
-        allUsers.push(newUser);
-        this.saveUsers(allUsers);
-        return newUser;
-    }
-
-    updateUser(id, updates) {
-        const users = this.getUsers(true); // Modify source
-        const index = users.findIndex(u => u.id === id);
-        if (index === -1) throw new Error('User not found');
-
-        users[index] = { ...users[index], ...updates };
-        this.saveUsers(users);
-
-        // Update session if it's the current user
-        const session = this.getSession();
-        if (session && session.id === id) {
-            // Preserve session-only properties like activeIdentityId
-            const updatedSession = { ...users[index], activeIdentityId: session.activeIdentityId };
-            localStorage.setItem('ssb_session', JSON.stringify(updatedSession));
-        }
-
-        return users[index];
-    }
-
-    deleteUser(id) {
-        // Soft Delete
-        this.updateUser(id, { deleted: true, deletedAt: new Date().toISOString() });
-    }
-
-    restoreUser(id) {
-        // Restore User
-        this.updateUser(id, { deleted: false, deletedAt: null });
-    }
-
-    restoreUser(id) {
-        this.updateUser(id, { deleted: false, deletedAt: null });
-    }
-
-    permanentDeleteUser(id) {
-        const user = this.getById(id);
-        if (!user) return; // User already gone
-
-        // 1. Remove User from Main List
-        let users = this.getUsers(true);
-        users = users.filter(u => u.id !== id);
-        this.saveUsers(users);
-
-        // 2. Remove Transactions (userId matches OR source matches an identity)
-        const allIdentities = user.identities ? user.identities.map(i => i.id) : [];
-        let txns = JSON.parse(localStorage.getItem('ssb_transactions') || '[]');
-
-        const initialCount = txns.length;
-        txns = txns.filter(t => {
-            // Keep if userId doesn't match AND source doesn't match any identity
-            const matchesUser = t.userId === id;
-            const matchesSource = t.source && allIdentities.includes(t.source.split(' ')[0]); // "source": "C1001 from Buyer"
-            return !matchesUser && !matchesSource;
-        });
-
-        if (txns.length !== initialCount) {
-            console.log(`[Store] Removed ${initialCount - txns.length} transactions for user ${id}`);
-            localStorage.setItem('ssb_transactions', JSON.stringify(txns));
-        }
-
-        // 3. Remove Feedback
-        let feedback = JSON.parse(localStorage.getItem('ssb_feedback') || '[]');
-        const feedbackCount = feedback.length;
-        feedback = feedback.filter(f => f.userId !== id);
-
-        if (feedback.length !== feedbackCount) {
-            console.log(`[Store] Removed ${feedbackCount - feedback.length} feedback entries for user ${id}`);
-            localStorage.setItem('ssb_feedback', JSON.stringify(feedback));
-        }
-    }
-
-    // --- Auth ---
-
-    authenticate(identifier, pin) {
-        // identifier can be: Mobile (10 digits) OR Identity ID (C1001, S1001)
-
-        let user = null;
-
-        console.log(`[Store] Authenticating: ${identifier}`);
-
-        // 1. Try finding by Mobile
-        user = this.getUsers().find(u => u.mobile === identifier);
-
-        // 2. If not found, try finding by Identity ID (C1001, S1001, etc.)
-        if (!user) {
-            console.log(`[Store] Mobile not found, checking Identity ID...`);
-            user = this.findUserByIdentity(identifier);
-        } else {
-            console.log(`[Store] User found via Mobile: ${user.id}`);
-        }
-
-        if (user && user.pin === pin) {
-            // Auto-Correct: Cap Minutes at 3650
-            if (user.minutesBalance > 3650) {
-                user.minutesBalance = 3650;
-                this.updateUser(user.id, { minutesBalance: 3650 });
-            }
-
-            localStorage.setItem('ssb_session', JSON.stringify(user));
-            return user;
-        }
+        console.warn("Store.getUser is DEPRECATED. Use /api/auth/me");
         return null;
     }
 
+    authenticate(identifier, pin) {
+        throw new Error("Store.authenticate is REMOVED. Use /api/auth/login via auth.js");
+    }
+
     logout() {
-        // Safe Logout: Remove only session keys, NOT the whole database
+        // Standard & Safe Logout: Clear all session keys
         localStorage.removeItem('ssb_session');
+        localStorage.removeItem('token');
         localStorage.removeItem('ssb_partner_session');
         localStorage.removeItem('ssb_seller_consent');
         localStorage.removeItem('ssb_admin_logged_in');
+        sessionStorage.clear();
     }
+
 
     getSession() {
         return JSON.parse(localStorage.getItem('ssb_session'));
@@ -437,10 +178,10 @@ class Store {
             // Determine Purchase Value based on Plan
             // Family Pack / Seeder = 580
             // Standard Buyer = 178
-            if (u.role === 'SEEDER' || u.hasFamilyPlan) {
-                totalPurchaseValue += 580;
+            if (u.role === 'SEEDER' || u.role === 'BUSINESS' || u.hasFamilyPlan) {
+                totalPurchaseValue += 2900;
             } else {
-                totalPurchaseValue += 178;
+                totalPurchaseValue += 779;
             }
         });
 
@@ -508,8 +249,8 @@ class Store {
 
     getKits() {
         return {
-            'kit1': { id: 'kit1', name: 'SDP 1 Kit', price: 178, minutes: 3650, sellerShare: 50, systemShare: 128 },
-            'family': { id: 'family', name: 'SDP Family Pack', price: 580, minutes: 3650, familySlots: 3, sellerShare: 140, systemShare: 440 }
+            'basic': { id: 'basic', name: 'SINAANK Basic Plan', price: 779, minutes: 3650, sellerShare: 220, systemShare: 559 },
+            'business': { id: 'business', name: 'SINAANK Business Plan', price: 2900, minutes: 3650, familySlots: 3, sellerShare: 580, systemShare: 2320 }
         };
     }
 
@@ -703,7 +444,7 @@ class Store {
                 date: new Date().toISOString(),
                 timestamp: new Date().toISOString(),
                 type: 'PURCHASE',
-                amount: kit.price, // 580
+                amount: kit.price, // New Prices (779 / 2900)
                 from: buyer.identities[0].id, // Use CID/SDP ID
                 to: 'ADMIN',
                 desc: `Purchase: ${kit.name}`,

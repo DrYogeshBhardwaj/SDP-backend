@@ -88,3 +88,56 @@ exports.getNetworkData = async (req, res) => {
     }
 };
 
+exports.getReferralTree = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        console.log(`[Referral API] Fetching tree for User ID: ${userId}`);
+
+        const referrals = await prisma.referral.findMany({
+            where: { referrerId: userId },
+            include: {
+                referredUser: {
+                    select: {
+                        mobile: true,
+                        role: true,
+                        kit_activated: true,
+                        createdAt: true
+                    }
+                }
+            }
+        });
+
+        // Function to mask mobile: "8888888888" -> "88****8888"
+        const maskMobile = (m) => {
+            if (!m) return '****';
+            const s = m.toString();
+            if (s.length < 6) return '****';
+            return s.slice(0, 2) + '****' + s.slice(-4);
+        };
+
+        const tree = {
+            level1: [],
+            level2: [],
+            level3: []
+        };
+
+        referrals.forEach(ref => {
+            const data = {
+                id: ref.id,
+                mobile: maskMobile(ref.referredUser.mobile),
+                plan: ref.referredUser.role,
+                joinDate: ref.referredUser.createdAt,
+                status: ref.referredUser.kit_activated ? 'ACTIVE' : 'PENDING'
+            };
+
+            if (ref.level === 1) tree.level1.push(data);
+            else if (ref.level === 2) tree.level2.push(data);
+            else if (ref.level === 3) tree.level3.push(data);
+        });
+
+        return successResponse(res, 200, 'Referral tree retrieved', tree);
+    } catch (error) {
+        console.error('Tree View Error:', error);
+        return errorResponse(res, 500, 'Failed to fetch tree view');
+    }
+};

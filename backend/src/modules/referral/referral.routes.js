@@ -5,5 +5,6 @@ const { authMiddleware } = require('../../middlewares/authMiddleware');
 
 router.get('/team', authMiddleware, referralController.getDirectTeam);
 router.get('/network', authMiddleware, referralController.getNetworkData);
+router.get('/tree', authMiddleware, referralController.getReferralTree);
 
 module.exports = router;

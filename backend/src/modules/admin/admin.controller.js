@@ -1,203 +1,148 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { successResponse, errorResponse } = require('../../utils/response');
+const sidService = require('../user/sid.service');
 
-const getPendingPayouts = async (req, res) => {
+/**
+ * Audit Helper: Log Admin Actions
+ */
+const logAdminAction = async (adminId, actionType, targetUserId, description) => {
     try {
-        const payouts = await prisma.payout.findMany({
-            where: {
-                status: 'PENDING'
-            },
-            include: {
-                user: {
-                    select: {
-                        id: true,
-                        name: true,
-                        mobile: true,
-                        cid: true,
-                        role: true,
-                        upi_id: true
-                    }
-                }
-            },
-            orderBy: {
-                requested_at: 'asc'
+        await prisma.systemLog.create({
+            data: {
+                adminId,
+                actionType,
+                targetUserId,
+                description
             }
         });
-
-        return successResponse(res, 200, 'Pending payouts retrieved', payouts);
-    } catch (error) {
-        console.error('View Pending Payouts Error:', error);
-        return errorResponse(res, 500, 'Failed to fetch payouts');
+    } catch (err) {
+        console.error("Critical: Failed to log admin action", err);
     }
 };
 
-const approvePayout = async (req, res) => {
+/**
+ * 1. Dashboard Stats
+ * System Wallet = Total Joins (Purchases) - Total Income PAID (Frozen) - Withdrawals PAID (Manual)
+ */
+const getDashboardStats = async (req, res) => {
     try {
-        const payoutId = req.params.id; // String UUID because Payout.id was migrated to String UUID
-        const adminId = req.user.id;
+        const { getSystemWallet } = require('../finance/finance.service');
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-        // Verify payout and status
-        const payout = await prisma.payout.findUnique({
-            where: { id: payoutId }
+        const [
+            totalUsers,
+            activeToday,
+            todayJoins,
+            todayPayments,
+            totalIncomePaid,
+            pendingPayoutAmount,
+            totalPayoutApproved,
+            todayTherapyMinutes,
+            activeSessions,
+            todayDemos
+        ] = await Promise.all([
+            prisma.user.count(),
+            prisma.user.count({ where: { last_active_at: { gte: todayStart } } }),
+            prisma.user.count({ where: { createdAt: { gte: todayStart } } }),
+            prisma.paymentOrder.aggregate({ 
+                _sum: { amount: true }, 
+                where: { status: 'PAID', createdAt: { gte: todayStart } } 
+            }),
+            prisma.bonusLedger.aggregate({ 
+                _sum: { amount: true }, 
+                where: { incomeStatus: 'PAID' } 
+            }),
+            prisma.payout.aggregate({ 
+                _sum: { amount: true }, 
+                where: { payoutStatus: 'PENDING' } 
+            }),
+            prisma.payout.aggregate({ 
+                _sum: { amount: true }, 
+                where: { payoutStatus: { in: ['APPROVED', 'PAID'] } } 
+            }),
+            prisma.therapySession.aggregate({
+                _sum: { minutesUsed: true },
+                where: { status: 'COMPLETED', endedAt: { gte: todayStart } }
+            }),
+            prisma.therapySession.count({
+                where: { status: 'ACTIVE' }
+            }),
+            prisma.systemLog.count({
+                where: { actionType: 'DEMO_VIEWED', createdAt: { gte: todayStart } }
+            })
+        ]);
+
+        const systemWallet = await getSystemWallet();
+        const conversionRate = todayDemos > 0 ? (todayJoins / todayDemos) * 100 : 0;
+
+        return successResponse(res, 200, 'Dashboard stats retrieved', {
+            totalUsers,
+            activeToday,
+            todayJoin: todayJoins,
+            todayDemos,
+            conversionRate,
+            todayIncome: todayPayments._sum.amount || 0,
+            totalIncome: totalIncomePaid._sum.amount || 0,
+            pendingPayout: pendingPayoutAmount._sum.amount || 0,
+            totalPayout: totalPayoutApproved._sum.amount || 0,
+            todayTherapyMinutes: todayTherapyMinutes._sum.minutesUsed || 0,
+            activeSessions,
+            systemWallet
         });
-
-        if (!payout) {
-            return errorResponse(res, 404, 'Payout not found');
-        }
-
-        if (payout.status !== 'PENDING') {
-            return errorResponse(res, 400, `Cannot approve payout because it is already ${payout.status}`);
-        }
-
-        const payoutAmount = payout.amount;
-
-        // Perform atomic transaction
-        await prisma.$transaction(async (tx) => {
-            // Confirm the lock via activePayoutId and clear it. Do not decrement balance again, it was deducted on request.
-            await tx.walletCash.update({
-                where: { userId: payout.userId },
-                data: { activePayoutId: null }
-            });
-
-            // Create transaction history log (append only)
-            await tx.transaction.create({
-                data: {
-                    userId: payout.userId,
-                    type: 'PAYOUT',
-                    amount: payoutAmount,
-                    description: 'Withdrawal Approved',
-                    status: 'COMPLETED'
-                }
-            });
-
-            // Update payout status to APPROVED
-            await tx.payout.update({
-                where: { id: payout.id },
-                data: {
-                    status: 'APPROVED',
-                    processed_at: new Date(),
-                    processed_by: adminId,
-                    remarks: req.body.remarks || 'Approved by Admin'
-                }
-            });
-
-            // Log System Action
-            await tx.systemLog.create({
-                data: {
-                    adminId: adminId,
-                    actionType: 'APPROVE_PAYOUT',
-                    targetUserId: payout.userId,
-                    description: `Approved payout of ₹${payoutAmount} for user ${payout.userId}`
-                }
-            });
-        });
-
-        return successResponse(res, 200, 'Payout approved successfully');
-
     } catch (error) {
-        console.error('Approve Payout Error:', error);
-        return errorResponse(res, 500, 'Failed to approve payout', { message: error.message });
+        console.error('Get Dashboard Stats Error:', error);
+        return errorResponse(res, 500, 'Failed to fetch dashboard stats');
     }
 };
 
-const rejectPayout = async (req, res) => {
-    try {
-        const payoutId = req.params.id;
-        const adminId = req.user.id;
-        const { remarks } = req.body;
-
-        if (!remarks) {
-            return errorResponse(res, 400, 'Remarks are required when rejecting a payout');
-        }
-
-        const payout = await prisma.payout.findUnique({
-            where: { id: payoutId }
-        });
-
-        if (!payout) {
-            return errorResponse(res, 404, 'Payout not found');
-        }
-
-        if (payout.status !== 'PENDING') {
-            return errorResponse(res, 400, `Cannot reject payout because it is already ${payout.status}`);
-        }
-
-        let updatedPayout;
-        // Perform atomic transaction to refund the wallet and clear lock
-        await prisma.$transaction(async (tx) => {
-            // Update status
-            updatedPayout = await tx.payout.update({
-                where: { id: payout.id },
-                data: {
-                    status: 'REJECTED',
-                    processed_at: new Date(),
-                    processed_by: adminId,
-                    remarks: remarks
-                }
-            });
-
-            // Refund wallet
-            await tx.walletCash.update({
-                where: { userId: payout.userId },
-                data: {
-                    balance: { increment: payout.amount },
-                    activePayoutId: null
-                }
-            });
-
-            await tx.systemLog.create({
-                data: {
-                    adminId,
-                    actionType: 'REJECT_PAYOUT',
-                    targetUserId: payout.userId,
-                    description: `Rejected payout of ₹${payout.amount}. Remarks: ${remarks}`
-                }
-            });
-        });
-
-        return successResponse(res, 200, 'Payout rejected successfully', {
-            status: updatedPayout.status,
-            remarks: updatedPayout.remarks
-        });
-
-    } catch (error) {
-        console.error('Reject Payout Error:', error);
-        return errorResponse(res, 500, 'Failed to reject payout', { message: error.message });
-    }
-};
-
+/**
+ * 2. User Management
+ */
 const getUsers = async (req, res) => {
     try {
+        const { search, role, status } = req.query;
+        const where = {};
+        if (search) where.mobile = { contains: search };
+        if (role) where.role = role;
+        if (status) where.status = status;
+
         const users = await prisma.user.findMany({
-            where: {
-                mobile: { not: { startsWith: 'TRASHED_' } }
-            },
+            where,
             include: {
-                cash: true,
+                referredBy: { include: { referrer: { select: { mobile: true, name: true } } } },
                 minutes: true,
-                ranks: { include: { rank: true } },
-                _count: {
-                    select: { referrals: true }
-                }
+                cash: true
             },
-            orderBy: { createdAt: 'desc' }
+            orderBy: { createdAt: 'desc' },
+            take: 100
         });
 
-        const safeUsers = users.map(u => ({
-            id: u.id,
-            name: u.name,
-            mobile: u.mobile,
-            role: u.role,
-            status: u.status,
-            createdAt: u.createdAt,
-            walletCash: u.cash?.balance || 0,
-            walletMinute: u.minutes?.balance || 0,
-            ranks: u.ranks.map(r => r.rank.name),
-            referralCount: u._count.referrals
+        const { getDerivedBalance } = require('../finance/finance.service');
+        const formatted = await Promise.all(users.map(async (u) => {
+            const walletCash = await getDerivedBalance(u.id);
+            return {
+                id: u.id,
+                sinaankId: u.referral_code || '-',
+                mobile: u.mobile,
+                name: u.name,
+                role: u.role,
+                status: u.status,
+                createdAt: u.createdAt,
+                sponsor: u.referredBy[0]?.referrer?.mobile || 'Direct',
+                walletMinute: u.minutes?.balance || 0,
+                walletCash: walletCash,
+                sid_id: u.sid_id || '-',
+                sid_combo_id: u.sid_combo_id || '-',
+                sid_color1: u.sid_color1 !== null ? `hsl(${u.sid_color1}, 70%, 50%)` : null,
+                sid_color2: u.sid_color2 !== null ? `hsl(${u.sid_color2}, 70%, 50%)` : null,
+                sid_left_hz: u.sid_left_hz,
+                sid_right_hz: u.sid_right_hz
+            };
         }));
 
-        return successResponse(res, 200, 'Users retrieved', safeUsers);
+        return successResponse(res, 200, 'Users retrieved', formatted);
     } catch (error) {
         console.error('Get Users Error:', error);
         return errorResponse(res, 500, 'Failed to fetch users');
@@ -206,458 +151,394 @@ const getUsers = async (req, res) => {
 
 const blockUser = async (req, res) => {
     try {
-        const targetUserId = req.params.id;
-        const adminId = req.user.id;
-
-        const updatedUser = await prisma.user.update({
-            where: { id: targetUserId },
-            data: { status: 'BLOCKED' }
-        });
-
-        await prisma.systemLog.create({
-            data: {
-                adminId,
-                actionType: 'BLOCK_USER',
-                targetUserId,
-                description: `Blocked user ${updatedUser.mobile}`
-            }
-        });
-
+        const { id } = req.params;
+        await prisma.user.update({ where: { id }, data: { status: 'BLOCKED' } });
+        await logAdminAction(req.user.id, 'BLOCK_USER', id, 'User blocked by admin');
         return successResponse(res, 200, 'User blocked successfully');
     } catch (error) {
-        console.error('Block User Error:', error);
         return errorResponse(res, 500, 'Failed to block user');
     }
 };
 
 const unblockUser = async (req, res) => {
     try {
-        const targetUserId = req.params.id;
-        const adminId = req.user.id;
-
-        const updatedUser = await prisma.user.update({
-            where: { id: targetUserId },
-            data: { status: 'ACTIVE' }
-        });
-
-        await prisma.systemLog.create({
-            data: {
-                adminId,
-                actionType: 'UNBLOCK_USER',
-                targetUserId,
-                description: `Unblocked user ${updatedUser.mobile}`
-            }
-        });
-
+        const { id } = req.params;
+        await prisma.user.update({ where: { id }, data: { status: 'ACTIVE' } });
+        await logAdminAction(req.user.id, 'UNBLOCK_USER', id, 'User unblocked by admin');
         return successResponse(res, 200, 'User unblocked successfully');
     } catch (error) {
-        console.error('Unblock User Error:', error);
         return errorResponse(res, 500, 'Failed to unblock user');
     }
 };
 
-const resetUserPin = async (req, res) => {
+const upgradeUser = async (req, res) => {
     try {
-        const targetUserId = req.params.id;
-        const adminId = req.user.id;
-        const bcrypt = require('bcryptjs');
-        const salt = await bcrypt.genSalt(10);
-        const pin_hash = await bcrypt.hash('1234', salt);
-
-        await prisma.user.update({
-            where: { id: targetUserId },
-            data: { pin_hash }
-        });
-
-        await prisma.systemLog.create({
-            data: { adminId, actionType: 'RESET_PIN', targetUserId, description: `Reset PIN to 1234 for user id: ${targetUserId}` }
-        });
-
-        return successResponse(res, 200, 'PIN reset to 1234 successfully');
+        const { id } = req.params;
+        const { role } = req.body;
+        await prisma.user.update({ where: { id }, data: { role } });
+        await logAdminAction(req.user.id, 'UPGRADE_USER', id, `Role updated to ${role}`);
+        return successResponse(res, 200, `User upgraded to ${role}`);
     } catch (error) {
-        console.error('Reset PIN Error:', error);
-        return errorResponse(res, 500, 'Failed to reset PIN');
+        return errorResponse(res, 500, 'Failed to upgrade user');
     }
 };
 
-const editUser = async (req, res) => {
+/**
+ * 3. Income Ledger (Freeze Logic)
+ */
+const getIncomeLedger = async (req, res) => {
     try {
-        const targetUserId = req.params.id;
-        const adminId = req.user.id;
-        const { name } = req.body;
-
-        await prisma.user.update({
-            where: { id: targetUserId },
-            data: { name }
+        const income = await prisma.bonusLedger.findMany({
+            include: { user: { select: { mobile: true } }, sourceUser: { select: { mobile: true } } },
+            orderBy: { createdAt: 'desc' },
+            take: 100
         });
-
-        await prisma.systemLog.create({
-            data: { adminId, actionType: 'EDIT_USER', targetUserId, description: `Updated user name to ${name}` }
-        });
-
-        return successResponse(res, 200, 'User updated successfully');
+        return successResponse(res, 200, 'Income ledger retrieved', income);
     } catch (error) {
-        console.error('Edit User Error:', error);
-        return errorResponse(res, 500, 'Failed to update user details');
+        return errorResponse(res, 500, 'Failed to fetch income ledger');
     }
 };
 
-const trashUser = async (req, res) => {
+const updateIncomeStatus = async (req, res) => {
     try {
-        const targetUserId = req.params.id;
+        const { id } = req.params;
+        const { status } = req.body; // APPROVED, PAID
+
+        const income = await prisma.bonusLedger.findUnique({ where: { id } });
+        if (income.incomeStatus === 'PAID') return errorResponse(res, 400, 'PAID income is frozen and immutable');
+
+        await prisma.bonusLedger.update({ where: { id }, data: { incomeStatus: status } });
+        await logAdminAction(req.user.id, 'INCOME_STATUS_CHANGE', income.userId, `Income ${id} status moved to ${status}`);
+
+        return successResponse(res, 200, `Income marked as ${status}`);
+    } catch (error) {
+        return errorResponse(res, 500, 'Failed to update income status');
+    }
+};
+
+const manualIncome = async (req, res) => {
+    try {
+        const { userId, amount, type, remarks } = req.body;
         const adminId = req.user.id;
 
-        // Note: For real soft-delete, we repurpose status as we did in V1, or we can use another field.
-        // For now, let's use the 'status' or add a safe block pattern that removes UI access.
-        // Actually, we'll prefix mobile to break auth, and status=BLOCKED
-        const userToTrash = await prisma.user.findUnique({ where: { id: targetUserId } });
-        if (!userToTrash) return errorResponse(res, 404, 'User not found');
+        if (!userId || !amount) return errorResponse(res, 400, 'User ID and Amount required');
 
-        const updatedUser = await prisma.user.update({
-            where: { id: targetUserId },
+        const income = await prisma.bonusLedger.create({
             data: {
-                status: 'BLOCKED',
-                mobile: `TRASHED_${Date.now()}_${userToTrash.mobile}` // breaks login entirely
+                userId,
+                amount: parseFloat(amount),
+                type: type || 'MANUAL',
+                incomeStatus: 'PENDING'
             }
         });
 
-        await prisma.systemLog.create({
-            data: {
-                adminId,
-                actionType: 'TRASH_USER',
-                targetUserId,
-                description: `Soft-deleted user ${userToTrash.mobile}`
-            }
-        });
+        await logAdminAction(adminId, 'MANUAL_INCOME_CREATED', userId, `Manual income of ${amount} created. Remarks: ${remarks || 'None'}`);
 
-        return successResponse(res, 200, 'User moved to trash successfully');
+        return successResponse(res, 201, 'Manual income created successfully', income);
     } catch (error) {
-        console.error('Trash User Error:', error);
-        return errorResponse(res, 500, 'Failed to trash user');
+        console.error('Manual Income Error:', error);
+        return errorResponse(res, 500, 'Failed to create manual income');
     }
 };
 
-const getTrashedUsers = async (req, res) => {
+/**
+ * 4. Transaction Ledger (Read-only)
+ */
+const getTransactionLedger = async (req, res) => {
     try {
-        const trashedUsers = await prisma.user.findMany({
-            where: {
-                mobile: { startsWith: 'TRASHED_' }
-            },
-            select: { id: true, mobile: true, role: true, status: true, updatedAt: true }
-        });
-
-        // Strip the TRASHED_timestamp_ logic to clean up the view
-        const cleanUsers = trashedUsers.map(u => {
-            const parts = u.mobile.split('_');
-            const originalMobile = parts.length >= 3 ? parts.slice(2).join('_') : u.mobile;
-            return {
-                id: u.id,
-                mobile: isNaN(Number(originalMobile)) ? originalMobile : originalMobile,
-                rawMobile: u.mobile, // Keep original to target them for total purge if needed
-                role: u.role,
-                status: u.status,
-                deletedAt: u.updatedAt
-            };
-        });
-
-        return successResponse(res, 200, 'Trashed users retrieved', cleanUsers);
-    } catch (error) {
-        console.error('Get Trash Error:', error);
-        return errorResponse(res, 500, 'Failed to retrieve trashed users');
-    }
-};
-
-const restoreUser = async (req, res) => {
-    try {
-        const targetUserId = req.params.id;
-        const adminId = req.user.id;
-
-        const userToRestore = await prisma.user.findUnique({ where: { id: targetUserId } });
-        if (!userToRestore || !userToRestore.mobile.startsWith('TRASHED_')) {
-            return errorResponse(res, 400, 'User is not in trash or not found');
-        }
-
-        const parts = userToRestore.mobile.split('_');
-        const originalMobile = parts.length >= 3 ? parts.slice(2).join('_') : userToRestore.mobile;
-
-        // Check if the original mobile is already taken by a new signup
-        const existing = await prisma.user.findFirst({
-            where: { mobile: originalMobile }
-        });
-
-        if (existing) {
-            return errorResponse(res, 400, 'Cannot restore user. The mobile number has already been registered by another account.');
-        }
-
-        await prisma.user.update({
-            where: { id: targetUserId },
-            data: {
-                status: 'ACTIVE',
-                mobile: originalMobile
-            }
-        });
-
-        await prisma.systemLog.create({
-            data: {
-                adminId,
-                actionType: 'RESTORE_USER',
-                targetUserId,
-                description: `Restored user ${originalMobile} from trash`
-            }
-        });
-
-        return successResponse(res, 200, 'User restored successfully');
-    } catch (error) {
-        console.error('Restore User Error:', error);
-        return errorResponse(res, 500, 'Failed to restore user');
-    }
-};
-
-const purgeUser = async (req, res) => {
-    try {
-        const targetUserId = req.params.id;
-        const adminId = req.user.id;
-
-        const userToPurge = await prisma.user.findUnique({ where: { id: targetUserId } });
-        if (!userToPurge || !userToPurge.mobile.startsWith('TRASHED_')) {
-            return errorResponse(res, 400, 'User is not in trash or not found');
-        }
-
-        // Permanently delete user and potentially all related records.
-        // Prisma cascade delete should handle most of this if foreign keys are set to ON DELETE CASCADE,
-        // otherwise we use transaction to delete related records first.
-
-        await prisma.$transaction(async (tx) => {
-            // Assume schema has necessary cascades, but manually delete wallets to be safe if strictly required.
-            // If there's an issue with missing cascades, we might need manual deletions here.
-            // Since User -> WalletCash/WalletMinute is 1:1, usually cascade handles it.
-            await tx.walletCash.deleteMany({ where: { userId: targetUserId } });
-            await tx.walletMinute.deleteMany({ where: { userId: targetUserId } });
-            await tx.bonusLedger.deleteMany({ where: { userId: targetUserId } });
-            // Remove referrals where they are the referred
-            await tx.referral.deleteMany({ where: { referredUserId: targetUserId } });
-            // Or where they are the referrer
-            await tx.referral.deleteMany({ where: { referrerId: targetUserId } });
-            await tx.payout.deleteMany({ where: { userId: targetUserId } });
-            await tx.transaction.deleteMany({ where: { userId: targetUserId } });
-
-            // Re-assign family members to null if they are owner
-            await tx.user.updateMany({
-                where: { familyOwnerId: targetUserId },
-                data: { familyOwnerId: null }
-            });
-
-            await tx.user.delete({ where: { id: targetUserId } });
-
-            await tx.systemLog.create({
-                data: {
-                    adminId,
-                    actionType: 'PURGE_USER',
-                    targetUserId,
-                    description: `Permanently deleted user ${userToPurge.mobile}`
-                }
-            });
-        });
-
-        return successResponse(res, 200, 'User permanently deleted');
-    } catch (error) {
-        console.error('Purge User Error:', error);
-        return errorResponse(res, 500, 'Failed to permanently delete user', { message: error.message });
-    }
-};
-
-const getSystemStats = async (req, res) => {
-    try {
-        const totalUsers = await prisma.user.count();
-        const totalSeeders = await prisma.user.count({ where: { role: 'SEEDER' } });
-
-        const cashAgg = await prisma.walletCash.aggregate({ _sum: { balance: true } });
-        const pendingPayoutAgg = await prisma.payout.aggregate({
-            where: { status: 'PENDING' },
-            _sum: { amount: true }
-        });
-        const distributedPayoutAgg = await prisma.payout.aggregate({
-            where: { status: 'APPROVED' },
-            _sum: { amount: true }
-        });
-        const minutesAgg = await prisma.walletMinute.aggregate({ _sum: { balance: true } });
-
-        const usedMinutesAgg = await prisma.transaction.aggregate({
-            where: { type: 'MINUTE_DEDUCT' },
-            _sum: { amount: true }
-        });
-
-        const pendingPayoutCount = await prisma.payout.count({ where: { status: 'PENDING' } });
-        const unreadMessagesCount = await prisma.message.count({ where: { receiverId: req.user.id, status: 'UNREAD' } });
-
-        const stats = {
-            total_users: totalUsers,
-            total_seeders: totalSeeders,
-            total_wallet_balance: cashAgg._sum.balance || 0,
-            total_pending_payout: pendingPayoutAgg._sum.amount || 0,
-            pending_payout_count: pendingPayoutCount,
-            unread_messages_count: unreadMessagesCount,
-            total_cash_distributed: distributedPayoutAgg._sum.amount || 0,
-            total_minutes_balance: minutesAgg._sum.balance || 0,
-            total_minutes_used: usedMinutesAgg._sum.amount || 0
-        };
-
-        return successResponse(res, 200, 'System stats retrieved', stats);
-    } catch (error) {
-        console.error('System Stats Error:', error);
-        return errorResponse(res, 500, 'Failed to fetch system stats');
-    }
-};
-
-const getLedger = async (req, res) => {
-    try {
-        // Fetch all PURCHASE transactions (Admin Credit)
-        const purchases = await prisma.transaction.findMany({
-            where: { type: 'PURCHASE', status: 'COMPLETED' },
+        const txns = await prisma.transaction.findMany({
             include: { user: { select: { mobile: true } } },
             orderBy: { transactionDate: 'desc' },
-            take: 50
+            take: 100
         });
-
-        // Fetch all BONUS assignments (Admin Debit Liability)
-        const bonuses = await prisma.bonusLedger.findMany({
-            include: { user: { select: { mobile: true } } },
-            orderBy: { createdAt: 'desc' },
-            take: 50
-        });
-
-        // Fetch all APPROVED Payouts (Admin Actual Debit)
-        const payouts = await prisma.payout.findMany({
-            where: { status: 'APPROVED' },
-            include: { user: { select: { mobile: true } } },
-            orderBy: { processed_at: 'desc' },
-            take: 50
-        });
-
-        const records = [];
-
-        purchases.forEach(p => {
-            records.push({
-                createdAt: p.transactionDate,
-                type: 'PURCHASE (Credit)',
-                amount: p.amount,
-                description: `Payment from ${p.user?.mobile || 'User'}`
-            });
-        });
-
-        bonuses.forEach(b => {
-            records.push({
-                createdAt: b.createdAt,
-                type: 'REFERRAL BONUS (Debit Liability)',
-                amount: `-${b.amount}`,
-                description: `Owed to Seeder ${b.user?.mobile || 'User'}`
-            });
-        });
-
-        payouts.forEach(p => {
-            records.push({
-                createdAt: p.processed_at || p.requested_at,
-                type: 'PAYOUT (Actual Debit)',
-                amount: `-${p.amount}`,
-                description: `Paid to Seeder ${p.user?.mobile || 'User'}`
-            });
-        });
-
-        // Sort by date descending
-        records.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-        // Calculate total liability (Sum of all wallet cash)
-        const cashAgg = await prisma.walletCash.aggregate({ _sum: { balance: true } });
-        const totalLiability = cashAgg._sum.balance || 0;
-
-        return successResponse(res, 200, 'Ledger retrieved', { records, totalLiability });
+        return successResponse(res, 200, 'Transaction ledger retrieved', txns);
     } catch (error) {
-        console.error('Ledger Error:', error);
-        return errorResponse(res, 500, 'Failed to retrieve ledger');
+        return errorResponse(res, 500, 'Failed to fetch transaction ledger');
     }
 };
 
+/**
+ * 5. Messages / Notifications (Log Push)
+ */
+const manageMessages = async (req, res) => {
+    try {
+        const { type, title, message, receiverId, priority } = req.body;
+        const adminId = req.user.id;
+
+        if (type === 'GLOBAL') {
+            await prisma.announcement.create({
+                data: { title, message, created_by: adminId, priority: priority || 'NORMAL' }
+            });
+            await logAdminAction(adminId, 'MESSAGE_PUSH_GLOBAL', null, `Global msg: ${title}`);
+        } else {
+            await prisma.message.create({
+                data: { content: message, senderId: adminId, receiverId }
+            });
+            await logAdminAction(adminId, 'MESSAGE_PUSH_PRIVATE', receiverId, `Private msg: ${message.substring(0, 20)}...`);
+        }
+
+        return successResponse(res, 201, 'Message sent successfully');
+    } catch (error) {
+        return errorResponse(res, 500, 'Failed to send message');
+    }
+};
+
+/**
+ * 6. Payout Control (Snapshot Logic)
+ */
+const getPayouts = async (req, res) => {
+    try {
+        const payouts = await prisma.payout.findMany({
+            include: { user: { select: { name: true, mobile: true, upi_id: true } } },
+            orderBy: { requested_at: 'desc' }
+        });
+        return successResponse(res, 200, 'Payouts retrieved', payouts);
+    } catch (error) {
+        return errorResponse(res, 500, 'Failed to fetch payouts');
+    }
+};
+
+const updatePayoutStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status, remarks } = req.body; // APPROVED, PAID, REJECTED
+
+        const payout = await prisma.payout.findUnique({ where: { id } });
+
+        await prisma.payout.update({
+            where: { id },
+            data: { payoutStatus: status, remarks, processed_at: new Date(), processed_by: req.user.id }
+        });
+        if (!payout) return errorResponse(res, 404, 'Payout not found');
+
+        const data = { payoutStatus: status, remarks, processed_at: new Date(), processed_by: req.user.id };
+
+        // Snapshot Logic & Transaction Reconciliation
+        if (status === 'APPROVED') {
+            const { getDerivedBalance, getSystemWallet } = require('../finance/finance.service');
+            const currentWallet = await getDerivedBalance(payout.userId);
+            const sysWallet = await getSystemWallet();
+
+            data.wallet_before = currentWallet;
+            data.system_wallet_snapshot = sysWallet;
+        }
+
+        if (status === 'PAID') {
+            const { getDerivedBalance } = require('../finance/finance.service');
+            data.wallet_after = await getDerivedBalance(payout.userId);
+        }
+
+        await prisma.$transaction(async (tx) => {
+            await tx.payout.update({ where: { id }, data });
+
+            // Update Transaction Ledger Status
+            const txn = await tx.transaction.findFirst({
+                where: { referenceId: id, type: 'PAYOUT' }
+            });
+
+            if (txn) {
+                await tx.transaction.update({
+                    where: { id: txn.id },
+                    data: {
+                        txStatus: status === 'PAID' ? 'PAID' : (status === 'REJECTED' ? 'REJECTED' : 'PENDING'),
+                        description: `Payout Status: ${status}`
+                    }
+                });
+            }
+
+            // Cleanup activePayoutId on finish
+            if (status === 'PAID' || status === 'REJECTED') {
+                await tx.walletCash.update({
+                    where: { userId: payout.userId },
+                    data: { activePayoutId: null }
+                });
+            }
+        });
+
+        await logAdminAction(req.user.id, `PAYOUT_${status}`, payout.userId, `Payout ${id} marked as ${status}`);
+
+        return successResponse(res, 200, `Payout marked as ${status}`);
+    } catch (error) {
+        console.error('Update Payout Error:', error);
+        return errorResponse(res, 500, 'Failed to update payout status');
+    }
+};
+
+/**
+ * 7. Therapy Usage Tracking
+ */
+const getTherapyLogs = async (req, res) => {
+    try {
+        const logs = await prisma.therapySession.findMany({
+            include: { user: { select: { mobile: true, name: true } } },
+            orderBy: { startedAt: 'desc' },
+            take: 100
+        });
+        return successResponse(res, 200, 'Therapy logs retrieved', logs);
+    } catch (err) {
+        return errorResponse(res, 500, 'Failed to fetch therapy logs');
+    }
+};
+
+/**
+ * 8. SID Management
+ */
+const regenerateUserSID = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const adminId = req.user.id;
+
+        const updatedUser = await sidService.archiveAndRegenerate(id, adminId);
+        
+        await logAdminAction(adminId, 'REGENERATE_SID', id, `SID regenerated by admin. New seed: ${updatedUser.sid_seed}`);
+
+        return successResponse(res, 200, 'SID regenerated successfully', {
+            color1: updatedUser.sid_color1,
+            color2: updatedUser.sid_color2,
+            leftHz: updatedUser.sid_left_hz,
+            rightHz: updatedUser.sid_right_hz
+        });
+    } catch (error) {
+        console.error('Regenerate SID Error:', error);
+        return errorResponse(res, 500, 'Failed to regenerate SID');
+    }
+};
+
+/**
+ * Get detailed user information including SID history
+ */
 const getUserDetails = async (req, res) => {
     try {
-        const userId = req.params.id;
-
+        const { id } = req.params;
         const user = await prisma.user.findUnique({
-            where: { id: userId },
+            where: { id },
             include: {
-                cash: true,
-                _count: {
-                    select: {
-                        referrals: true
+                sid_history: {
+                    orderBy: {
+                        archivedAt: 'desc'
                     }
                 }
             }
         });
 
-        if (!user) return errorResponse(res, 404, 'User not found');
+        if (!user) {
+            return errorResponse(res, 404, 'User not found');
+        }
 
-        // Level 1 explicitly active
-        const level1Count = await prisma.referral.count({
-            where: { referrerId: userId, level: 1 }
-        });
+        const sidHistory = user.sid_history || [];
+        const regeneratedCount = sidHistory.length;
+        const sidVersion = regeneratedCount + 1;
 
-        const level2Count = await prisma.referral.count({
-            where: { referrerId: userId, level: 2 }
-        });
-
-        // 10 latest bonus ledger entries
-        const latestBonuses = await prisma.bonusLedger.findMany({
-            where: { userId: userId },
-            include: {
-                sourceUser: {
-                    select: { mobile: true, name: true }
-                }
+        const data = {
+            id: user.id,
+            name: user.name,
+            mobile: user.mobile,
+            sinaankId: user.referral_code || '-',
+            sid_id: user.sid_id || '-',
+            sid_combo_id: user.sid_combo_id || '-',
+            role: user.role,
+            status: user.status,
+            createdAt: user.createdAt,
+            // Therapy SID Profile
+            sid: {
+                sidId: user.sid_id,
+                comboId: user.sid_combo_id,
+                color1: user.sid_color1 !== null ? `hsl(${user.sid_color1}, 70%, 50%)` : null,
+                color2: user.sid_color2 !== null ? `hsl(${user.sid_color2}, 70%, 50%)` : null,
+                leftHz: user.sid_left_hz,
+                rightHz: user.sid_right_hz,
+                seed: user.sid_seed,
+                createdAt: user.sid_created_at
             },
-            orderBy: { createdAt: 'desc' },
-            take: 10
-        });
-
-        return successResponse(res, 200, 'User details retrieved', {
-            info: {
-                name: user.name,
-                mobile: user.mobile,
-                role: user.role,
-                status: user.status,
-                joinedAt: user.createdAt,
+            // Stats
+            stats: {
+                regeneratedCount,
+                sidVersion
             },
-            wallet: user.cash?.balance || 0,
-            network: {
-                level1: level1Count,
-                level2: level2Count,
-                total: user._count.referrals
-            },
-            recentBonuses: latestBonuses.map(b => ({
-                amount: Math.abs(b.amount),
-                type: b.type,
-                date: b.createdAt,
-                sourceMobile: b.sourceUser?.mobile || 'System'
+            // History for before/after comparison
+            history: sidHistory.map(h => ({
+                id: h.id,
+                old_sid_id: h.old_sid_id,
+                old_combo_id: h.old_combo_id,
+                color1: h.color1 !== null ? `hsl(${h.color1}, 70%, 50%)` : '#333',
+                color2: h.color2 !== null ? `hsl(${h.color2}, 70%, 50%)` : '#333',
+                leftHz: h.leftHz,
+                rightHz: h.rightHz,
+                regeneratedAt: h.archivedAt,
+                reason: h.reason || 'Regenerated'
             }))
-        });
+        };
 
+        return successResponse(res, 200, 'User details retrieved', data);
     } catch (error) {
         console.error('Get User Details Error:', error);
         return errorResponse(res, 500, 'Failed to fetch user details');
     }
 };
 
+/**
+ * 9. SINAANK Live Monitor - Scaling Stats (Today/Yesterday)
+ */
+const getScalingStats = async (req, res) => {
+    try {
+        const { period } = req.query; // 'today' or 'yesterday'
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const yesterdayStart = new Date(todayStart);
+        yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+
+        const range = period === 'yesterday' 
+            ? { gte: yesterdayStart, lt: todayStart } 
+            : { gte: todayStart };
+
+        const [demo, payment, revenueData] = await Promise.all([
+            // Demo Views
+            prisma.systemLog.count({
+                where: { actionType: 'DEMO_VIEWED', createdAt: range }
+            }),
+            // Successful Joins (Payments)
+            prisma.paymentOrder.count({
+                where: { status: 'PAID', createdAt: range }
+            }),
+            // Revenue
+            prisma.paymentOrder.aggregate({
+                _sum: { amount: true },
+                where: { status: 'PAID', createdAt: range }
+            })
+        ]);
+
+        const conversion = demo > 0 ? (payment / demo) * 100 : 0;
+        const revenue = revenueData._sum.amount || 0;
+
+        return successResponse(res, 200, 'Scaling stats retrieved', {
+            demo,
+            payment,
+            conversion: parseFloat(conversion.toFixed(1)),
+            revenue
+        });
+    } catch (error) {
+        console.error('Get Scaling Stats Error:', error);
+        return errorResponse(res, 500, 'Failed to fetch scaling stats');
+    }
+};
+
 module.exports = {
-    getPendingPayouts,
-    approvePayout,
-    rejectPayout,
+    getDashboardStats,
+    getScalingStats,
     getUsers,
+    getUserDetails,
     blockUser,
     unblockUser,
-    resetUserPin,
-    editUser,
-    trashUser,
-    getTrashedUsers,
-    restoreUser,
-    purgeUser,
-    getSystemStats,
-    getLedger,
-    getUserDetails
+    upgradeUser,
+    getIncomeLedger,
+    updateIncomeStatus,
+    manualIncome,
+    getTransactionLedger,
+    manageMessages,
+    getPayouts,
+    updatePayoutStatus,
+    getTherapyLogs,
+    regenerateUserSID
 };
+
+

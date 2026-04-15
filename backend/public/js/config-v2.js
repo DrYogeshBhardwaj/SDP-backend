@@ -1,12 +1,10 @@
-/**
- * SINAANK Production Configuration
- * Purpose: Centralized API Base URL for shared hosting build.
- */
+const API_BASE_URL = "https://sdp-backend-production-3313.up.railway.app";
+
 const SINAANK_CONFIG = {
     /** 
      * API_BASE: Production Railway Backend URL
      */
-    API_BASE: 'https://sdp-backend-production-c758.up.railway.app',
+    API_BASE: API_BASE_URL,
 
     /**
      * getApiUrl: Standardized helper for direct backend communication.

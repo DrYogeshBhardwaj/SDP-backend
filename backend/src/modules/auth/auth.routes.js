@@ -2,13 +2,15 @@ const express = require('express');
 const router = express.Router();
 const authController = require('./auth.controller');
 const { authMiddleware } = require('../../middlewares/authMiddleware');
+const { checkLimit } = require('../../middlewares/dbRateLimiter');
 
-router.post('/check-mobile', authController.checkMobile);
+router.post('/check-mobile', checkLimit('otp'), authController.checkMobile);
 router.post('/register', authController.register);
-router.post('/login', authController.login);
+router.post('/login', checkLimit('login'), authController.login);
 router.post('/logout', authController.logout);
 
 router.get('/me', authMiddleware, authController.getMe);
+router.get('/sid', authMiddleware, authController.getSID);
 router.put('/profile', authMiddleware, authController.updateProfile);
 
 router.post('/family', authMiddleware, authController.addFamily);

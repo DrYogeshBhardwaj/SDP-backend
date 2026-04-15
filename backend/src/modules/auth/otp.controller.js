@@ -2,43 +2,52 @@ const { successResponse, errorResponse } = require('../../utils/response');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { generateToken } = require('../../utils/jwt');
-const axios = require('axios');
+const { sendOTP, verifyOTP } = require('../../utils/vi_sms');
+const { recordFailure, resetFailures } = require('../../middlewares/dbRateLimiter');
 
-// In-memory store for OTPs (Mobile -> { otp, expiresAt })
-const otpStore = new Map();
-// LIVE MODE OTP SEND
+// OTP SEND (Real Session API)
 exports.sendOtp = async (req, res, next) => {
     try {
         const { mobile } = req.body;
-
         if (!mobile || !/^[0-9]{10}$/.test(mobile)) {
             return errorResponse(res, 400, 'Please provide a valid 10-digit mobile number.');
         }
 
-        // BYPASS OTP FOR DEVELOPMENT/TESTING
-        console.log(`[BYPASS] Mock OTP generated for ${mobile}`);
-        return successResponse(res, 200, 'OTP sent successfully (Bypass Mode)', {
-            sessionId: "BYPASS_SESSION"
-        });
+        const result = await sendOTP(mobile);
 
+        if (result.Status === 'Success') {
+            return successResponse(res, 200, 'OTP sent successfully', {
+                sessionId: result.Details // 2Factor Session ID
+            });
+        } else {
+            return errorResponse(res, 500, 'Failed to send OTP via 2Factor');
+        }
     } catch (error) {
         console.error('OTP Sending Error:', error);
         next(error);
     }
 };
 
-// LIVE MODE OTP VERIFY
+// OTP VERIFY (Real Session API)
 exports.verifyOtp = async (req, res, next) => {
     try {
-        const { mobile, otp } = req.body;
-
-        if (!mobile || !otp) {
-            return errorResponse(res, 400, 'Mobile and OTP required.');
+        const { mobile, otp, sessionId } = req.body;
+        if (!mobile || !otp || !sessionId) {
+            return errorResponse(res, 400, 'Mobile, OTP, and SessionId are required.');
         }
 
-        // BYPASS OTP VERIFICATION FOR DEVELOPMENT/TESTING
-        console.log(`[BYPASS] OTP verified for ${mobile}`);
-        
+        // Verify with 2Factor
+        const result = await verifyOTP(sessionId, otp);
+
+        if (result.Status !== 'Success' || result.Details !== 'OTP Matched') {
+            await recordFailure(req, 'otp');
+            return errorResponse(res, 400, result.Details || 'Invalid OTP');
+        }
+
+        // OTP Verified - Reset Failures
+        await resetFailures(req, 'otp');
+
+        // Check if user exists
         const user = await prisma.user.findUnique({
             where: { mobile }
         });
@@ -64,7 +73,8 @@ exports.verifyOtp = async (req, res, next) => {
 
             return successResponse(res, 200, 'OTP verified successfully', {
                 userExists: true,
-                user: { id: user.id, name: user.name, role: user.role }
+                token, 
+                user: { id: user.id, name: user.name, role: user.role, kit_activated: user.kit_activated, plan_type: user.plan_type }
             });
         }
 
@@ -74,7 +84,9 @@ exports.verifyOtp = async (req, res, next) => {
         });
 
     } catch (error) {
-        console.error('OTP Verification System Error');
+        console.error('OTP Verification System Error:', error);
         next(error);
     }
 };
+
+

@@ -16,6 +16,13 @@ async function testPurchase() {
     const req = http.request(options, (res) => {
         res.on('data', () => { });
         res.on('end', () => {
+            if (!res.headers['set-cookie']) {
+                console.error('Login Failed:', res.statusCode);
+                let errData = '';
+                res.on('data', c => errData += c);
+                res.on('end', () => console.error(errData));
+                return prisma.$disconnect();
+            }
             const cookie = res.headers['set-cookie'][0].split(';')[0];
 
             const purReq = http.request({

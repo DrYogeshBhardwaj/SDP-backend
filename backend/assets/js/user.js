@@ -5,20 +5,50 @@ document.addEventListener('DOMContentLoaded', async () => {
     const user = await Auth.protectPage();
     if (!user) return; // Will redirect
 
+    // Welcome Celebration Handler
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('welcome') === '1') {
+        const overlay = document.getElementById('welcome-overlay');
+        if (overlay) {
+            overlay.classList.remove('hidden');
+            const welcomePlan = document.getElementById('welcome-plan-name');
+            if (welcomePlan) welcomePlan.textContent = user.role === 'BUSINESS' ? 'Business' : 'Basic';
+            
+            // Trigger confetti if function exists
+            if (typeof startConfetti === 'function') startConfetti();
+        }
+    }
+
+    window.closeWelcome = () => {
+        const overlay = document.getElementById('welcome-overlay');
+        if (overlay) overlay.classList.add('hidden');
+        // Clean up URL
+        const url = new URL(window.location);
+        url.searchParams.delete('welcome');
+        window.history.replaceState({}, '', url);
+    };
+
     // Populate Profile
     document.getElementById('profile-mobile').textContent = user.mobile || 'N/A';
 
-    // Dynamic Plan Name based on Role assigned from Checkout
-    let planName = 'Standard';
-    if (user.role === 'USER_178') {
-        planName = 'SDP Personal (₹178)';
-        const upgradeOffer = document.getElementById('upgrade-offer-178');
+    // Update Profile Fields
+    const refCodeEl = document.getElementById('profile-referral');
+    if (refCodeEl) refCodeEl.textContent = user.referral_code || 'SDP-NEW';
+
+    // Dynamic Plan Name
+    let planName = 'Free Tier';
+    if (user.role === 'BASIC') {
+        planName = 'Basic Plan (₹779)';
+        const upgradeOffer = document.getElementById('upgrade-offer-basic');
         if (upgradeOffer) upgradeOffer.classList.remove('hidden');
     }
-    if (user.role === 'USER_580') {
-        planName = 'SDP Family (₹580)';
-        const familySection = document.getElementById('family-section-580');
+    else if (user.role === 'BUSINESS') {
+        planName = 'Business Plan (₹2900)';
+        const familySection = document.getElementById('family-section-business');
         if (familySection) familySection.classList.remove('hidden');
+    }
+    else if (user.role === 'SEEDER') {
+        planName = 'Partner Pack';
     }
     document.getElementById('profile-plan').textContent = planName;
 
@@ -63,13 +93,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             msg.textContent = "";
 
             try {
-                // Wait for the backend API route if it doesn't exist yet, passing it explicitly
-                const res = await fetch(CONFIG.API_BASE_URL + '/auth/family', {
+                const token = localStorage.getItem('token');
+                const res = await fetch('/api.php?action=family', {
                     method: 'POST',
-                    credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('sdp_token')}`
+                        'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify({
                         mobile: fMobile,
@@ -99,9 +128,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function loadFamilyMembers(user) {
         try {
-            const res = await fetch(CONFIG.API_BASE_URL + '/auth/family', {
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('sdp_token')}` },
-                credentials: 'include'
+            const token = localStorage.getItem('token');
+            const res = await fetch('/api.php?action=family', {
+                headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
 
@@ -182,7 +211,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadDashboardData() {
     try {
         // Fetch User details for balance
-        const userData = await ApiClient.get('/auth/me');
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api.php?action=me', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const userData = await response.json();
         const user = userData.data?.user || userData.user || userData.data;
 
         document.getElementById('minutes-balance').textContent = user.minutesBalance || 0;
@@ -190,7 +223,10 @@ async function loadDashboardData() {
         // Fetch History
         let historyData = { data: [] }; // Default to empty array
         try {
-            historyData = await ApiClient.get('/minutes/history');
+            const historyResponse = await fetch('/api.php?action=history', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            historyData = await historyResponse.json();
         } catch (e) {
             console.warn('Failed to fetch history data (backend might not supply it yet):', e);
         }
@@ -317,7 +353,15 @@ async function startSession(minutes) {
         } catch (e) { console.warn("Fullscreen request failed", e); }
 
         // Validation handled entirely by backend API rate limiter, JWT validation, and balance checks
-        await ApiClient.post('/minutes/start-session', { duration: minutes });
+        const token = localStorage.getItem('token');
+        await fetch('/api.php?action=start-session', { 
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ duration: minutes })
+        });
 
         // Wait for Ritual to complete
         if (ritualPromise) {

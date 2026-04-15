@@ -1477,12 +1477,13 @@ body.theme-admin .data-row:hover {
 }
 
 .btn-ai:hover {
-    transform: translateY(-2px);
+    transform: translateY(-2px) scale(1.05);
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    filter: brightness(1.1);
 }
 
 .btn-ai:active {
-    transform: translateY(0);
+    transform: translateY(0) scale(0.98);
 }
 
 /* Utilities from dashboard.js */
@@ -1535,3 +1536,4 @@ body.theme-admin .data-row:hover {
 .p-2 {
     padding: 0.5rem;
 }
+

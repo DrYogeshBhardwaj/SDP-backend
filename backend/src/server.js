@@ -100,7 +100,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/referral', referralRoutes);
-app.use('/api/payment', paymentRoutes);
+app.use('/api/payment', require('./routes/payment'));
 
 
 // Fallback to index.html

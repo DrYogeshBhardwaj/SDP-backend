@@ -4,6 +4,7 @@ const prisma = new PrismaClient();
 async function main() {
     console.log('Wiping all user data from the database...');
 
+    // WIPE ALL RECORDS
     await prisma.announcement.deleteMany();
     await prisma.message.deleteMany();
     await prisma.systemExpense.deleteMany();
@@ -15,38 +16,38 @@ async function main() {
     await prisma.transaction.deleteMany();
     await prisma.walletCash.deleteMany();
     await prisma.walletMinute.deleteMany();
-    await prisma.user.deleteMany();
+    await prisma.user.deleteMany(); // DELETE EVERYTHING INCLUDING ADMINS
 
-    console.log('All user data deleted successfully!');
+    console.log('All data wiped. Database is now at ZERO state.');
 
-    // Create default products if they don't exist
-    const p1 = await prisma.product.upsert({
-        where: { name: 'Personal Pack' },
-        update: {},
+    // Create correct products for testing
+    await prisma.product.upsert({
+        where: { name: 'Basic Plan' },
+        update: { price: 779.0 },
         create: {
-            name: 'Personal Pack',
-            price: 178.0,
+            name: 'Basic Plan',
+            price: 779.0,
             type: 'PERSONAL',
             minutes_allocated: 3650,
-            description: '10 mins daily for 365 days',
+            description: 'SINAANK Basic Therapy Kit',
             isActive: true
         }
     });
 
-    const p2 = await prisma.product.upsert({
-        where: { name: 'Family Kit' },
-        update: {},
+    await prisma.product.upsert({
+        where: { name: 'Business Plan' },
+        update: { price: 2900.0 },
         create: {
-            name: 'Family Kit',
-            price: 580.0,
+            name: 'Business Plan',
+            price: 2900.0,
             type: 'FAMILY',
             minutes_allocated: 0,
-            description: 'Seeder Upgrade Kit',
+            description: 'SINAANK Business Partner Kit',
             isActive: true
         }
     });
 
-    console.log('Default products created/verified.');
+    console.log('Test products (₹779, ₹2900) created/verified.');
 }
 
 main()

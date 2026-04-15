@@ -4,6 +4,25 @@ const { hashPin, comparePin } = require('../../utils/hash');
 const { generateToken } = require('../../utils/jwt');
 const { successResponse, errorResponse } = require('../../utils/response');
 const { checkAndAwardMilestones } = require('../referral/milestone.service');
+const sidService = require('../user/sid.service');
+const { recordFailure, resetFailures } = require('../../middlewares/dbRateLimiter');
+
+// Generate unique referral code (e.g., SDP-XXXXXX)
+const generateReferralCode = async () => {
+    let isUnique = false;
+    let code = '';
+    while (!isUnique) {
+        const randomStr = Math.random().toString(36).substring(2, 8).toUpperCase();
+        code = `SDP-${randomStr}`;
+        const existing = await prisma.user.findUnique({
+            where: { referral_code: code }
+        });
+        if (!existing) {
+            isUnique = true;
+        }
+    }
+    return code;
+};
 
 const checkMobile = async (req, res) => {
     try {
@@ -19,149 +38,60 @@ const checkMobile = async (req, res) => {
     }
 };
 
+const { registerUser } = require('./registration.service');
+
 const register = async (req, res) => {
     try {
-        let { mobile, country_code = '+91', name, pin, amount } = req.body;
-
-        // Stringify to handle literal numbers from json
-        mobile = String(mobile);
-        pin = String(pin);
-
-        // Validation
-        if (!mobile || !pin) {
-            return errorResponse(res, 400, 'Mobile and PIN are required');
-        }
-        if (mobile.length !== 10 || !/^\d+$/.test(mobile)) {
-            return errorResponse(res, 400, 'Mobile must be a 10-digit number');
-        }
-        if (pin.length !== 4 || !/^\d+$/.test(pin)) {
-            return errorResponse(res, 400, 'PIN must be exactly 4 digits');
+        // Register user
+        let { mobile, name, pin, sponsor, orderId, plan_type, amount } = req.body;
+        
+        if (!orderId) {
+            return errorResponse(res, 400, 'Order ID is required for registration');
         }
 
-        // Auto-capitalize name if provided
-        if (name && typeof name === 'string') {
-            name = name.charAt(0).toUpperCase() + name.slice(1);
-        }
-
-        // Check if user already exists
-        const existingUser = await prisma.user.findUnique({
-            where: { mobile }
+        const user = await registerUser({
+            mobile,
+            name,
+            pin,
+            plan_type: plan_type || 'BASIC',
+            amount: amount || 779,
+            sponsor: sponsor || '',
+            orderId
         });
 
-        if (existingUser) {
-            // Do not reveal if mobile exists for security, just send a generic success 
-            // or error message. The requirement specifically asked: "Do not reveal if mobile exists".
-            // Let's pretend it worked or return a vague error. For registration flow, returning success might confuse them, 
-            // but returning "Account creation completed or already exists" is safest.
-            return successResponse(res, 201, 'Registration processed successfully');
-        }
+        // Generate Session Token
+        const token = generateToken({
+            userId: user.id,
+            role: user.role,
+            cid: user.cid
+        });
 
-        // Hash PIN
-        const pin_hash = await hashPin(pin);
+        // Set Cookie
+        res.cookie('jwt', token, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
 
-        // Generate a unique CID (simplified logic, usually needs uniqueness check)
-        const cid = `CID_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-
-        // Role Assignment based on purchase intent
-        let assignedRole = 'USER_178';
-        if (amount === 580 || amount === '580') {
-            assignedRole = 'USER_580';
-        }
-
-        // Create user and initial wallets Transactionally
-        await prisma.$transaction(async (tx) => {
-            const user = await tx.user.create({
-                data: {
-                    mobile,
-                    country_code,
-                    name,
-                    pin_hash,
-                    cid,
-                    role: assignedRole,
-                    status: 'ACTIVE'
-                }
-            });
-
-            await tx.walletMinute.create({
-                data: {
-                    userId: user.id,
-                    balance: 3650
-                }
-            });
-
-            await tx.walletCash.create({
-                data: {
-                    userId: user.id,
-                    balance: 0.0
-                }
-            });
-
-            // Handle Referral Logic if a referral code was provided
-            if (req.body.referral_code) {
-                const referrer = await tx.user.findFirst({
-                    where: { 
-                        OR: [
-                            { referral_code: req.body.referral_code },
-                            { mobile: req.body.referral_code }
-                        ]
-                    },
-                    include: { referredBy: true }
-                });
-
-                if (referrer && referrer.role === 'SEEDER' && referrer.status === 'ACTIVE') {
-                    // Level 1 Commission
-                    const level1Amount = 220;
-                    await tx.walletCash.update({
-                        where: { userId: referrer.id },
-                        data: { balance: { increment: level1Amount } }
-                    });
-                    await tx.transaction.create({
-                        data: {
-                            userId: referrer.id,
-                            type: 'BONUS',
-                            amount: level1Amount,
-                            description: `Level 1 Referral Bonus from ${name || 'User'}`,
-                            status: 'COMPLETED'
-                        }
-                    });
-                    await tx.bonusLedger.create({
-                        data: { userId: referrer.id, amount: level1Amount, type: 'DIRECT', sourceUserId: user.id }
-                    });
-                    await tx.referral.create({
-                        data: { referrerId: referrer.id, referredUserId: user.id, level: 1 }
-                    });
-                    await checkAndAwardMilestones(referrer.id, tx);
-
-                    // Level 2 Commission
-                    const level1Referral = referrer.referredBy.find(r => r.level === 1);
-                    if (level1Referral) {
-                        const level2Referrer = await tx.user.findUnique({ where: { id: level1Referral.referrerId } });
-                        if (level2Referrer && level2Referrer.role === 'SEEDER' && level2Referrer.status === 'ACTIVE') {
-                            const level2Amount = 150;
-                            await tx.walletCash.update({
-                                where: { userId: level2Referrer.id },
-                                data: { balance: { increment: level2Amount } }
-                            });
-                            await tx.transaction.create({
-                                data: { userId: level2Referrer.id, type: 'BONUS', amount: level2Amount, description: `Level 2 Referral Bonus from ${name || 'User'}`, status: 'COMPLETED' }
-                            });
-                            await tx.bonusLedger.create({
-                                data: { userId: level2Referrer.id, amount: level2Amount, type: 'LEVEL2', sourceUserId: user.id }
-                            });
-                            await tx.referral.create({
-                                data: { referrerId: level2Referrer.id, referredUserId: user.id, level: 2 }
-                            });
-                            await checkAndAwardMilestones(level2Referrer.id, tx);
-                        }
-                    }
-                }
+        return successResponse(res, 201, 'Registration successful', {
+            token,
+            user: {
+                id: user.id,
+                name: user.name,
+                mobile: user.mobile,
+                cid: user.cid,
+                role: user.role,
+                plan_type: user.plan_type
             }
         });
 
-        return successResponse(res, 201, 'Registration processed successfully');
     } catch (error) {
+        if (error.message === 'USER_ALREADY_EXISTS') {
+            return errorResponse(res, 400, 'Mobile number is already registered');
+        }
         console.error("REGISTER API CRASH:", error);
-        return res.status(500).json({ success: false, message: 'Registration failed', error: error.message || error.toString() });
+        return errorResponse(res, 500, error.message || 'Registration failed');
     }
 };
 
@@ -188,11 +118,20 @@ const login = async (req, res) => {
         const isMatch = await comparePin(pin, user.pin_hash);
 
         if (!isMatch) {
+            await recordFailure(req, 'login');
             return errorResponse(res, 401, 'Invalid credentials');
         }
 
+        // Login Success - Reset Failures
+        await resetFailures(req, 'login');
+
         if (user.status === 'BLOCKED') {
             return errorResponse(res, 403, 'Account is blocked');
+        }
+
+        // Generate SID if missing (Legacy User Fallback)
+        if (user.sid_color1 === null) {
+            await sidService.generateUniqueSID(user.id);
         }
 
         // Generate JWT
@@ -211,13 +150,18 @@ const login = async (req, res) => {
         });
 
         return successResponse(res, 200, 'Login successful', {
+            token, // Returning token for localStorage
             user: {
                 id: user.id,
                 name: user.name,
                 mobile: user.mobile,
                 cid: user.cid,
-                role: user.role
+                role: user.role,
+                kit_activated: user.kit_activated,
+                plan_type: user.plan_type
             }
+
+
         });
 
     } catch (error) {
@@ -313,6 +257,10 @@ const getMe = async (req, res) => {
             where: { userId: req.user.id }
         });
 
+        const user = await prisma.user.findUnique({
+             where: { id: req.user.id }
+        });
+
         // Calculate total bonus dynamically or default to 0
         const bonusAggregate = await prisma.bonusLedger.aggregate({
             where: { userId: req.user.id },
@@ -320,22 +268,29 @@ const getMe = async (req, res) => {
         });
         const totalBonus = bonusAggregate._sum.amount || 0;
 
-        const user = {
-            id: req.user.id,
-            name: req.user.name,
-            mobile: req.user.mobile,
-            cid: req.user.cid,
-            role: req.user.role,
-            referral_code: req.user.referral_code,
-            status: req.user.status,
-            country_code: req.user.country_code,
-            upi_id: req.user.upi_id,
-            profile_photo: req.user.profile_photo,
+        const userData = {
+            id: user.id,
+            name: user.name,
+            mobile: user.mobile,
+            cid: user.cid,
+            role: user.role,
+            referral_code: user.referral_code,
+            status: user.status,
+            country_code: user.country_code,
+            upi_id: user.upi_id,
+            profile_photo: user.profile_photo,
+            sid: {
+                color1: user.sid_color1,
+                color2: user.sid_color2,
+                leftHz: user.sid_left_hz,
+                rightHz: user.sid_right_hz,
+                sinaankId: user.referral_code
+            },
             minutesBalance: walletMinute ? walletMinute.balance : 0,
             walletBalance: walletCash ? walletCash.balance : 0,
             totalBonus: totalBonus
         };
-        return successResponse(res, 200, 'User details retrieved successfully', { user });
+        return successResponse(res, 200, 'User details retrieved successfully', { user: userData });
     } catch (error) {
         return errorResponse(res, 500, 'Failed to fetch user details', error);
     }
@@ -393,6 +348,38 @@ const getReferrer = async (req, res) => {
     }
 };
 
+const getSID = async (req, res) => {
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: req.user.id }
+        });
+        
+        if (!user) return errorResponse(res, 404, 'User not found');
+        
+        // Generate on the fly if still missing
+        if (user.sid_color1 === null) {
+            const updated = await sidService.generateUniqueSID(user.id);
+            return successResponse(res, 200, 'SID generated and retrieved', {
+                sinaankId: updated.referral_code,
+                color1: updated.sid_color1,
+                color2: updated.sid_color2,
+                leftHz: updated.sid_left_hz,
+                rightHz: updated.sid_right_hz
+            });
+        }
+
+        return successResponse(res, 200, 'SID retrieved', {
+            sinaankId: user.referral_code,
+            color1: user.sid_color1,
+            color2: user.sid_color2,
+            leftHz: user.sid_left_hz,
+            rightHz: user.sid_right_hz
+        });
+    } catch (error) {
+        return errorResponse(res, 500, 'Failed to fetch SID', error);
+    }
+};
+
 module.exports = {
     checkMobile,
     register,
@@ -401,6 +388,8 @@ module.exports = {
     addFamily,
     getFamily,
     getMe,
+    getSID,
     getReferrer,
-    updateProfile
+    updateProfile,
+    generateReferralCode
 };

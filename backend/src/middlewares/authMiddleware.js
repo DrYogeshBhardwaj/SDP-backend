@@ -5,7 +5,12 @@ const prisma = new PrismaClient();
 
 const authMiddleware = async (req, res, next) => {
     try {
-        const token = req.cookies.jwt;
+        let token = req.cookies.jwt;
+
+        // Backup: Check Authorization header
+        if (!token && req.headers.authorization) {
+            token = req.headers.authorization.split(' ')[1];
+        }
 
         if (!token) {
             return errorResponse(res, 401, 'Unauthorized - No token provided');
