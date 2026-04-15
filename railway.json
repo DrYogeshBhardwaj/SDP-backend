@@ -5,7 +5,7 @@
     "rootDirectory": "backend"
   },
   "deploy": {
-    "startCommand": "node src/server.js",
+    "startCommand": "node backend/src/server.js",
     "restartPolicyType": "ON_FAILURE",
     "healthcheckPath": "/api/auth/otp/test-status",
     "healthcheckTimeout": 30
