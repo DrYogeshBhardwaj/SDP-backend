@@ -305,13 +305,20 @@
                 }
 
                 const data = await res.json();
-                console.log("Payment Initiation Response:", data);
+                console.log("REAL ERROR:", data);
                 
                 if (data.success) {
-                    console.log("Using key_id:", data.key_id);
                     initiateRazorpay(data, { name, pin });
-                } else { alert("Failed to create order: " + (data.message || "Unknown error")); }
-            } catch (err) { alert("Payment initiation failed: " + err.message); } finally { btn.disabled = false; spinner.classList.add('hidden'); }
+                } else { 
+                    alert(data.message || "Payment error"); 
+                    return;
+                }
+            } catch (err) { 
+                alert("Payment initiation failed: " + err.message); 
+            } finally { 
+                btn.disabled = false; 
+                spinner.classList.add('hidden'); 
+            }
         }
 
         function initiateRazorpay(orderData, userData) {
