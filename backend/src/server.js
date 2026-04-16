@@ -31,12 +31,11 @@ const announcementRoutes = require('./modules/communication/announcement.routes'
 const adminAnnouncementRoutes = require('./modules/communication/admin.announcement.routes');
 const exportRoutes = require('./modules/admin/export.routes');
 const referralRoutes = require('./modules/referral/referral.routes');
-// const paymentRoutes = require('./modules/payment/payment.routes'); // Removed in favor of user request path
+
 const { errorResponse } = require('./utils/response');
 const minutesController = require('./modules/minutes/minutes.controller');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
 const allowedOrigins = [
     'http://localhost:3000',
@@ -48,7 +47,6 @@ const allowedOrigins = [
 
 app.use(cors({
     origin: (origin, callback) => {
-        // Allow if no origin (e.g. mobile apps or curl) OR if in whitelist
         if (!origin || allowedOrigins.includes(origin) || origin.startsWith('http://192.168.')) {
             callback(null, true);
         } else {
@@ -61,7 +59,6 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// 🛡️ API Security Lock (JSON Only for POST)
 app.use('/api', (req, res, next) => {
     if (req.method === 'POST') {
         const contentType = req.headers['content-type'];
@@ -90,16 +87,13 @@ app.use(helmet({
     crossOriginEmbedderPolicy: false
 }));
 
-// API Routes (Must be before static fallback)
 app.use("/api/payment", require("./routes/payment.routes"));
 
-// Static Folders
 app.use('/public', express.static(path.join(__dirname, "../public")));
 app.use('/assets', express.static(path.join(__dirname, "../assets")));
 app.use('/dashboard', express.static(path.join(__dirname, "../dashboard")));
 app.use(express.static(path.join(__dirname, "../public")));
 
-// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/auth', otpRoutes);
 app.use('/api/products', productRoutes);
@@ -114,14 +108,11 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/referral', referralRoutes);
 
-
-// Fallback to index.html
 app.use((req, res, next) => {
     if (req.originalUrl.startsWith('/api')) return next();
     res.sendFile(path.join(__dirname, "../public", "index.html"));
 });
 
-// Central error handler
 app.use((err, req, res, next) => {
     const statusCode = err.status || 500;
     const message = err.message || 'Internal Server Error';
@@ -136,7 +127,6 @@ setInterval(() => {
     minutesController.autoAbandonSessions();
 }, 60 * 1000);
 
-// 8. Rate Limit Cleanup (Every 1 hour, remove older than 24h)
 setInterval(async () => {
     try {
         const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -151,5 +141,5 @@ setInterval(async () => {
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  console.log("Server running on", PORT);
 });
