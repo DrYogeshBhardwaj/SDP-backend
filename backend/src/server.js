@@ -1,3 +1,7 @@
+require('dotenv').config();
+console.log("[SERVER] ENV LOADED. KEY_ID:", process.env.RAZORPAY_KEY_ID ? "PRESENT" : "MISSING");
+console.log("[SERVER] KEY_SECRET:", process.env.RAZORPAY_KEY_SECRET ? "PRESENT" : "MISSING");
+
 console.log("SERVER STARTING...");
 
 process.on("uncaughtException", (err) => {
@@ -8,7 +12,6 @@ process.on("unhandledRejection", (err) => {
   console.error("UNHANDLED:", err);
 });
 
-require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');

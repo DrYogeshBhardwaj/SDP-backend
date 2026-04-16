@@ -10,6 +10,8 @@ try {
     const keyId = process.env.RAZORPAY_KEY_ID ? process.env.RAZORPAY_KEY_ID.trim() : null;
     const keySecret = process.env.RAZORPAY_KEY_SECRET ? process.env.RAZORPAY_KEY_SECRET.trim() : null;
 
+    console.log(`[RAZORPAY_INIT] KeyID: ${keyId ? 'FOUND' : 'MISSING'}, KeySecret: ${keySecret ? 'FOUND' : 'MISSING'}`);
+
     if (keyId && keySecret) {
         razorpay = new Razorpay({
             key_id: keyId,
