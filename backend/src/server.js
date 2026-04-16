@@ -36,6 +36,8 @@ const adminAnnouncementRoutes = require('./modules/communication/admin.announcem
 const exportRoutes = require('./modules/admin/export.routes');
 const referralRoutes = require('./modules/referral/referral.routes');
 
+const paymentRoutes = require('./routes/payment.routes');
+
 const { errorResponse } = require('./utils/response');
 const minutesController = require('./modules/minutes/minutes.controller');
 
@@ -111,6 +113,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/referral', referralRoutes);
+app.use('/api/payment', paymentRoutes);
 
 app.use((req, res, next) => {
     if (req.originalUrl.startsWith('/api')) return next();
