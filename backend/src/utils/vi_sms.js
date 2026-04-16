@@ -11,10 +11,10 @@ const generateOTP = () => {
 };
 
 /**
- * Sends OTP via 2Factor.in using the explicit DLT Template API.
+ * Sends OTP via 2Factor.in using the STRICT Positional DLT Template API.
  * This ensures the message matches your registered template EXACTLY.
  * 
- * Template: "Your Sinaank verification code is {#var#} यह कोड किसी के साथ साझा न करें"
+ * Format: https://2factor.in/API/V1/{API_KEY}/SMS/{MOBILE}/{OTP}/{TEMPLATE_NAME}
  * 
  * @param {string} mobile - 10-digit mobile number
  * @returns {Promise<any>} - { Status: "Success", Details: "SessionId" }
@@ -24,11 +24,8 @@ const sendOTP = async (mobile) => {
         const apiKey = process.env.TWO_FACTOR_API_KEY;
         if (!apiKey) throw new Error("TWO_FACTOR_API_KEY is missing in environment.");
 
-        // DLT Compliance Parameters
-        const template = process.env.TWO_FACTOR_TEMPLATE || "SINAANK_OTP";
-        const senderId = process.env.TWO_FACTOR_SENDER_ID || "MKUNDL";
-        const templateId = process.env.TWO_FACTOR_TEMPLATE_ID;
-        const peId = process.env.TWO_FACTOR_PE_ID;
+        // DLT Template Name (MUST be exactly as shown in 2Factor Dashboard)
+        const templateName = process.env.TWO_FACTOR_TEMPLATE || "SINAANK_OTP";
 
         // 1. Generate OTP Manually
         const otp = generateOTP();
@@ -43,22 +40,17 @@ const sendOTP = async (mobile) => {
         const expiresAt = Date.now() + 5 * 60 * 1000;
         otpStorage.set(mobile, { otp, expiresAt });
 
-        // 4. Base URL: Using the DLT Template Route
-        // Format: .../SMS/{MOBILE}/{OTP}/{TEMPLATE_NAME}?template_id=...&pe_id=...&sender=...
-        let url = `https://2factor.in/API/V1/${apiKey}/SMS/${fMobile}/${otp}/${template}?sender=${senderId}`;
+        // 4. Strict Positional URL (No Query Params)
+        const url = `https://2factor.in/API/V1/${apiKey}/SMS/${fMobile}/${otp}/${templateName}`;
 
-        if (templateId) url += `&template_id=${templateId}`;
-        if (peId) url += `&pe_id=${peId}`;
-
-        // Verify log (Masking API Key)
+        // Mandatory Log (Masking API Key)
         const logUrl = url.replace(apiKey, "HIDDEN_KEY");
-        console.log(`[DLT-OTP] Outgoing Request: ${logUrl}`);
+        console.log(`OTP URL: ${logUrl}`);
 
         const response = await axios.get(url);
         
         if (response.data && response.data.Status === 'Success') {
             console.log(`[SMS] Success! Delivery UUID: ${response.data.Details}`);
-            // Return a "SessionId" which is just the mobile number for our local Map logic
             return { Status: 'Success', Details: mobile };
         } else {
             console.warn("[SMS] Failed to send:", response.data);
