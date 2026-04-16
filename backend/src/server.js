@@ -1,4 +1,13 @@
-// Deployment Update: 2026-04-16T09:40:00Z
+console.log("SERVER STARTING...");
+
+process.on("uncaughtException", (err) => {
+  console.error("UNCAUGHT:", err);
+});
+
+process.on("unhandledRejection", (err) => {
+  console.error("UNHANDLED:", err);
+});
+
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -140,6 +149,7 @@ setInterval(async () => {
     }
 }, 60 * 60 * 1000);
 
-app.listen(PORT, '0.0.0.0', () => {
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
