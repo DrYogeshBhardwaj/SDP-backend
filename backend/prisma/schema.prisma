@@ -403,3 +403,13 @@ enum SessionStatus {
   ABANDONED
   TIMEOUT
 }
+
+model OtpSession {
+  id        String   @id @default(uuid())
+  mobile    String
+  otp       String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([mobile])
+}
