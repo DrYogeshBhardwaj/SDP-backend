@@ -1,4 +1,5 @@
 require('dotenv').config();
+console.log("[SERVER] ENV KEYS STARTING WITH RAZORPAY_:", Object.keys(process.env).filter(k => k.startsWith('RAZORPAY')));
 console.log("[SERVER] ENV LOADED. KEY_ID:", process.env.RAZORPAY_KEY_ID ? "PRESENT" : "MISSING");
 console.log("[SERVER] KEY_SECRET:", process.env.RAZORPAY_KEY_SECRET ? "PRESENT" : "MISSING");
 
