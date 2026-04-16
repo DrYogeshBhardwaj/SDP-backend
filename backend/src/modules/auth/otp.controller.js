@@ -17,10 +17,10 @@ exports.sendOtp = async (req, res, next) => {
 
         if (result.Status === 'Success') {
             return successResponse(res, 200, 'OTP sent successfully', {
-                sessionId: result.Details // 2Factor Session ID
+                sessionId: result.Details
             });
         } else {
-            return errorResponse(res, 500, 'Failed to send OTP via 2Factor');
+            return errorResponse(res, 400, 'Unable to send OTP at this time. Please check your mobile number or try again later.');
         }
     } catch (error) {
         console.error('OTP Sending Error:', error);
@@ -41,7 +41,7 @@ exports.verifyOtp = async (req, res, next) => {
 
         if (result.Status !== 'Success' || result.Details !== 'OTP Matched') {
             await recordFailure(req, 'otp');
-            return errorResponse(res, 400, result.Details || 'Invalid OTP');
+            return errorResponse(res, 400, 'गलत कोड दर्ज हुआ है। कृपया पुनः प्रयास करें।');
         }
 
         // OTP Verified - Reset Failures

@@ -278,41 +278,42 @@
         <div class="otp-card">
             <h2 style="margin: 0; font-size: 1.6rem; font-weight: 800; color: var(--text-main);" data-i18n="join.otp.title">Verify Mobile</h2>
             <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem;" data-i18n="join.otp.desc">Enter your 10-digit mobile number</p>
+            <div id="otp-message" class="error-text" style="display: none; margin-bottom: 1rem; color: #ef4444; background: #fee2e2; padding: 0.75rem; border-radius: 12px; font-size: 0.9rem;"></div>
             
             <div id="mobile-step" style="display: block;">
                 <div class="form-group">
-                    <label class="form-label" style="font-weight:700; color:var(--text-muted); margin-bottom:5px; display:block;">Full Name</label>
+                    <label class="form-label">Full Name</label>
                     <input type="text" id="otp-name" class="form-input" placeholder="Enter your full name">
                 </div>
                 <div class="form-group">
-                    <label class="form-label" style="font-weight:700; color:var(--text-muted); margin-bottom:5px; display:block;">Mobile Number</label>
-                    <input type="tel" id="otp-mobile" class="form-input otp-mobile-special" placeholder="Enter 10-digit mobile" maxlength="10">
+                    <label class="form-label">Mobile Number</label>
+                    <input type="tel" id="otp-mobile" class="form-input" placeholder="Enter 10-digit mobile" maxlength="10">
                 </div>
-                <button class="btn-register" id="send-otp-btn" style="width: 100%; font-weight: 700;" data-i18n="join.otp.send">Send OTP <span id="send-spinner" class="spinner hidden"></span></button>
+                <button class="btn-register" id="send-otp-btn" style="width: 100%; font-weight: 700;">Send OTP <span id="send-spinner" class="spinner hidden"></span></button>
             </div>
 
             <div id="otp-step" style="display: none;">
+                <h2 class="otp-title">📱 Verification</h2>
+                <p class="otp-desc">हमने आपके मोबाइल पर कोड भेजा है</p>
                 <div class="form-group">
-                    <input type="tel" id="otpInput" class="form-input otp-input-special" placeholder="Enter 6-digit OTP" data-i18n="join.otp.placeholder" maxlength="6">
+                    <input type="tel" id="otpInput" class="form-input" placeholder="Enter 6-digit OTP" maxlength="6" style="text-align: center; letter-spacing: 5px; font-size: 1.2rem;">
                 </div>
-                <button class="btn-register" id="verify-otp-btn" style="width: 100%; font-weight: 700;" data-i18n="join.otp.verify_proceed">Verify & Proceed <span id="verify-spinner" class="spinner hidden"></span></button>
-                <div id="resend-container" class="resend-text disabled"><span data-i18n="join.resend_in">Resend OTP in </span> <span id="timer">30</span>s</div>
+                <button class="btn-register" id="verify-otp-btn" style="width: 100%; font-weight: 700;">सत्यापित करें और आगे बढ़ें <span id="verify-spinner" class="spinner hidden"></span></button>
+                <div id="resend-container" class="resend-text disabled" style="margin-top: 1rem; font-size: 0.9rem;">
+                    Resend OTP in <span id="timer">30</span>s
+                </div>
             </div>
             
-            <div id="cancel-otp-btn" style="margin-top: 1.5rem; color: var(--text-muted); cursor: pointer; font-weight: 600; font-size: 0.9rem; text-decoration: underline;" data-i18n="btn.cancel">Cancel</div>
+            <div id="cancel-otp-btn" style="margin-top: 1.5rem; color: var(--text-muted); cursor: pointer; font-weight: 600; font-size: 0.9rem; text-decoration: underline;">Cancel</div>
         </div>
     </div>
-
 
     <script>
         const params = new URLSearchParams(window.location.search);
         let rawPlanId = params.get('plan') || 'growth';
-        
-        // Backward compatibility mapping
         if (rawPlanId === 'basic') rawPlanId = 'starter';
         if (rawPlanId === 'business') rawPlanId = 'growth';
         const planId = rawPlanId;
-
         const sponsorId = params.get('ref') || '';
 
         const PLANS = {
@@ -322,51 +323,31 @@
 
         const currentPlan = PLANS[planId] || PLANS.growth;
 
-        // Init UI
+        function showMessage(msg, isError = true) {
+            const el = document.getElementById('otp-message');
+            el.textContent = msg;
+            el.style.display = 'block';
+            el.style.color = isError ? '#ef4444' : '#10b981';
+            el.style.background = isError ? '#fee2e2' : '#ecfdf5';
+        }
+
         function initApp() {
-            if (window._t) {
-                document.getElementById('plan-name').textContent = _t(currentPlan.key);
-                document.getElementById('plan-label').textContent = _t('join.verif_req');
-            } else {
-                document.getElementById('plan-name').textContent = currentPlan.name;
-                document.getElementById('plan-label').textContent = 'Verification Required';
-            }
+            document.getElementById('plan-name').textContent = currentPlan.name;
             document.getElementById('plan-price').textContent = `₹${currentPlan.price}`;
             document.getElementById('inc-l1').textContent = `₹${currentPlan.l1}`;
             document.getElementById('inc-l2').textContent = `₹${currentPlan.l2}`;
             document.getElementById('inc-l3').textContent = `₹${currentPlan.l3}`;
             
-            if (window.SinaankI18n) window.SinaankI18n.updatePage();
-
-            // CSP-compliant event listeners
             document.getElementById('payBtn').addEventListener('click', openOtp);
             document.getElementById('send-otp-btn').addEventListener('click', sendOtp);
             document.getElementById('verify-otp-btn').addEventListener('click', verifyOtp);
             document.getElementById('cancel-otp-btn').addEventListener('click', closeOtp);
         }
 
-        // Run as soon as possible
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initApp);
-        } else {
-            initApp();
-        }
+        initApp();
 
-        let currentOrderId = null;
         let verifiedMobile = null;
         let currentSessionId = null;
-
-        function togglePin(id) {
-            const input = document.getElementById(id);
-            const btn = input.nextElementSibling;
-            if (input.type === "password") {
-                input.type = "text";
-                btn.textContent = "HIDE";
-            } else {
-                input.type = "password";
-                btn.textContent = "SHOW";
-            }
-        }
 
         function openOtp() { document.getElementById('otpModal').style.display = 'flex'; }
         function closeOtp() { document.getElementById('otpModal').style.display = 'none'; }
@@ -375,23 +356,20 @@
             const name = document.getElementById('otp-name').value.trim();
             const mobile = document.getElementById('otp-mobile').value;
             
-            if (!name || name.length < 2) { alert("Please enter your full name."); return; }
-            if (!/^\d{10}$/.test(mobile)) { alert(_t('join.error.invalid_mobile')); return; }
+            if (!name || name.length < 2) { showMessage("Please enter your full name"); return; }
+            if (!/^\d{10}$/.test(mobile)) { showMessage("Invalid mobile number"); return; }
 
             const btn = document.getElementById('send-otp-btn');
             const spinner = document.getElementById('send-spinner');
             btn.disabled = true; spinner.classList.remove('hidden');
+            document.getElementById('otp-message').style.display = 'none';
 
-            const url = "/api.php?action=send-otp";
+            const url = "/api/auth/send-otp";
             try {
                 const res = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        planId: planId,
-                        amount: currentPlan.price,
-                        mobile: mobile
-                    })
+                    body: JSON.stringify({ mobile: mobile })
                 });
                 const data = await res.json();
                 if (data.success) {
@@ -400,22 +378,28 @@
                     document.getElementById("otp-step").style.display = "block";
                     verifiedMobile = mobile;
                     startResendTimer();
-                } else { alert(data.message || "Failed to send OTP"); }
-            } catch (err) { alert("Network error"); } finally { btn.disabled = false; spinner.classList.add('hidden'); }
+                } else { showMessage(data.message || "Failed to send OTP"); }
+            } catch (err) { showMessage("Network error. Please try again."); } finally { btn.disabled = false; spinner.classList.add('hidden'); }
         }
 
         function startResendTimer() {
             let resendTimer = 30;
             const container = document.getElementById('resend-container');
             const timerSpan = document.getElementById('timer');
+            
+            container.innerHTML = `Resend OTP in <span id="timer">${resendTimer}</span>s`;
             container.classList.add('disabled');
+            container.onclick = null;
+
             const interval = setInterval(() => {
                 resendTimer--;
-                timerSpan.textContent = resendTimer;
+                const ts = document.getElementById('timer');
+                if (ts) ts.textContent = resendTimer;
+
                 if (resendTimer <= 0) {
                     clearInterval(interval);
                     container.classList.remove('disabled');
-                    container.innerHTML = "Resend OTP";
+                    container.innerHTML = `<span style="color: #4f46e5; font-weight: 700; text-decoration: underline; cursor: pointer;">Resend OTP</span>`;
                     container.onclick = sendOtp;
                 }
             }, 1000);
@@ -423,13 +407,14 @@
 
         async function verifyOtp() {
             const otp = document.getElementById("otpInput").value;
-            if (otp.length !== 6) { alert("Enter 6-digit OTP"); return; }
+            if (otp.length < 4) { showMessage("Enter valid OTP"); return; }
 
             const btn = document.getElementById('verify-otp-btn');
             const spinner = document.getElementById('verify-spinner');
             btn.disabled = true; spinner.classList.remove('hidden');
+            document.getElementById('otp-message').style.display = 'none';
 
-            const url = "/api.php?action=verify-otp";
+            const url = "/api/auth/verify-otp";
             try {
                 const res = await fetch(url, {
                     method: 'POST',
@@ -438,21 +423,19 @@
                 });
                 const data = await res.json();
                 if (data.success) {
+                    showMessage("Verification Successful! Redirecting...", false);
                     const name = document.getElementById('otp-name').value.trim();
-                    sessionStorage.setItem('sinaank_reg_name', name);
-                    
-                    // User Request FIX 4: Store in localStorage for robustness
                     localStorage.setItem("mobile", verifiedMobile);
-                    localStorage.setItem("plan", planId);
-                    localStorage.setItem("session", currentSessionId);
-                    if (sponsorId) localStorage.setItem("ref", sponsorId);
-
-                    // Redirect to payment page with context
-                    window.location.href = `payment-v2.html?mobile=${verifiedMobile}&plan=${planId}&session=${currentSessionId}${sponsorId ? '&ref=' + sponsorId : ''}`;
-                } else { alert("Invalid OTP"); }
-            } catch (err) { alert("Verification error"); } finally { btn.disabled = false; spinner.classList.add('hidden'); }
+                    localStorage.setItem("sinaank_reg_name", name);
+                    
+                    setTimeout(() => {
+                        window.location.href = `payment-v2.html?mobile=${verifiedMobile}&plan=${planId}${sponsorId ? '&ref=' + sponsorId : ''}`;
+                    }, 1500);
+                } else { 
+                    showMessage(data.message || "गलत कोड दर्ज हुआ है। कृपया पुनः प्रयास करें।"); 
+                }
+            } catch (err) { showMessage("Verification error"); } finally { btn.disabled = false; spinner.classList.add('hidden'); }
         }
-
     </script>
 </body>
 </html>

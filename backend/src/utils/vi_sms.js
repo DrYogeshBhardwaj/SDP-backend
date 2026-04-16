@@ -17,22 +17,23 @@ const sendOTP = async (mobile) => {
             fMobile = `91${fMobile}`;
         }
 
-        const template = "MKUNDLI_OTP";
+        // Branding: Sinaank – A Short Digital Pause
+        // NOTE: The actual text is controlled by the 2Factor Template 'SINAANK_OTP'
+        const template = process.env.TWO_FACTOR_TEMPLATE || "SINAANK_OTP";
         const url = `https://2factor.in/API/V1/${apiKey}/SMS/${fMobile}/AUTOGEN/${template}`;
 
-        console.log(`Sending OTP via 2Factor: ${url}`);
+        console.log(`[SMS] Sending branded OTP to ${mobile} using template ${template}`);
         const response = await axios.get(url);
-        console.log("2Factor API Response:", response.data);
         
-        if (response.data && response.data.Details) {
-            console.log("Check if SessionId is coming:", response.data.Details);
+        if (response.data && response.data.Status === 'Success') {
+            console.log(`[SMS] Success! SessionId: ${response.data.Details}`);
         } else {
-            console.warn("2Factor Response missing SessionId (Details):", response.data);
+            console.warn("[SMS] Failed to send:", response.data);
         }
 
         return response.data;
     } catch (error) {
-        console.error("2Factor Send API Error:", error.response ? error.response.data : error.message);
+        console.error("[SMS] 2Factor Error:", error.response ? error.response.data : error.message);
         throw error;
     }
 };
