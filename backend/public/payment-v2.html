@@ -286,7 +286,7 @@
                 let apiPlanId = 'BUSINESS';
                 if (planId === 'starter' || planId === 'basic') apiPlanId = 'BASIC';
                 
-                const url = SINAANK_CONFIG.getApiUrl('payment/create-order');
+                const url = "https://sdp-backend-production-c758.up.railway.app/api/payment/create-order";
                 console.log("DEBUG - Initiating payment at:", url);
                 const res = await fetch(url, {
                     method: 'POST',
@@ -298,21 +298,15 @@
                     })
                 });
 
-                if (!res.ok) {
-                    const errorText = await res.text();
-                    console.error("API Error Response:", errorText);
-                    throw new Error(`API NOT FOUND (${res.status}): ${res.statusText}`);
-                }
-
                 const data = await res.json();
-                console.log("REAL ERROR:", data);
                 
-                if (data.success) {
-                    initiateRazorpay(data, { name, pin });
-                } else { 
-                    alert(data.message || "Payment error"); 
+                if (!data.success) {
+                    console.log("REAL ERROR:", data);
+                    alert(data.message || "Payment error");
                     return;
                 }
+
+                initiateRazorpay(data, { name, pin });
             } catch (err) { 
                 alert("Payment initiation failed: " + err.message); 
             } finally { 
