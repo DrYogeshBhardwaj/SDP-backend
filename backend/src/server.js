@@ -117,6 +117,10 @@ app.use((err, req, res, next) => {
     return errorResponse(res, statusCode, message);
 });
 
+app.get('/api/debug-ping', (req, res) => {
+    return res.json({ status: "ANTIGRAVITY_PING_OK", env: process.env.NODE_ENV || 'development' });
+});
+
 setInterval(() => {
     minutesController.autoAbandonSessions();
 }, 60 * 1000);
