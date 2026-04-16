@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://sdp-backend-production-3313.up.railway.app";
+const API_BASE_URL = "https://sdp-backend-production-c758.up.railway.app";
 
 const SINAANK_CONFIG = {
     /** 
