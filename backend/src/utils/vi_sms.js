@@ -17,12 +17,21 @@ const sendOTP = async (mobile) => {
             fMobile = `91${fMobile}`;
         }
 
-        // Branding: Sinaank – A Short Digital Pause
-        // NOTE: The actual text is controlled by the 2Factor Template 'SINAANK_OTP'
+        // DLT Compliance Parameters
         const template = process.env.TWO_FACTOR_TEMPLATE || "SINAANK_OTP";
-        const url = `https://2factor.in/API/V1/${apiKey}/SMS/${fMobile}/AUTOGEN/${template}`;
+        const senderId = process.env.TWO_FACTOR_SENDER_ID || "MKUNDL";
+        const templateId = process.env.TWO_FACTOR_TEMPLATE_ID;
+        const peId = process.env.TWO_FACTOR_PE_ID;
 
-        console.log(`[SMS] Sending branded OTP to ${mobile} using template ${template}`);
+        // Base URL
+        let url = `https://2factor.in/API/V1/${apiKey}/SMS/${fMobile}/AUTOGEN/${template}?sender=${senderId}`;
+
+        // Append DLT IDs if available
+        if (templateId) url += `&template_id=${templateId}`;
+        if (peId) url += `&pe_id=${peId}`;
+
+        console.log(`[SMS] Sending DLT OTP to ${mobile} (Sender: ${senderId}, TemplateId: ${templateId})`);
+        
         const response = await axios.get(url);
         
         if (response.data && response.data.Status === 'Success') {

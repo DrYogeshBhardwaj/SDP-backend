@@ -37,15 +37,18 @@ exports.verifyOtp = async (req, res, next) => {
         }
 
         // Verify with 2Factor
-        const result = await verifyOTP(sessionId, otp);
-
-        if (result.Status !== 'Success' || result.Details !== 'OTP Matched') {
+        try {
+            const result = await verifyOTP(sessionId, otp);
+            if (result.Status !== 'Success' || result.Details !== 'OTP Matched') {
+                throw new Error("Invalid OTP");
+            }
+            // OTP Verified - Reset Failures
+            await resetFailures(req, 'otp');
+        } catch (err) {
+            console.warn('OTP Verification attempt failed:', err.message);
             await recordFailure(req, 'otp');
             return errorResponse(res, 400, 'गलत कोड दर्ज हुआ है। कृपया पुनः प्रयास करें।');
         }
-
-        // OTP Verified - Reset Failures
-        await resetFailures(req, 'otp');
 
         // Check if user exists
         const user = await prisma.user.findUnique({
