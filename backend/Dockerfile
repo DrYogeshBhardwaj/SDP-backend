@@ -1,4 +1,3 @@
-# Forced Rebuild - Certified Fix
 FROM node:18
 
 WORKDIR /app
@@ -6,5 +5,7 @@ WORKDIR /app
 COPY . .
 
 RUN npm install
+
+RUN npx prisma generate
 
 CMD ["node", "src/server.js"]

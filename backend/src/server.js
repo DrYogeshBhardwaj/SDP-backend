@@ -81,13 +81,14 @@ app.use(helmet({
     crossOriginEmbedderPolicy: false
 }));
 
+// API Routes (Must be before static fallback)
+app.use("/api/payment", require("./routes/payment.routes"));
+
 // Static Folders
 app.use('/public', express.static(path.join(__dirname, "../public")));
 app.use('/assets', express.static(path.join(__dirname, "../assets")));
 app.use('/dashboard', express.static(path.join(__dirname, "../dashboard")));
 app.use(express.static(path.join(__dirname, "../public")));
-
-app.use("/api/payment", require("./routes/payment.routes"));
 
 // Routes
 app.use('/api/auth', authRoutes);
