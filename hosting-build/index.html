@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sinaank Digital Therapy – Mobile Wellness Platform</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="icon" href="assets/smt_logo.png">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/AiDemoGuide.css">
+    <link rel="stylesheet" href="css/SinaankAssistant.css">
+    <script src="js/i18n.js"></script>
+    <script src="js/SinaankAssistant.js"></script>
+    <script src="js/AiDemoGuide.js"></script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #3730a3;
+            --secondary: #0ea5e9;
+            --accent: #f59e0b;
+            --background: #ffffff;
+            --surface: #f8fafc;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --glass: rgba(255, 255, 255, 0.8);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--background);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* --- Animations --- */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+
+        .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s ease-out; }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+
+        /* --- Header is injected by i18n.js --- */
+
+        /* --- Section Shared --- */
+        section { padding: 6rem 10%; position: relative; }
+        .section-title { font-size: 2.5rem; font-weight: 800; margin-bottom: 1.5rem; text-align: center; }
+        .section-subtitle { font-size: 1.25rem; color: var(--text-muted); text-align: center; max-width: 700px; margin: 0 auto 3rem; }
+
+        /* --- Step 1 & 3: Hero --- */
+        .hero {
+            padding: 10rem 5% 5rem;
+            min-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            box-sizing: border-box;
+            background: radial-gradient(circle at top right, rgba(79, 70, 229, 0.08), transparent),
+                        radial-gradient(circle at bottom left, rgba(14, 165, 233, 0.08), transparent);
+        }
+
+        .hero-badge {
+            background: rgba(79, 70, 229, 0.1);
+            color: var(--primary);
+            padding: 0.5rem 1.25rem;
+            border-radius: 99px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            display: inline-block;
+        }
+
+        .hero h1 { font-size: 4.5rem; line-height: 1; margin: 0; color: var(--primary); }
+        .hero h2 { font-size: 2.5rem; color: var(--secondary); margin-top: 0.5rem; }
+        
+        .hero-image-box {
+            position: relative;
+            margin: 2rem 0;
+            width: 100%;
+            max-width: 480px;
+            aspect-ratio: 1/1; /* Reserved space to prevent jumping */
+            min-height: 320px; /* Safety fallback for layout shift */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            animation: float 6s ease-in-out infinite;
+        }
+        .hero-image { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain; 
+            border-radius: 32px; 
+            filter: drop-shadow(0 20px 50px rgba(0,0,0,0.1)); 
+        }
+        
+        .powerful-line {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-top: 2rem;
+            font-style: italic;
+        }
+
+        /* --- Step 2: Why Different --- */
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; }
+        .feature-card {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 24px;
+            text-align: center;
+            transition: all 0.3s;
+            border: 1px solid rgba(0,0,0,0.03);
+        }
+        .feature-card:hover { transform: translateY(-10px); background: white; box-shadow: 0 20px 40px rgba(0,0,0,0.05); }
+        .feature-icon { font-size: 2.5rem; margin-bottom: 1rem; display: block; }
+        .feature-text { font-weight: 700; font-size: 1.1rem; }
+
+        /* --- Step 4: Plans --- */
+        .plans-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 2rem; }
+        .plan-card {
+            background: white;
+            padding: 3rem 2rem;
+            border-radius: 32px;
+            width: 300px;
+            border: 2px solid rgba(0,0,0,0.05);
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+        }
+        .plan-card.featured { border-color: var(--primary); box-shadow: 0 25px 50px -12px rgba(79, 70, 229, 0.2); }
+        .plan-card:hover { 
+            transform: translateY(-8px); 
+            box-shadow: 0 30px 60px -12px rgba(0,0,0,0.1);
+            border-color: var(--primary);
+        }
+        .plan-name { font-size: 1.5rem; font-weight: 800; margin-bottom: 1rem; }
+        .plan-price { font-size: 3rem; font-weight: 800; color: var(--primary); margin-bottom: 1.5rem; }
+        .plan-price span { font-size: 1.25rem; font-weight: 400; color: var(--text-muted); }
+        
+        .plan-features {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 2.5rem 0;
+            text-align: left;
+        }
+        .plan-features li {
+            padding: 0.75rem 0;
+            color: var(--text-main);
+            font-size: 0.95rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 1px solid rgba(0,0,0,0.03);
+        }
+        .plan-features li:last-child { border-bottom: none; }
+        .plan-features li::before {
+            content: "✓";
+            color: var(--secondary);
+            font-weight: 900;
+        }
+        .plan-card.featured .plan-features li::before { color: var(--primary); }
+
+        .btn-buy {
+            display: block; text-align: center; padding: 1.2rem; border-radius: 16px;
+            background: var(--primary); color: white; font-weight: 800; text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            border: none;
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.2);
+        }
+        .btn-buy:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(79, 70, 229, 0.4);
+            filter: brightness(1.1);
+        }
+        .plan-card.featured .btn-buy { background: var(--primary); }
+        
+        /* AI Card Background */
+        .plan-card { overflow: hidden; position: relative; }
+        .plan-card::after {
+            content: "";
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(79, 70, 229, 0.03) 0%, transparent 70%);
+            animation: aiPulse 10s linear infinite;
+            pointer-events: none;
+        }
+        @keyframes aiPulse {
+            0% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.2); opacity: 0.6; }
+            100% { transform: scale(1); opacity: 0.3; }
+        }
+
+        /* --- Step 5: Income --- */
+        .income-box { 
+            background: #0f172a; color: white; border-radius: 40px; padding: 4rem;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 4rem;
+        }
+        .income-title { color: var(--secondary); font-size: 1.5rem; font-weight: 700; margin-bottom: 2rem; }
+        .income-row { display: flex; justify-content: space-between; padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .level-name { color: rgba(255,255,255,0.6); }
+        .level-amount { font-weight: 700; font-size: 1.2rem; }
+
+        /* --- Step 6: Workflow --- */
+        .workflow-steps { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem; }
+        .step { 
+            display: flex; flex-direction: column; align-items: center; gap: 1rem;
+            background: var(--surface); padding: 1.5rem 2rem; border-radius: 20px;
+            font-weight: 700; min-width: 150px;
+        }
+        .step-num { 
+            width: 30px; height: 30px; background: var(--primary); color: white;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem;
+        }
+
+        /* --- Step 7: Pitch --- */
+        .pitch-box {
+            background: linear-gradient(135deg, #3730a3, #0369a1); /* Darker gradient for better text contrast */
+            color: #ffffff; padding: 4rem; border-radius: 40px; text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .pitch-box p { 
+            font-size: 1.6rem; 
+            font-weight: 800; 
+            line-height: 1.4; 
+            max-width: 800px; 
+            margin: 0 auto;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Added shadow for readability */
+        }
+
+        /* --- Hero CTA Buttons --- */
+        .hero-cta-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 2.5rem;
+            animation: fadeIn 0.8s ease-out 0.3s both;
+        }
+        .btn-hero-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1rem 2.5rem;
+            border-radius: 16px;
+            font-weight: 800;
+            font-size: 1.15rem;
+            text-decoration: none;
+            box-shadow: 0 8px 25px rgba(79,70,229,0.35);
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: inline-block;
+        }
+        .btn-hero-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(79,70,229,0.5);
+        }
+        .btn-hero-outline {
+            background: transparent;
+            color: var(--primary);
+            padding: 1rem 2rem;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 1.05rem;
+            text-decoration: none;
+            border: 2px solid var(--primary);
+            transition: all 0.2s;
+            display: inline-block;
+        }
+        .btn-hero-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        footer { text-align: center; padding: 4rem; border-top: 1px solid rgba(0,0,0,0.05); color: var(--text-muted); }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 3rem; }
+            .hero h2 { font-size: 1.8rem; }
+            section { padding: 4rem 5%; }
+            .income-box { padding: 2rem; }
+        }
+    </style>
+</head>
+<body class="reveal">
+
+    <!-- Desktop/Mobile Global Navigation (Static for immediate load, synced with i18n.js) -->
+    <nav id="Sinaank-top-nav" class="Sinaank-top-bar">
+        <div class="Sinaank-nav-left">
+            <a href="/index.html" class="Sinaank-home-link" title="Home">
+                <img src="/assets/smt_logo.png" alt="Sinaank Digital Therapy" class="smt-logo-header">
+            </a>
+        </div>
+        <div class="Sinaank-nav-right">
+            <div class="Sinaank-auth-links">
+                <a href="/login.html" class="nav-btn nav-btn-outline" data-i18n="btn.login">Login</a>
+                <a href="#plans" class="nav-btn nav-btn-primary" data-i18n="btn.get_started">Get Started</a>
+            </div>
+            <div class="Sinaank-lang-switcher">
+                <button class="switcher-btn" data-sinaank-setlang="hi">हिन्दी</button>
+                <span class="switcher-sep">|</span>
+                <button class="switcher-btn active" data-sinaank-setlang="en">English</button>
+            </div>
+        </div>
+    </nav>
+
+
+    <!-- Step 1: Introduction -->
+    <main class="hero">
+        <div class="hero-badge reveal" data-i18n="hero.badge">The Future of Wellness</div>
+        <h1 class="reveal" data-i18n="hero.title">This is Sinaank Mobile Therapy</h1>
+        <h2 class="reveal" data-i18n="hero.subtitle">First Complete Digital Therapy</h2>
+        <p class="section-subtitle reveal" style="margin-top: 1rem;" data-i18n="hero.desc">AI-powered mobile number wellness analysis tailored for the digital generation.</p>
+        
+        <!-- Hero CTA Buttons — placed here for instant above-the-fold visibility -->
+        <div class="hero-cta-group">
+            <a href="#plans" id="hero-cta-starter" class="btn-hero-primary" data-i18n="hero.cta.start">
+                🚀 Start Your Journey
+            </a>
+            <a href="#plans" id="hero-cta-growth" class="btn-hero-outline" data-i18n="hero.cta.growth">
+                Growth Plan
+            </a>
+        </div>
+
+        <div class="reveal" style="margin-top: 1.5rem; display: flex; justify-content: center;">
+            <button id="hero-ai-guide-btn" class="btn-ai" style="padding: 0.6rem 1.8rem; font-size: 0.95rem;" data-i18n="hero.cta.guide">
+                ✨ Experience Sinaank Therapy
+            </button>
+        </div>
+
+        <div class="hero-image-box reveal">
+            <img src="assets/med_ai_hero.png" alt="Sinaank Mobile Therapy Illustration" class="hero-image" onerror="this.src='sinaank_hero_therapy.png'">
+        </div>
+
+        <div class="powerful-line reveal" data-i18n="hero.powerful">
+            "Your mobile is no longer the problem,<br>it is now the therapy."
+        </div>
+    </main>
+
+    <!-- Step 2: Why Different -->
+    <section>
+        <div class="hero-badge reveal" style="display: block; margin: 0 auto 2rem; width: fit-content;" data-i18n="features.badge">Why SINAANK?</div>
+        <div class="features-grid">
+            <div class="feature-card reveal">
+                <span class="feature-icon">🌐</span>
+                <span class="feature-text" data-i18n="features.f1">100% Digital</span>
+            </div>
+            <div class="feature-card reveal">
+                <span class="feature-icon">📦</span>
+                <span class="feature-text" data-i18n="features.f2">Zero Physical Products</span>
+            </div>
+            <div class="feature-card reveal">
+                <span class="feature-icon">📊</span>
+                <span class="feature-text" data-i18n="features.f3">No Inventory Required</span>
+            </div>
+            <div class="feature-card reveal">
+                <span class="feature-icon">🚚</span>
+                <span class="feature-text" data-i18n="features.f4">Instant Digital Delivery</span>
+            </div>
+            <div class="feature-card reveal">
+                <span class="feature-icon">📱</span>
+                <span class="feature-text" data-i18n="features.f5">Mobile-Based Therapy</span>
+            </div>
+            <div class="feature-card reveal">
+                <span class="feature-icon">⚡</span>
+                <span class="feature-text" data-i18n="features.f6">Built for Daily Use</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Step 4: Plans -->
+    <section id="plans" style="background: var(--surface);">
+        <div class="hero-badge reveal" style="display: block; margin: 0 auto 1rem; width: fit-content;" data-i18n="plans.badge">Digital Wellness Plans</div>
+        <h2 class="section-title reveal" data-i18n="plans.title">Start Your Digital Wellness Journey</h2>
+        <div class="plans-container" style="max-width: 800px; margin: 0 auto;">
+            <!-- Starter Plan -->
+            <div class="plan-card" id="plan-card-starter">
+                <div class="plan-name" data-i18n="plans.starter.name">Starter Plan</div>
+                <div class="plan-price">₹779 <span data-i18n="plans.lifetime">/ Lifetime</span></div>
+                <ul class="plan-features">
+                    <li data-i18n="plans.starter.f1">1 Digital Kit (1 Mobile)</li>
+                    <li data-i18n="plans.starter.f2">Personal Use Only</li>
+                    <li data-i18n="plans.starter.f3">Lifetime Therapy Access</li>
+                    <li data-i18n="plans.starter.f4">Standard Referral Rewards</li>
+                </ul>
+                <a href="join.html?plan=starter" class="btn-buy" id="plan-starter-btn" data-i18n="btn.buy_starter">Start ₹779</a>
+            </div>
+
+            <!-- Growth Plan -->
+            <div class="plan-card featured" id="plan-card-growth">
+                <div class="plan-name" data-i18n="plans.growth.name">Growth Plan</div>
+                <div class="plan-price">₹2990 <span data-i18n="plans.best_value">/ Best Value</span></div>
+                <ul class="plan-features">
+                    <li data-i18n="plans.growth.f1">4 Digital Kits (4 Mobiles)</li>
+                    <li data-i18n="plans.growth.f2">1 Primary + 3 Family/Partner</li>
+                    <li data-i18n="plans.growth.f3">Full Business Partner Rights</li>
+                    <li data-i18n="plans.growth.f4">Maximum Referral Rewards</li>
+                </ul>
+                <a href="join.html?plan=growth" class="btn-buy" id="plan-growth-btn" style="background: var(--primary); color: white;" data-i18n="btn.buy_growth">Start ₹2990</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Step 5: Income -->
+    <section>
+        <div class="hero-badge reveal" style="display: block; margin: 0 auto 1rem; width: fit-content;" data-i18n="income.badge">Referral Rewards</div>
+        <h2 class="section-title reveal" data-i18n="income.title">3-Level Dynamic Income System</h2>
+        <div class="income-box reveal">
+            <div>
+                <div class="income-title" data-i18n="income.starter.title">Starter Tier (₹779) Rewards</div>
+                <div class="income-row">
+                    <span class="level-name" data-i18n="income.l1">Level 1 Direct</span>
+                    <span class="level-amount">₹120</span>
+                </div>
+                <div class="income-row">
+                    <span class="level-name" data-i18n="income.l2">Level 2 Indirect</span>
+                    <span class="level-amount">₹80</span>
+                </div>
+                <div class="income-row">
+                    <span class="level-name" data-i18n="income.l3">Level 3 Indirect</span>
+                    <span class="level-amount">₹50</span>
+                </div>
+            </div>
+            <div>
+                <div class="income-title" data-i18n="income.growth.title">Growth Tier (₹2990) Rewards</div>
+                <div class="income-row">
+                    <span class="level-name" data-i18n="income.l1">Level 1 Direct</span>
+                    <span class="level-amount">₹450</span>
+                </div>
+                <div class="income-row">
+                    <span class="level-name" data-i18n="income.l2">Level 2 Indirect</span>
+                    <span class="level-amount">₹250</span>
+                </div>
+                <div class="income-row">
+                    <span class="level-name" data-i18n="income.l3">Level 3 Indirect</span>
+                    <span class="level-amount">₹150</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Step 6: Workflow -->
+    <section style="background: var(--surface);">
+        <div class="hero-badge reveal" style="display: block; margin: 0 auto 1rem; width: fit-content;" data-i18n="workflow.badge">Our Simple Workflow</div>
+        <h2 class="section-title reveal" data-i18n="workflow.title">Get Started in 5 Simple Steps</h2>
+        <div class="workflow-steps">
+            <div class="step reveal">
+                <span class="step-num">1</span> <span data-i18n="workflow.s1">Personal Use</span>
+            </div>
+            <div class="step reveal">
+                <span class="step-num">2</span> <span data-i18n="workflow.s2">Family Wellness</span>
+            </div>
+            <div class="step reveal">
+                <span class="step-num">3</span> <span data-i18n="workflow.s3">Share Concept</span>
+            </div>
+            <div class="step reveal">
+                <span class="step-num">4</span> <span data-i18n="workflow.s4">Build Network</span>
+            </div>
+            <div class="step reveal" style="background: var(--primary); color: white;">
+                <span class="step-num" style="background: white; color: var(--primary);">5</span> <span data-i18n="workflow.s5">Passive Income</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Step 7: Pitch -->
+    <section>
+        <div class="pitch-box reveal">
+            <div class="hero-badge" style="background: rgba(255,255,255,0.2); color: white;" data-i18n="pitch.badge">The Professional Pitch</div>
+            <p data-i18n="pitch.text">"No products, no inventory. Pure digital therapy — Use yourself and earn while you share."</p>
+            <div style="margin-top: 3rem; opacity: 0.8; font-size: 0.9rem; letter-spacing: 1px; text-transform: uppercase;" data-i18n="pitch.footer">
+                20 Second Pitch: Sinaank Digital Therapy. Professional. Digital. Profitable.
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="logo-container" style="justify-content: center; margin-bottom: 2rem;">
+            <img src="assets/smt_logo.png" alt="Sinaank Digital Therapy Logo" style="height: 40px;">
+        </div>
+        <span>&copy; 2026 Sinaank Digital Therapy. All rights reserved.</span><br>
+        <div style="margin-top: 1rem;">
+            <a href="privacy.html" style="color: var(--primary); text-decoration: none;" data-i18n="footer.privacy">Privacy Policy</a> | 
+            <a href="terms.html" style="color: var(--primary); text-decoration: none;" data-i18n="footer.terms">Terms & Conditions</a>
+        </div>
+    </footer>
+
+    <script>
+        // Scroll Reveal
+        function reveal() {
+            var reveals = document.querySelectorAll(".reveal");
+            for (var i = 0; i < reveals.length; i++) {
+                var windowHeight = window.innerHeight;
+                var elementTop = reveals[i].getBoundingClientRect().top;
+                var elementVisible = 150;
+                if (elementTop < windowHeight - elementVisible) {
+                    reveals[i].classList.add("active");
+                }
+            }
+        }
+        window.addEventListener("scroll", reveal);
+        window.addEventListener("load", reveal);
+
+        // CSP-compliant event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            const loginBtn = document.getElementById('login-btn');
+            if (token && loginBtn) {
+                loginBtn.textContent = window._t('nav.dashboard');
+            }
+
+            // Bind CSP-compliant listeners
+            const guideBtn = document.getElementById('hero-ai-guide-btn');
+            if (guideBtn) {
+                guideBtn.addEventListener('click', () => {
+                    if (window.openSinaankGuide) window.openSinaankGuide();
+                });
+            }
+
+            const starterCard = document.getElementById('plan-card-starter');
+            if (starterCard) {
+                starterCard.addEventListener('click', () => {
+                    window.location.href = 'join.html?plan=starter';
+                });
+            }
+
+            const growthCard = document.getElementById('plan-card-growth');
+            if (growthCard) {
+                growthCard.addEventListener('click', () => {
+                    window.location.href = 'join.html?plan=growth';
+                });
+            }
+
+            // Stop propagation on buttons inside cards
+            ['plan-starter-btn', 'plan-growth-btn'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) btn.addEventListener('click', (e) => e.stopPropagation());
+            });
+        });
+
+        async function goDashboard(e) {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                // Not logged in, let default link (login.html) work
+                return;
+            }
+
+            e.preventDefault(); // Stop navigation to perform check
+            
+            try {
+                const res = await fetch('/api.php?action=me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    const user = data.data.user;
+                    
+                    // Always update local session to be sure
+                    localStorage.setItem('ssb_session', JSON.stringify(user));
+
+                    if (!user.kit_activated) {
+                        window.location.href = "/public/join.html";
+                        return;
+                    }
+
+                    if (user.role.indexOf('ADMIN') !== -1 || user.role === 'MASTER') {
+                        window.location.href = '/dashboard/admin.html';
+                    } else if (user.role === 'BUSINESS' || user.role === 'SEEDER') {
+                        window.location.href = '/dashboard/business.html';
+                    } else {
+                        window.location.href = '/dashboard/dashboard.html';
+                    }
+                } else {
+                    // Token invalid or expired
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('ssb_session');
+                    window.location.href = "/public/login.html";
+                }
+            } catch (err) {
+                console.error("Dashboard check failed:", err);
+                window.location.href = "/public/login.html";
+            }
+        }
+    </script>
+</body>
+</html>
+
