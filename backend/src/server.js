@@ -21,7 +21,7 @@ const announcementRoutes = require('./modules/communication/announcement.routes'
 const adminAnnouncementRoutes = require('./modules/communication/admin.announcement.routes');
 const exportRoutes = require('./modules/admin/export.routes');
 const referralRoutes = require('./modules/referral/referral.routes');
-const paymentRoutes = require('./modules/payment/payment.routes');
+// const paymentRoutes = require('./modules/payment/payment.routes'); // Removed in favor of user request path
 const { errorResponse } = require('./utils/response');
 const minutesController = require('./modules/minutes/minutes.controller');
 
@@ -86,6 +86,8 @@ app.use('/assets', express.static(path.join(__dirname, "../assets")));
 app.use('/dashboard', express.static(path.join(__dirname, "../dashboard")));
 app.use(express.static(path.join(__dirname, "../public")));
 
+app.use("/api/payment", require("./routes/payment.routes"));
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/auth', otpRoutes);
@@ -100,7 +102,6 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/referral', referralRoutes);
-app.use('/api/payment', require('./routes/payment'));
 
 
 // Fallback to index.html

@@ -204,7 +204,8 @@
                 <span id="pay-spinner" class="spinner hidden"></span>
             </button>
             
-            <button class="demo-btn" id="demo-skip-btn">Skip for Demo (Testing Only)</button>
+            <button class="demo-btn" id="demo-skip-btn" onclick="skipPayment()">Skip for Test</button>
+            
             
             <a href="join.html" class="back-link">Change Plan / Back</a>
         </div>
@@ -297,6 +298,13 @@
                         mobile: mobile
                     })
                 });
+
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    console.error("API Error Response:", errorText);
+                    throw new Error(`API NOT FOUND (${res.status}): ${res.statusText}`);
+                }
+
                 const data = await res.json();
                 console.log("Payment Initiation Response:", data);
                 
@@ -310,11 +318,11 @@
         function initiateRazorpay(orderData, userData) {
             const options = {
                 "key": orderData.key_id,
-                "amount": orderData.order.amount,
-                "currency": orderData.order.currency,
+                "amount": orderData.amount,
+                "currency": "INR",
                 "name": "Sinaank",
                 "description": `${window._t ? _t(currentPlan.key) : currentPlan.name} Activation`,
-                "order_id": orderData.order.id,
+                "order_id": orderData.order_id,
                 "handler": function (response) {
                     verifyAndRegister(response, userData);
                 },
@@ -339,16 +347,17 @@
             rzp.open();
         }
 
-        async function continueAsDemo() {
-            localStorage.setItem("token", "SMT_TOKEN_12345");
+        async function skipPayment() {
+            localStorage.setItem("token", "TEST_TOKEN");
             localStorage.setItem("ssb_session", JSON.stringify({
-                id: 'demo_user',
-                name: 'Demo User',
-                mobile: mobile,
-                role: 'BUSINESS',
+                role: "BUSINESS",
                 kit_activated: true
             }));
-            window.location.href = "../dashboard/dashboard-business.html";
+            window.location.href = "/dashboard/dashboard-business.html";
+        }
+
+        async function continueAsDemo() {
+            skipPayment();
         }
 
         async function verifyAndRegister(paymentData, userData) {
@@ -380,8 +389,11 @@
                 const data = await res.json();
                 if (data.success) {
                     localStorage.setItem('token', data.token || data.data?.token);
-                    localStorage.setItem('ssb_session', JSON.stringify(data.data.user));
-                    window.location.href = '/dashboard/dashboard.html?welcome=1';
+                    localStorage.setItem('ssb_session', JSON.stringify({
+                        role: "BUSINESS",
+                        kit_activated: true
+                    }));
+                    window.location.href = '/dashboard/dashboard-business.html';
                 } else {
                     alert(data.message || "Registration failed. Contact Support.");
                     loadingOverlay.remove();
