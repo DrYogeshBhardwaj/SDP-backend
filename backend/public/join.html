@@ -425,13 +425,31 @@
                 const data = await res.json();
                 if (data.success) {
                     showMessage("Verification Successful! Redirecting...", false);
-                    const name = document.getElementById('otp-name').value.trim();
-                    localStorage.setItem("mobile", verifiedMobile);
-                    localStorage.setItem("sinaank_reg_name", name);
                     
-                    setTimeout(() => {
-                        window.location.href = `payment-v2.html?mobile=${verifiedMobile}&plan=${planId}${sponsorId ? '&ref=' + sponsorId : ''}`;
-                    }, 1500);
+                    // Store mobile for session persistence
+                    localStorage.setItem("mobile", verifiedMobile);
+                    
+                    if (data.userExists) {
+                        // EXISTING USER -> Dashboard
+                        localStorage.setItem("token", data.token);
+                        localStorage.setItem("ssb_session", JSON.stringify({
+                            role: data.user.role,
+                            kit_activated: data.user.kit_activated,
+                            name: data.user.name
+                        }));
+                        setTimeout(() => {
+                            window.location.href = "/dashboard/dashboard.html";
+                        }, 1000);
+                    } else {
+                        // NEW USER -> Payment/Registration
+                        const name = document.getElementById('otp-name').value.trim();
+                        sessionStorage.setItem("sinaank_reg_name", name);
+                        
+                        setTimeout(() => {
+                            // Corrected redirect: pass currentSessionId as 'session'
+                            window.location.href = `payment-v2.html?mobile=${verifiedMobile}&plan=${planId}&session=${currentSessionId}${sponsorId ? '&ref=' + sponsorId : ''}`;
+                        }, 1500);
+                    }
                 } else { 
                     showMessage(data.message || "गलत कोड दर्ज हुआ है। कृपया पुनः प्रयास करें।"); 
                 }

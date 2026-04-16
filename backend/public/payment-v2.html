@@ -214,14 +214,13 @@
     <script>
         const params = new URLSearchParams(window.location.search);
         
-        // FIX: Prioritize URL params, fallback to localStorage
         const mobile = params.get('mobile') || localStorage.getItem("mobile");
         const planId = params.get('plan') || localStorage.getItem("plan") || 'growth';
-        const sessionId = params.get('session') || localStorage.getItem("session");
+        const sessionId = params.get('session') || localStorage.getItem("session") || mobile; // Fallback to mobile if session is missing
         const sponsorId = params.get('ref') || localStorage.getItem("ref") || '';
 
-        if (!mobile || !sessionId || !planId) {
-            console.error("Missing Session Context:", { mobile, planId, sessionId });
+        if (!mobile || !planId) {
+            console.error("Missing Session Context:", { mobile, planId });
             alert("Session expired or invalid. Please start again from the Registration page.");
             window.location.href = 'join.html';
         }
@@ -350,10 +349,11 @@
         async function skipPayment() {
             localStorage.setItem("token", "TEST_TOKEN");
             localStorage.setItem("ssb_session", JSON.stringify({
+                name: "Test User",
                 role: "BUSINESS",
                 kit_activated: true
             }));
-            window.location.href = "/dashboard/dashboard-business.html";
+            window.location.href = "/dashboard/dashboard.html";
         }
 
         async function continueAsDemo() {
@@ -389,11 +389,8 @@
                 const data = await res.json();
                 if (data.success) {
                     localStorage.setItem('token', data.token || data.data?.token);
-                    localStorage.setItem('ssb_session', JSON.stringify({
-                        role: "BUSINESS",
-                        kit_activated: true
-                    }));
-                    window.location.href = '/dashboard/dashboard-business.html';
+                    localStorage.setItem('ssb_session', JSON.stringify(data.user || data.data?.user));
+                    window.location.href = '/dashboard/dashboard.html';
                 } else {
                     alert(data.message || "Registration failed. Contact Support.");
                     loadingOverlay.remove();
