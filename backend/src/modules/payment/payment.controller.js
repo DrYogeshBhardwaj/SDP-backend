@@ -7,19 +7,25 @@ const crypto = require('crypto');
 // Initialize Razorpay
 let razorpay;
 try {
-    if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+    const keyId = process.env.RAZORPAY_KEY_ID ? process.env.RAZORPAY_KEY_ID.trim() : null;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET ? process.env.RAZORPAY_KEY_SECRET.trim() : null;
+
+    if (keyId && keySecret) {
         razorpay = new Razorpay({
-            key_id: process.env.RAZORPAY_KEY_ID,
-            key_secret: process.env.RAZORPAY_KEY_SECRET
+            key_id: keyId,
+            key_secret: keySecret
         });
         console.log("Razorpay initialized successfully");
     } else {
-        console.warn("Razorpay credentials missing. Payment routes will fail.");
-        // Create a dummy object to prevent 'undefined' crashes when calling methods, 
-        // though the actual methods should handle the missing config.
+        const missing = [];
+        if (!keyId) missing.push("RAZORPAY_KEY_ID");
+        if (!keySecret) missing.push("RAZORPAY_KEY_SECRET");
+        
+        console.warn(`[RAZORPAY] Initialization failed. Missing: ${missing.join(", ")}`);
+        
         razorpay = {
             orders: {
-                create: () => { throw new Error("Razorpay not configured"); }
+                create: () => { throw new Error(`Razorpay not configured. Missing: ${missing.join(", ")}`); }
             }
         };
     }
