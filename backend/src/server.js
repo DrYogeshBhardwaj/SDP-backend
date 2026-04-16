@@ -130,14 +130,16 @@ setInterval(() => {
 setInterval(async () => {
     try {
         const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-        await prisma.rateLimit.deleteMany({
+        const result = await prisma.rateLimit.deleteMany({
             where: { createdAt: { lt: yesterday } }
         });
-        console.log('Cleanup: Deleted old rate limit records.');
+        if (result.count > 0) {
+            console.log(`Cleanup: Deleted ${result.count} old rate limit records.`);
+        }
     } catch (e) {
         console.error('Cleanup Error:', e);
     }
-}, 60 * 60 * 1000);
+}, 10 * 60 * 1000);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
