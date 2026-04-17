@@ -16,11 +16,11 @@ exports.sendOtp = async (req, res, next) => {
         const result = await sendOTP(mobile);
 
         if (result.Status === 'Success') {
-            return successResponse(res, 200, 'OTP sent successfully', {
+            return successResponse(res, 200, 'OTP भेजा गया', {
                 sessionId: result.Details
             });
         } else {
-            return errorResponse(res, 400, 'Unable to send OTP at this time. Please check your mobile number or try again later.');
+            return errorResponse(res, 400, 'OTP भेजने में समस्या हुई। कृपया मोबाइल नंबर जांचें या बाद में प्रयास करें।');
         }
     } catch (error) {
         console.error('OTP Sending Error:', error);

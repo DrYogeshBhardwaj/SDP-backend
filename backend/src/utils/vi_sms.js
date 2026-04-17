@@ -40,8 +40,8 @@ const sendOTP = async (mobile) => {
         const expiresAt = Date.now() + 5 * 60 * 1000;
         otpStorage.set(mobile, { otp, expiresAt });
 
-        // 4. Strict Positional URL (No Query Params)
-        const url = `https://2factor.in/API/V1/${apiKey}/SMS/${fMobile}/${otp}/${templateName}`;
+        // 4. DLT Compliant URL (No templateName in path as per mapping)
+        const url = `https://2factor.in/API/V1/${apiKey}/SMS/${fMobile}/${otp}/MKUNDL`;
 
         // Mandatory Log (Masking API Key)
         const logUrl = url.replace(apiKey, "HIDDEN_KEY");
