@@ -22,10 +22,12 @@ const generateOTP = () => {
 const sendOTP = async (mobile) => {
     try {
         const apiKey = process.env.TWO_FACTOR_API_KEY;
+        const peId = process.env.TWO_FACTOR_PE_ID || "120115915501";
+        const templateId = process.env.TWO_FACTOR_TEMPLATE_ID || "1207161520191";
+        
         if (!apiKey) throw new Error("TWO_FACTOR_API_KEY is missing in environment.");
 
         const senderId = process.env.TWO_FACTOR_SENDER_ID || "MKUNDL";
-        const templateName = process.env.TWO_FACTOR_TEMPLATE || "SDT_OTP_V2";
         
         // 1. Generate OTP Manually
         const otp = generateOTP();
@@ -40,35 +42,33 @@ const sendOTP = async (mobile) => {
         const expiresAt = Date.now() + 5 * 60 * 1000;
         otpStorage.set(mobile, { otp, expiresAt });
 
-        // 4. Construct R1 Payload
+        // 4. Construct the EXACT DLT-Approved Message String
+        // Actual Template: "Your MKUNDLI OTP is {#var#}. It is valid for 5 minutes. -MKUNDLI"
+        const message = `Your MKUNDLI OTP is ${otp}. It is valid for 5 minutes. -MKUNDLI`;
+
+        // 5. Use the Bare Metal TSMS API (No Var1, sends raw string)
+        const url = `https://2factor.in/API/V1/${apiKey}/ADDON_SERVICES/SEND/TSMS`;
         const payload = {
-            module: "TRANS_SMS",
-            apikey: apiKey,
-            to: fMobile,
-            from: senderId,
-            templatename: templateName,
-            var1: otp
+            From: senderId,
+            To: fMobile,
+            Msg: message,
+            EntityID: peId,
+            TemplateID: templateId
         };
-
-        // Add DLT IDs if available in environment
-        if (process.env.TWO_FACTOR_PE_ID) payload.EntityId = process.env.TWO_FACTOR_PE_ID;
-        if (process.env.TWO_FACTOR_TEMPLATE_ID) payload.TemplateId = process.env.TWO_FACTOR_TEMPLATE_ID;
-
-        const url = "https://2factor.in/API/R1/";
         
-        console.log(`[R1 SMS] Sending OTP to ${fMobile} using template ${templateName}...`);
+        console.log(`[TSMS] Sending Raw SMS to ${fMobile}... Content: "${message}"`);
 
         const response = await axios.post(url, payload);
         
         if (response.data && response.data.Status === 'Success') {
-            console.log(`[R1 SMS] Success! UUID: ${response.data.Details}`);
+            console.log(`[TSMS] Success! UUID: ${response.data.Details}`);
             return { Status: 'Success', Details: mobile };
         } else {
-            console.warn("[R1 SMS] Failed to send:", response.data);
+            console.warn("[TSMS] Failed to send:", response.data);
             return response.data;
         }
     } catch (error) {
-        console.error("[R1 SMS] 2Factor Error:", error.response ? error.response.data : error.message);
+        console.error("[TSMS] 2Factor Error:", error.response ? error.response.data : error.message);
         throw error;
     }
 };
