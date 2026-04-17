@@ -46,30 +46,36 @@ const sendOTP = async (mobile) => {
         // Actual Template: "Your MKUNDLI OTP is {#var#}. It is valid for 5 minutes. -MKUNDLI"
         const message = `Your MKUNDLI OTP is ${otp}. It is valid for 5 minutes. -MKUNDLI`;
 
-        // 5. Use the Bare Metal TSMS API (No Var1, sends raw string)
-        const url = `https://2factor.in/API/V1/${apiKey}/ADDON_SERVICES/SEND/TSMS`;
-        const payload = {
+        // 5. Use GET Request with AUTOCALL=0 (Forces SMS only)
+        // Format: .../TSMS?From={S}&To={M}&Msg={MSG}&EntityID={E}&TemplateID={T}&AUTOCALL=0
+        const baseUrl = `https://2factor.in/API/V1/${apiKey}/ADDON_SERVICES/SEND/TSMS`;
+        
+        const params = new URLSearchParams({
             From: senderId,
             To: fMobile,
             Msg: message,
             EntityID: peId,
-            TemplateID: templateId
-        };
-        
-        console.log(`[TSMS] Sending Raw SMS to ${fMobile}... Content: "${message}"`);
+            TemplateID: templateId,
+            AUTOCALL: "0" // Explicitly DISABLE voice fallback
+        });
 
-        const response = await axios.post(url, payload);
+        const url = `${baseUrl}?${params.toString()}`;
+        
+        console.log(`[TSMS-GET] Triggering URL: ${url.replace(apiKey, "HIDDEN_KEY")}`);
+
+        const response = await axios.get(url);
         
         if (response.data && response.data.Status === 'Success') {
-            console.log(`[TSMS] Success! UUID: ${response.data.Details}`);
+            console.log(`[TSMS-GET] Success! UUID: ${response.data.Details}`);
             return { Status: 'Success', Details: mobile };
         } else {
-            console.warn("[TSMS] Failed to send:", response.data);
-            return response.data;
+            console.warn("[TSMS-GET] API rejected request:", response.data);
+            return { Status: 'Error', Details: response.data.Details || "SMS rejected by provider" };
         }
     } catch (error) {
-        console.error("[TSMS] 2Factor Error:", error.response ? error.response.data : error.message);
-        throw error;
+        const errorMsg = error.response ? JSON.stringify(error.response.data) : error.message;
+        console.error("[TSMS-GET] Critical Error:", errorMsg);
+        throw new Error(errorMsg);
     }
 };
 
