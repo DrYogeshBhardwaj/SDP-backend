@@ -25,7 +25,7 @@ const sendOTP = async (mobile) => {
         if (!apiKey) throw new Error("TWO_FACTOR_API_KEY is missing in environment.");
 
         const senderId = process.env.TWO_FACTOR_SENDER_ID || "MKUNDL";
-        const templateName = process.env.TWO_FACTOR_TEMPLATE || "MKUNDLI_OTP";
+        const templateName = process.env.TWO_FACTOR_TEMPLATE || "SDT_OTP";
         
         // 1. Generate OTP Manually
         const otp = generateOTP();
