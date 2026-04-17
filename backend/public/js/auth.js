@@ -39,12 +39,18 @@ class AuthApp {
         const mobile = document.getElementById('register-mobile').value;
         const pin = document.getElementById('register-pin').value;
 
-        if (mobile.length !== 10) { alert("Mobile must be 10 digits"); return; }
-        if (pin.length !== 4) { alert("PIN must be 4 digits"); return; }
+        if (mobile.length !== 10) { 
+            if (window.showAlert) window.showAlert("Mobile must be 10 digits");
+            return; 
+        }
+        if (pin.length !== 4) { 
+            if (window.showAlert) window.showAlert("PIN must be 4 digits");
+            return; 
+        }
 
         try {
             if (store.getUser(mobile)) {
-                alert("User already exists. Please Login.");
+                if (window.showAlert) window.showAlert("User already exists. Please Login.");
                 window.toggleAuth('login');
                 return;
             }
@@ -55,16 +61,14 @@ class AuthApp {
                 name: "Member"
             });
 
-            alert("Registration Successful! Please Login.");
+            if (window.showAlert) window.showAlert("Registration Successful! Please Login.", false);
             window.toggleAuth('login');
             // Pre-fill login
             document.getElementById('login-mobile').value = mobile;
-            // Trigger input event to load CIDs? 
-            // Manual trigger:
             this.handleMobileInput({ target: { value: mobile } });
 
         } catch (err) {
-            alert("Registration Error: " + err.message);
+            if (window.showAlert) window.showAlert("Registration Error: " + err.message);
         }
     }
 
@@ -72,7 +76,7 @@ class AuthApp {
     handleMobileInput(e) {
         const mobile = e.target.value;
         const cidSelect = document.getElementById('login-cid');
-        if (!cidSelect) return; // Exit if dropdown doesn't exist (Legacy Mode)
+        if (!cidSelect) return; 
 
         if (mobile.length === 10) {
             const accounts = store.getCidsByMobile(mobile);
@@ -81,7 +85,7 @@ class AuthApp {
             if (accounts.length > 0) {
                 accounts.forEach(acc => {
                     const opt = document.createElement('option');
-                    opt.value = acc.cid; // This is the Identity ID (C1001 or S1001)
+                    opt.value = acc.cid;
 
                     const typeLabel = acc.type === 'SID' ? 'Seeder' : (acc.type === 'CID' ? 'Buyer' : acc.type);
                     const balDisplay = acc.type === 'SID' ? `₹${acc.walletBalance || 0}` : `${acc.minutesBalance || 0}m`;
@@ -90,7 +94,6 @@ class AuthApp {
                     cidSelect.appendChild(opt);
                 });
 
-                // Auto-select first active or meaningful account
                 cidSelect.selectedIndex = 0;
             } else {
                 cidSelect.innerHTML = '<option value="" disabled selected>No accounts found</option>';
@@ -102,16 +105,18 @@ class AuthApp {
 
     async handleLogin(e) {
         e.preventDefault();
-        console.log("Login sequence started"); // Debug
         const mobile = document.getElementById('login-mobile').value;
         const cidElement = document.getElementById('login-cid');
-        let identityId = cidElement ? cidElement.value : null;
         const pin = document.getElementById('login-pin').value;
 
-        try {
-            console.log(`Attempting backend login for mobile: ${mobile}`);
+        const btn = e.submitter || document.querySelector('#login-form button[type="submit"]');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = 'Signing in...';
+        }
 
-            const res = await fetch('/api.php?action=login', {
+        try {
+            const res = await fetch('https://sdp-backend-production-c758.up.railway.app/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ mobile, pin })
@@ -119,24 +124,23 @@ class AuthApp {
             const data = await res.json();
 
             if (data.success) {
-                // Set Backend Token & Session
                 localStorage.setItem('token', data.token || data.data?.token);
                 localStorage.setItem('ssb_session', JSON.stringify(data.data.user));
-
-                // Redirect to the choice page (mandatory)
                 window.location.href = '../dashboard/dashboard.html';
             } else {
-                console.warn("Login Failed:", data.message);
-                alert("Login Failed: " + (data.message || "Invalid Mobile or PIN"));
+                if (window.showAlert) window.showAlert("Login Failed: " + (data.message || "Invalid Mobile or PIN"));
             }
         } catch (err) {
-            console.error("Login Error:", err);
-            alert("Login System Error. Check connection.");
+            if (window.showAlert) window.showAlert("Login System Error. Check connection.");
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = 'Sign In';
+            }
         }
     }
 }
 
-// Initialize
 // Initialize
 const authApp = new AuthApp();
 window.authApp = authApp;

@@ -105,7 +105,7 @@
 
                 try {
                     // Standardized Bridge Path
-                    const res = await fetch(`/api.php?action=referrer&code=${referralCode}`);
+                    const res = await fetch(`https://sdp-backend-production-c758.up.railway.app/api/referrer?code=${referralCode}`);
                     const data = await res.json();
 
                     if (res.ok && data.success) {
@@ -114,8 +114,8 @@
                     } else {
                         refInput.value = referralCode;
                     }
+                    refInput.value = referralCode;
                 } catch (e) {
-                    console.error('Referral lookup failed', e);
                     refInput.value = referralCode;
                 }
             } else {
@@ -137,7 +137,7 @@
 
             try {
                 // Standardized Bridge Path
-                const res = await fetch("/api.php?action=check-mobile", {
+                const res = await fetch("https://sdp-backend-production-c758.up.railway.app/api/auth/check-mobile", {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ mobile })
@@ -201,7 +201,7 @@
                 // LOGIN
                 try {
                     // Standardized Bridge Path
-                    const res = await fetch("/api.php?action=login", {
+                    const res = await fetch("https://sdp-backend-production-c758.up.railway.app/api/auth/login", {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ mobile, pin })
@@ -230,7 +230,7 @@
                     if (referralCode) reqBody.referral_code = referralCode;
 
                     // Standardized Bridge Path
-                    const regRes = await fetch("/api.php?action=register", {
+                    const regRes = await fetch("https://sdp-backend-production-c758.up.railway.app/api/auth/register", {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(reqBody)

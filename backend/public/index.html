@@ -555,7 +555,7 @@
             e.preventDefault(); // Stop navigation to perform check
             
             try {
-                const res = await fetch('/api.php?action=me', {
+                const res = await fetch('https://sdp-backend-production-c758.up.railway.app/api/me', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const data = await res.json();
@@ -585,7 +585,6 @@
                     window.location.href = "/public/login.html";
                 }
             } catch (err) {
-                console.error("Dashboard check failed:", err);
                 window.location.href = "/public/login.html";
             }
         }

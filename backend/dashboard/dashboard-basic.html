@@ -65,22 +65,21 @@
         .auth-revealed { opacity: 1 !important; pointer-events: auto !important; transition: opacity 0.4s !important; }
     </style>
     <script>
-        // Synchronous Auth Guard: Runs before body renders to prevent flicker
+        // Mandatory Session Guard
         (function() {
-            const sessionStr = localStorage.getItem('ssb_session');
-            if (!sessionStr) {
-                window.location.href = "../public/login.html?redirect=" + encodeURIComponent(window.location.pathname + window.location.search);
+            const session = localStorage.getItem('ssb_session');
+            if (!session) {
+                window.location.href = "/join.html";
                 return;
             }
-            const user = JSON.parse(sessionStr);
+            const user = JSON.parse(session);
             if (!user.kit_activated) {
-                window.location.href = "../public/join.html";
+                window.location.href = "/join.html";
                 return;
             }
         })();
 
         window.addEventListener('DOMContentLoaded', function() {
-            // Only reveal if we didn't redirect
             document.body.classList.add('auth-revealed');
         });
     </script>

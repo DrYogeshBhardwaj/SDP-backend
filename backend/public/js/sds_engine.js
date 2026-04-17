@@ -23,7 +23,6 @@ window.SDSEngine = {
             await this.audioCtx.resume();
         }
 
-        console.log('[SDS] init complete');
     },
 
     async startFlow() {
@@ -67,7 +66,6 @@ window.SDSEngine = {
         this.binauralL = createOsc(left, -1);
         this.binauralR = createOsc(right, 1);
 
-        console.log(`[SDS] binaural started at L:${left} R:${right}`);
     },
 
     stop() {

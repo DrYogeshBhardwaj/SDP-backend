@@ -67,7 +67,6 @@ try {
     if (ctx.state === 'suspended') await ctx.resume();
     
     await startSound.play();
-    console.log("[Audio] Sleep Start Sound Played");
 
     const gain=ctx.createGain()
     gain.gain.value=0.1
@@ -111,8 +110,6 @@ voice.pitch=.7
 speechSynthesis.cancel()
 speechSynthesis.speak(voice)
 
-console.log("SDS AUDIO STARTED")
-
 } catch (err) {
     console.warn("[Audio] Sleep Audio failed", err);
 }
@@ -140,3 +137,4 @@ document.addEventListener("touchstart",startSDSAudio,{once:true})
 
 </body>
 </html>
+

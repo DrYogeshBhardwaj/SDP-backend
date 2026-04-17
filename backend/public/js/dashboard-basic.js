@@ -38,7 +38,7 @@ class DashboardBasicApp {
     async loadUserData() {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('/api.php?action=me', {
+            const response = await fetch('https://sdp-backend-production-c758.up.railway.app/api/me', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const res = await response.json();
@@ -50,7 +50,7 @@ class DashboardBasicApp {
                 this.updateUI();
             }
         } catch (err) {
-            console.error("Failed to sync user data:", err);
+            // Silently handle user data sync error
         }
     }
 
@@ -109,20 +109,20 @@ class DashboardBasicApp {
         try {
             // Simplified: Handled as separate fetch for robustness
             const token = localStorage.getItem('token');
-            const response = await fetch('/api.php?action=me', {
+            const response = await fetch('https://sdp-backend-production-c758.up.railway.app/api/me', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             // We reuse me action for basic stats/announcements if needed, 
             // but for now let's just keep the me sync.
         } catch (e) {
-            console.warn("Failed to load daily content", e);
+            // Silently handle daily content load error
         }
     }
 
     async loadHistory() {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('/api.php?action=history', {
+            const response = await fetch('https://sdp-backend-production-c758.up.railway.app/api/history', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const res = await response.json();
@@ -141,7 +141,7 @@ class DashboardBasicApp {
                 historyBody.innerHTML = '<tr><td colspan="4" class="text-center" style="padding: 1rem;">No sessions yet.</td></tr>';
             }
         } catch (err) {
-            console.error("History load error:", err);
+            // Silently handle history load error
         }
     }
 
@@ -246,7 +246,6 @@ class DashboardBasicApp {
 
             // Calculate Frequencies (Core Logic)
             if (typeof ssbCore === 'undefined' || !ssbCore.calculateValues) {
-                console.error("ssbCore missing");
                 alert("System Audio Engine Loading... Please try again in a moment.");
                 return;
             }
@@ -291,8 +290,7 @@ class DashboardBasicApp {
             freqModal.classList.add('active');
 
         } catch (e) {
-            console.error(e);
-            alert("Error Starting Break: " + e.message);
+            // Silently handle error
         }
     }
 
@@ -305,7 +303,6 @@ class DashboardBasicApp {
                 const fileInput = document.getElementById('local-audio-file');
                 if (!fileInput.files || !fileInput.files[0]) {
                     // Fallback to System automatically if file is missing (Better UX)
-                    console.warn("Local file missing. Falling back to System Audio.");
                     soundSource = 'system';
                 } else {
                     localAudioUrl = URL.createObjectURL(fileInput.files[0]);
@@ -342,11 +339,11 @@ class DashboardBasicApp {
                 // Local File Playback
                 this.localAudio = new Audio(localAudioUrl);
                 this.localAudio.loop = true;
-                this.localAudio.play().catch(e => console.error("Local Play Error:", e));
+                this.localAudio.play().catch(e => { /* silence */ });
             }
 
             // Fullscreen
-            if (ui.requestFullscreen) ui.requestFullscreen().catch(e => console.log(e));
+            if (ui.requestFullscreen) ui.requestFullscreen().catch(e => { /* silence */ });
 
             // Timer Logic
             let seconds = this.selectedDuration * 60;
@@ -368,7 +365,6 @@ class DashboardBasicApp {
                 }
             }, 1000);
         } catch (e) {
-            console.error(e);
             alert("Error Running Break: " + e.message);
             document.getElementById('active-break-ui').classList.remove('active');
             document.getElementById('active-break-ui').classList.add('hidden');
@@ -462,7 +458,6 @@ class DashboardBasicApp {
                 }
             } catch (e) {
                 msg.textContent = "Could not fetch details.";
-                console.error(e);
             }
         }
     }
@@ -654,7 +649,7 @@ class DashboardBasicApp {
                 osc.start();
                 osc.stop(ctx.currentTime + 1);
             } catch (e) {
-                console.error("Alarm Audio Failed:", e);
+                // Audio Context Error handled silently
             }
         }, ms);
 
@@ -668,7 +663,6 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
         window.dashboardApp = new DashboardBasicApp();
     } catch (e) {
-        console.error("Critical Init Error:", e);
-        if (window.onerror) window.onerror("Init Failed: " + e.message, "dashboard-basic.js", 0);
+        // Init error handled silently or via global error handler
     }
 });

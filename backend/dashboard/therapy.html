@@ -343,10 +343,13 @@
 </main>
 
 <script>
-    // Auth guard — token is stored separately from ssb_session
-    const _sess = JSON.parse(localStorage.getItem('ssb_session') || '{}');
+    // Mandatory Session Guard
+    const _sess_str = localStorage.getItem('ssb_session');
     const _tok = localStorage.getItem('token');
-    if (!_sess.id && !_tok) window.location.href = '/login.html';
+    if (!_sess_str || !_tok) {
+        window.location.href = '/join.html';
+    }
+    const _sess = JSON.parse(_sess_str || '{}');
 
 
     // Removed Intro guard

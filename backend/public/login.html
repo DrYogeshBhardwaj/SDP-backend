@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sinaank Digital Therapy</title>
     <link rel="icon" href="../assets/smt_logo.png">
-    <script src="js/config.js"></script>
+    <script src="js/config-v2.js"></script>
     <script src="js/i18n.js"></script>
     <style>
         :root {
@@ -644,7 +644,7 @@
     <!-- Scripts -->
     <script>
         // Use literal path for API bridge for maximum production stability
-        const API_BRIDGE = '/api.php'; 
+        const API_BRIDGE = 'https://sdp-backend-production-c758.up.railway.app/api'; 
 
         // Dev Warning: Check if running via file://
         if (window.location.protocol === 'file:') {
@@ -711,7 +711,7 @@
             btn.classList.add('loading');
             btn.disabled = true;
 
-            const url = "/api.php?action=send-otp";
+            const url = "https://sdp-backend-production-c758.up.railway.app/api/auth/send-otp";
             try {
                 const res = await fetch(url, {
                     method: 'POST',
@@ -724,7 +724,7 @@
                     state.sessionId = data.data.sessionId;
                     
                     // Proceed with verification
-                    const verifyUrl = "/api.php?action=verify-otp";
+                    const verifyUrl = "https://sdp-backend-production-c758.up.railway.app/api/auth/verify-otp";
                     const verifyRes = await fetch(verifyUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -771,7 +771,7 @@
             btn.classList.add('loading');
             btn.disabled = true;
 
-            const url = "/api.php?action=verify-otp";
+            const url = "https://sdp-backend-production-c758.up.railway.app/api/auth/verify-otp";
             try {
                 const res = await fetch(url, {
                     method: 'POST',
@@ -895,7 +895,7 @@
                 if (state.refCode) reqBody.referral_code = state.refCode;
 
                 // Step 1: Register
-                const regRes = await fetch("/api.php?action=register", {
+                const regRes = await fetch("https://sdp-backend-production-c758.up.railway.app/api/auth/register", {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
@@ -912,7 +912,7 @@
 
                 // Step 2: Auto-login
                 btnTxt.textContent = _t('login.status.logging_in');
-                const loginRes = await fetch("/api.php?action=login", {
+                const loginRes = await fetch("https://sdp-backend-production-c758.up.railway.app/api/auth/login", {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
@@ -986,7 +986,7 @@
             if (state.userExists) {
                 // LOGIN
                 try {
-                    const res = await fetch("/api.php?action=login", {
+                    const res = await fetch("https://sdp-backend-production-c758.up.railway.app/api/auth/login", {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
@@ -1013,7 +1013,7 @@
                     const reqBody = { mobile: state.mobile, pin, name, amount: state.purchaseAmount };
                     if (state.refCode) reqBody.referral_code = state.refCode;
 
-                    const res = await fetch("/api.php?action=register", {
+                    const res = await fetch("https://sdp-backend-production-c758.up.railway.app/api/auth/register", {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
@@ -1022,7 +1022,7 @@
                     
                     if (res.ok) {
                         // Auto-login after successful registration
-                        const loginRes = await fetch("/api.php?action=login", {
+                        const loginRes = await fetch("https://sdp-backend-production-c758.up.railway.app/api/auth/login", {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             credentials: 'include',

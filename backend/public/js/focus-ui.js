@@ -45,7 +45,7 @@ window.FocusUIController = {
             if (res && res.success) {
                 this.sessionId = res.data.sessionId;
                 this.startPing();
-                console.log('[FocusUI] Session linked:', this.sessionId, res.data.resumed ? '(Resumed)' : '(New)');
+
                 return true;
             }
 
@@ -102,7 +102,7 @@ window.FocusUIController = {
     async _unlockAudioContext() {
         if (window.AudioEngine && window.AudioEngine.ctx) {
             if (window.AudioEngine.ctx.state === 'suspended') {
-                console.log("[FocusUI] Resuming AudioEngine Context...");
+
                 await window.AudioEngine.ctx.resume();
             }
         }
@@ -170,7 +170,7 @@ window.FocusUIController = {
             // ------------------------------
 
             await kickstart.play();
-            console.log("[FocusUI] Audio unlocked and boosted successfully.");
+
         } catch(e) {
             console.warn("[FocusUI] MP3 Kickstart failed:", e);
         }
@@ -347,10 +347,9 @@ window.FocusUIController = {
 
         // ── 0. Check Theme Ready (Strict Gate) ──
         if (!window.SDP_THEME) {
-            console.log("[FocusUI] Waiting for SID DNA Profile...");
+
             await this._waitForTheme();
         }
-        console.log("Theme ready");
 
         // ── 1. Audio Gesture Unlock (Critical for Sound) ──
         await this._unlockAudioContext();
@@ -367,11 +366,10 @@ window.FocusUIController = {
         if (isNew) {
             // New Session: Mandatory sequence
             this._showSIDInfoWindow(true);
-            console.log("SID window shown");
 
             try {
                 if (window.PersonalStartEngine) {
-                    console.log("[FocusUI] Starting Personal Intro...");
+
                     await PersonalStartEngine.playIntroMp3(this.moduleId);
                     
                     // ── Natural Hindi SID Announcement ──
@@ -386,7 +384,7 @@ window.FocusUIController = {
                         const btn = document.getElementById('sid-start-btn');
                         if (btn) {
                             btn.onclick = async () => {
-                                console.log("[FocusUI] Manual Start Triggered.");
+
                                 await this._unlockAudioAndSense(); 
                                 resolve();
                             };
@@ -405,7 +403,7 @@ window.FocusUIController = {
         } else {
             // Continue Session: 2s Confirmation
             this._showSIDInfoWindow(false);
-            console.log("SID window shown (confirmation)");
+
             await new Promise(r => setTimeout(r, 2000));
             await this._hideSIDInfoWindow();
         }
@@ -572,7 +570,7 @@ window.FocusUIController = {
             const eng = window[name];
             if (eng && eng.audioCtx && eng.audioCtx.state === 'suspended') {
                 eng.audioCtx.resume().then(() => {
-                    console.log(`[FocusUI] Resumed AudioContext for ${name}`);
+
                 }).catch(e => {});
             }
         });
@@ -733,7 +731,7 @@ window.FocusUIController = {
             if (engine && engine.toggleMusic) {
                 const isActive = btn.classList.toggle('active');
                 engine.toggleMusic(isActive);
-                console.log(`[FocusUI] Music Mode: ${isActive ? 'ON' : 'OFF'}`);
+
             }
         };
     },
@@ -743,3 +741,4 @@ window.FocusUIController = {
 };
 
 // FocusUIController v2.0 Finalized.
+

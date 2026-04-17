@@ -1,6 +1,6 @@
 const CONFIG = {
-    // Relative connection to backend so it works locally and on Railway
-    API_BASE_URL: '/api'
+    // Force absolute production Railway backend URL
+    API_BASE_URL: 'https://sdp-backend-production-c758.up.railway.app/api'
 };
 
 Object.freeze(CONFIG);

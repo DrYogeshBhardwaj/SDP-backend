@@ -114,7 +114,7 @@
                 if (ctx.state === 'suspended') await ctx.resume();
                 
                 await startSound.play();
-                console.log("[Audio] Therapy Start Sound Played");
+
             } catch (err) {
                 console.warn("[Audio] Blocked or failed", err);
             }
@@ -143,3 +143,4 @@
     </script>
 </body>
 </html>
+

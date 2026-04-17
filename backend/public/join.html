@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="js/i18n.js"></script>
     <link rel="icon" href="assets/smt_logo.png">
-    <script src="js/config.js"></script>
+    <script src="js/config-v2.js"></script>
     <script src="js/SinaankAssistant.js"></script>
     <style>
         :root {
@@ -343,6 +343,8 @@
             document.getElementById('send-otp-btn').addEventListener('click', sendOtp);
             document.getElementById('verify-otp-btn').addEventListener('click', verifyOtp);
             document.getElementById('cancel-otp-btn').addEventListener('click', closeOtp);
+            
+            // Production ready: removed all console logs
         }
 
         initApp();
@@ -357,15 +359,16 @@
             const name = document.getElementById('otp-name').value.trim();
             const mobile = document.getElementById('otp-mobile').value;
             
-            if (!name || name.length < 2) { showMessage("Please enter your full name"); return; }
-            if (!/^\d{10}$/.test(mobile)) { showMessage("Invalid mobile number"); return; }
+            if (!name || name.length < 2) { showMessage("कृपया अपना पूरा नाम दर्ज करें"); return; }
+            if (!/^\d{10}$/.test(mobile)) { showMessage("अमान्य मोबाइल नंबर (10 अंक आवश्यक)"); return; }
 
             const btn = document.getElementById('send-otp-btn');
-            const spinner = document.getElementById('send-spinner');
-            btn.disabled = true; spinner.classList.remove('hidden');
+            btn.disabled = true; 
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `Sending OTP... <span id="send-spinner" class="spinner"></span>`;
             document.getElementById('otp-message').style.display = 'none';
 
-            const url = "/api/auth/send-otp";
+            const url = "https://sdp-backend-production-c758.up.railway.app/api/auth/send-otp";
             try {
                 const res = await fetch(url, {
                     method: 'POST',
@@ -379,8 +382,8 @@
                     document.getElementById("otp-step").style.display = "block";
                     verifiedMobile = mobile;
                     startResendTimer();
-                } else { showMessage(data.message || "Failed to send OTP"); }
-            } catch (err) { showMessage("Network error. Please try again."); } finally { btn.disabled = false; spinner.classList.add('hidden'); }
+                } else { showMessage(data.message || "OTP भेजने में समस्या हुई, कृपया पुनः प्रयास करें"); }
+            } catch (err) { showMessage("Network issue. Please check connection"); } finally { btn.disabled = false; btn.innerHTML = originalText; }
         }
 
         function startResendTimer() {
@@ -408,14 +411,15 @@
 
         async function verifyOtp() {
             const otp = document.getElementById("otpInput").value;
-            if (otp.length < 4) { showMessage("Enter valid OTP"); return; }
+            if (otp.length < 4) { showMessage("कृपया सही OTP दर्ज करें"); return; }
 
             const btn = document.getElementById('verify-otp-btn');
-            const spinner = document.getElementById('verify-spinner');
-            btn.disabled = true; spinner.classList.remove('hidden');
+            btn.disabled = true; 
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `Verifying... <span id="verify-spinner" class="spinner"></span>`;
             document.getElementById('otp-message').style.display = 'none';
 
-            const url = "/api/auth/verify-otp";
+            const url = "https://sdp-backend-production-c758.up.railway.app/api/auth/verify-otp";
             try {
                 const res = await fetch(url, {
                     method: 'POST',
@@ -424,7 +428,7 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    showMessage("Verification Successful! Redirecting...", false);
+                    showMessage("सत्यापन सफल! आगे बढ़ रहे हैं...", false);
                     
                     // Store mobile for session persistence
                     localStorage.setItem("mobile", verifiedMobile);
@@ -446,14 +450,13 @@
                         sessionStorage.setItem("sinaank_reg_name", name);
                         
                         setTimeout(() => {
-                            // Corrected redirect: pass currentSessionId as 'session'
                             window.location.href = `payment-v2.html?mobile=${verifiedMobile}&plan=${planId}&session=${currentSessionId}${sponsorId ? '&ref=' + sponsorId : ''}`;
                         }, 1500);
                     }
                 } else { 
                     showMessage(data.message || "गलत कोड दर्ज हुआ है। कृपया पुनः प्रयास करें।"); 
                 }
-            } catch (err) { showMessage("Verification error"); } finally { btn.disabled = false; spinner.classList.add('hidden'); }
+            } catch (err) { showMessage("Verification issue. Please check connection"); } finally { btn.disabled = false; btn.innerHTML = originalText; }
         }
     </script>
 </body>

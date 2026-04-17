@@ -60,8 +60,7 @@ class AiDemoGuide {
     }
 
     async startFlow() {
-        console.log("[AiGuide] Unlocking Audio Context on User Gesture...");
-        
+
         const startSound = new Audio("/assets/audio/common/therapy_start.mp3");
         startSound.volume = 1.0;
 
@@ -72,14 +71,14 @@ class AiDemoGuide {
 
             // Play sound immediately within the gesture handler
             await startSound.play();
-            console.log("[AiGuide] Audio started successfully");
+
         } catch(e) { 
             console.warn("[AiGuide] Audio failed:", e); 
         }
 
         // 1. Log Demo Start (Conversion Tracking)
         try {
-            fetch("/api.php?action=log-demo", { method: 'POST', headers: { 'Content-Type': 'application/json' } }).catch(() => {});
+            fetch("https://sdp-backend-production-c758.up.railway.app/api/log-demo", { method: 'POST', headers: { 'Content-Type': 'application/json' } }).catch(() => {});
         } catch(e) {}
 
         // 3. Unlock Speech Synth
@@ -272,3 +271,4 @@ class AiDemoGuide {
 
 window.aiGuide = new AiDemoGuide();
 window.openSinaankGuide = () => window.aiGuide.open();
+

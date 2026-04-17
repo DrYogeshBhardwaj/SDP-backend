@@ -38,7 +38,7 @@ class DashboardBusinessApp {
     async loadUserData() {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('/api.php?action=me', {
+            const response = await fetch('https://sdp-backend-production-c758.up.railway.app/api/me', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const res = await response.json();
@@ -50,7 +50,7 @@ class DashboardBusinessApp {
                 this.updateUI();
             }
         } catch (err) {
-            console.error("Failed to sync business user data:", err);
+            // Silently handle error
         }
     }
 
@@ -130,7 +130,7 @@ class DashboardBusinessApp {
                 }
             }
         } catch (e) {
-            console.warn("Failed to load announcements", e);
+            // Silently handle announcements load error
         }
     }
 
@@ -348,7 +348,7 @@ class DashboardBusinessApp {
     async loadHistory() {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('/api.php?action=history', {
+            const response = await fetch('https://sdp-backend-production-c758.up.railway.app/api/history', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const res = await response.json();
@@ -367,14 +367,14 @@ class DashboardBusinessApp {
                 historyList.innerHTML = '<li class="text-sm text-muted">No recent activity.</li>';
             }
         } catch (err) {
-            console.error("History load error:", err);
+            // Silently handle history load error
         }
     }
 
     async requestPayout() {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('/api.php?action=payout-request', {
+            const response = await fetch('https://sdp-backend-production-c758.up.railway.app/api/payout-request', {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -403,7 +403,6 @@ class DashboardBusinessApp {
             navigator.clipboard.writeText(input.value).then(() => {
                 alert("Link Copied!");
             }).catch(err => {
-                console.error('Async: Could not copy', err);
                 document.execCommand('copy');
                 alert("Link Copied!");
             });
@@ -609,10 +608,10 @@ class DashboardBusinessApp {
                 // Local File Playback
                 this.localAudio = new Audio(localAudioUrl);
                 this.localAudio.loop = true;
-                this.localAudio.play().catch(e => console.error("Local Play Error:", e));
+                this.localAudio.play().catch(e => { /* silence */ });
             }
             // Fullscreen
-            if (ui.requestFullscreen) ui.requestFullscreen().catch(e => console.log(e));
+            if (ui.requestFullscreen) ui.requestFullscreen().catch(e => { });
 
             // Timer Logic
             let seconds = this.selectedDuration * 60;
@@ -635,7 +634,7 @@ class DashboardBusinessApp {
             }, 1000);
 
         } catch (e) {
-            console.error("Run Break Error:", e);
+            // Silently handle run error
         }
     }
 
@@ -702,7 +701,7 @@ class DashboardBusinessApp {
                 osc.start();
                 osc.stop(ctx.currentTime + 1);
             } catch (e) {
-                console.error("Alarm Audio Failed:", e);
+                // Audio context error
             }
         }, ms);
 
@@ -751,7 +750,6 @@ class DashboardBusinessApp {
                 }
             } catch (e) {
                 msg.textContent = "Could not fetch details.";
-                console.error(e);
             }
         }
     }

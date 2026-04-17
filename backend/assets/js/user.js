@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             try {
                 const token = localStorage.getItem('token');
-                const res = await fetch('/api.php?action=family', {
+                const res = await fetch('https://sdp-backend-production-c758.up.railway.app/api/family', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function loadFamilyMembers(user) {
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch('/api.php?action=family', {
+            const res = await fetch('https://sdp-backend-production-c758.up.railway.app/api/family', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await res.json();
@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
         } catch (e) {
-            console.error("Failed to load family members", e);
+            // Silently handle family load error
         }
     }
 
@@ -212,7 +212,7 @@ async function loadDashboardData() {
     try {
         // Fetch User details for balance
         const token = localStorage.getItem('token');
-        const response = await fetch('/api.php?action=me', {
+        const response = await fetch('https://sdp-backend-production-c758.up.railway.app/api/me', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         const userData = await response.json();
@@ -223,12 +223,12 @@ async function loadDashboardData() {
         // Fetch History
         let historyData = { data: [] }; // Default to empty array
         try {
-            const historyResponse = await fetch('/api.php?action=history', {
+            const historyResponse = await fetch('https://sdp-backend-production-c758.up.railway.app/api/history', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             historyData = await historyResponse.json();
         } catch (e) {
-            console.warn('Failed to fetch history data (backend might not supply it yet):', e);
+            // Silently handle history fetch error
         }
         const history = historyData.data?.history || historyData.history || [];
 
@@ -286,7 +286,7 @@ async function startSession(minutes) {
                     audioFileToPlay = savedAudio.file;
                     originalFileName = savedAudio.name;
                 }
-            } catch (e) { console.warn('Audio DB Get Error', e); }
+            } catch (e) { }
         }
 
         const audioInput = document.getElementById('custom-audio');
@@ -327,7 +327,6 @@ async function startSession(minutes) {
                 try {
                     await window.ssbCore.startAudio(styledVals.val1, styledVals.val2);
                 } catch (e) {
-                    console.warn('[SSB CORE] Audio failed, using fallback:', e);
                     if (window.playSessionAmbientAudio) {
                         window.playSessionAmbientAudio(5);
                     }
@@ -350,11 +349,11 @@ async function startSession(minutes) {
             if (requestFS && !document.fullscreenElement && !document.webkitFullscreenElement) {
                 requestFS.call(docEl);
             }
-        } catch (e) { console.warn("Fullscreen request failed", e); }
+        } catch (e) { }
 
         // Validation handled entirely by backend API rate limiter, JWT validation, and balance checks
         const token = localStorage.getItem('token');
-        await fetch('/api.php?action=start-session', { 
+        await fetch('https://sdp-backend-production-c758.up.railway.app/api/start-session', { 
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',

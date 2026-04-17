@@ -6,6 +6,14 @@
     <title>Sinaank Digital Therapy</title>
     <script src="../public/js/i18n.js"></script>
     <script>
+    (function() {
+        // Mandatory Session Guard
+        const _sess = localStorage.getItem("ssb_session");
+        const _tok = localStorage.getItem("token");
+        if (!_sess || !_tok) {
+            window.location.href = "/join.html";
+        }
+    })();
         // Module Guard (mandatory)
         if (!sessionStorage.getItem("sinaank_intro")) {
             window.location.href = "/dashboard/therapy.html";
@@ -31,3 +39,4 @@
     <iframe src="/dashboard/therapy.html" allow="autoplay; accelerometer; gyroscope;"></iframe>
 </body>
 </html>
+

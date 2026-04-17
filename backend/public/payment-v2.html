@@ -203,6 +203,7 @@
                 <span data-i18n="join.otp.verify_proceed">Proceed to Payment</span>
                 <span id="pay-spinner" class="spinner hidden"></span>
             </button>
+            <div id="payment-error" class="error-text" style="margin-top: 1rem; padding: 0.75rem; border-radius: 12px; background: #fee2e2;"></div>
             
             <button class="demo-btn" id="demo-skip-btn" onclick="skipPayment()">Skip for Test</button>
             
@@ -220,9 +221,13 @@
         const sponsorId = params.get('ref') || localStorage.getItem("ref") || '';
 
         if (!mobile || !planId) {
-            console.error("Missing Session Context:", { mobile, planId });
-            alert("Session expired or invalid. Please start again from the Registration page.");
-            window.location.href = 'join.html';
+            window.location.href = '/join.html';
+        }
+
+        function showPaymentError(msg) {
+            const el = document.getElementById('payment-error');
+            el.textContent = msg;
+            el.style.display = 'block';
         }
 
         const PLANS = {
@@ -272,14 +277,16 @@
             const pinConfirm = document.getElementById('reg-pin-confirm').value;
             const errorDiv = document.getElementById('pin-error');
 
-            if (!name) { alert("Enter Full Name"); return; }
-            if (pin.length !== 4 || !/^\d+$/.test(pin)) { alert("Enter 4-digit numeric PIN"); return; }
+            if (!name) { showPaymentError("Enter Full Name"); return; }
+            if (pin.length !== 4 || !/^\d+$/.test(pin)) { showPaymentError("Enter 4-digit numeric PIN"); return; }
             if (pin !== pinConfirm) { errorDiv.style.display = 'block'; return; }
             errorDiv.style.display = 'none';
 
             const btn = document.getElementById('pay-proceed-btn');
-            const spinner = document.getElementById('pay-spinner');
-            btn.disabled = true; spinner.classList.remove('hidden');
+            const originalText = btn.innerHTML;
+            btn.disabled = true; 
+            btn.innerHTML = `Processing payment... <span id="pay-spinner" class="spinner"></span>`;
+            document.getElementById('payment-error').style.display = 'none';
 
             try {
                 // Map frontend plan ID to backend enum if needed
@@ -287,7 +294,6 @@
                 if (planId === 'starter' || planId === 'basic') apiPlanId = 'BASIC';
                 
                 const url = "https://sdp-backend-production-c758.up.railway.app/api/payment/create-order";
-                console.log("DEBUG - Initiating payment at:", url);
                 const res = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -301,17 +307,16 @@
                 const data = await res.json();
                 
                 if (!data.success) {
-                    console.log("REAL ERROR:", data);
-                    alert(data.message || "Payment error");
+                    showPaymentError(data.message || "Payment temporarily unavailable. Please try again");
                     return;
                 }
 
                 initiateRazorpay(data, { name, pin });
             } catch (err) { 
-                alert("Payment initiation failed: " + err.message); 
+                showPaymentError("Network issue. Please check connection"); 
             } finally { 
                 btn.disabled = false; 
-                spinner.classList.add('hidden'); 
+                btn.innerHTML = originalText;
             }
         }
 
@@ -328,10 +333,9 @@
                 },
                 "modal": {
                     "ondismiss": function() {
-                        alert("Payment window closed. You can retry with the 'Proceed' button.");
+                        showPaymentError("Payment window closed. Please try again.");
                         const btn = document.getElementById('pay-proceed-btn');
                         btn.disabled = false;
-                        btn.innerHTML = "Retry Payment";
                     }
                 },
                 "prefill": { "contact": mobile, "name": userData.name },
@@ -339,10 +343,9 @@
             };
             const rzp = new Razorpay(options);
             rzp.on('payment.failed', function (response){
-                alert("Payment Failed: " + response.error.description);
+                showPaymentError("Payment Failed: " + response.error.description);
                 const btn = document.getElementById('pay-proceed-btn');
                 btn.disabled = false;
-                btn.innerHTML = "Retry Payment";
             });
             rzp.open();
         }
@@ -393,7 +396,7 @@
                     localStorage.setItem('ssb_session', JSON.stringify(data.user || data.data?.user));
                     window.location.href = '/dashboard/dashboard.html';
                 } else {
-                    alert(data.message || "Registration failed. Contact Support.");
+                    showPaymentError(data.message || "Registration failed. Contact Support.");
                     loadingOverlay.remove();
                     if (document.getElementById('demo-skip-btn')) {
                         document.getElementById('demo-skip-btn').disabled = false;
@@ -401,7 +404,7 @@
                     }
                 }
             } catch (err) {
-                alert("Critical error during activation. " + err.message);
+                showPaymentError("Critical error during activation. " + err.message);
                 loadingOverlay.remove();
             }
         }

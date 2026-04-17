@@ -157,8 +157,6 @@ class SSBCore {
             const f1 = this.getFrequency(val1);
             const f2 = this.getFrequency(val2);
 
-            console.log(`[SSB CORE] Starting Audio: L=${f1}Hz (${val1}), R=${f2}Hz (${val2})`);
-
             // Check if frequencies are valid numbers
             if (!f1 || !f2 || isNaN(f1) || isNaN(f2)) {
                 console.error("Invalid Frequencies:", f1, f2);
@@ -220,7 +218,38 @@ class SSBCore {
             this.ctx = null;
         }
     }
+    showAlert(msg, isError = true) {
+        let toast = document.getElementById('ssb-toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'ssb-toast';
+            Object.assign(toast.style, {
+                position: 'fixed', bottom: '2rem', left: '50%', transform: 'translateX(-50%)',
+                padding: '1rem 2rem', borderRadius: '12px', zIndex: '99999',
+                fontFamily: 'Outfit, sans-serif', fontSize: '0.95rem', fontWeight: '600',
+                transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                opacity: '0', visibility: 'hidden', textAlign: 'center', minWidth: '280px',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.3)'
+            });
+            document.body.appendChild(toast);
+        }
+
+        toast.textContent = msg;
+        toast.style.background = isError ? 'rgba(239, 68, 68, 0.95)' : 'rgba(16, 185, 129, 0.95)';
+        toast.style.color = '#fff';
+        toast.style.opacity = '1';
+        toast.style.visibility = 'visible';
+        toast.style.transform = 'translateX(-50%) translateY(0)';
+
+        if (this.toastTimeout) clearTimeout(this.toastTimeout);
+        this.toastTimeout = setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.visibility = 'hidden';
+            toast.style.transform = 'translateX(-50%) translateY(10px)';
+        }, 4000);
+    }
 }
 
 // Global Instance
 window.ssbCore = new SSBCore();
+

@@ -19,7 +19,7 @@ class Store {
 
         // FORCE LOGOUT MIGRATION (Version 6)
         if (storedVersion < 6) {
-            // console.log("Migration v6: Forcing Global Logout");
+            // 
             this.logout();
             localStorage.setItem('ssb_db_version', this.DB_VERSION.toString());
         }
@@ -154,7 +154,7 @@ class Store {
         const removedTxns = initialTxnCount - validTxns.length;
         if (removedTxns > 0) {
             localStorage.setItem('ssb_transactions', JSON.stringify(validTxns));
-            console.log(`[Cleanup] Removed ${removedTxns} orphaned transactions.`);
+
         }
 
         // 2. Clean Feedback
@@ -164,7 +164,7 @@ class Store {
         const removedFb = initialFbCount - validFeedback.length;
         if (removedFb > 0) {
             localStorage.setItem('ssb_feedback', JSON.stringify(validFeedback));
-            console.log(`[Cleanup] Removed ${removedFb} orphaned feedback entries.`);
+
         }
 
         return { removedTxns, removedFb };
@@ -599,7 +599,7 @@ class Store {
         if (typeof buyer === 'string') {
             const found = this.getUsers().find(u => u.id === buyer);
             if (!found) {
-                console.log("Commission Skipped: User ID not found in LocalStorage store");
+
                 return [];
             }
             buyer = found;
@@ -607,7 +607,7 @@ class Store {
 
         // CRITICAL GUARD: Only ₹580 (Family Pack) triggers commission
         if (amountPaid < 580) {
-            console.log("Commission Skiped: Amount is less than 580");
+
             return [];
         }
 
@@ -1130,4 +1130,4 @@ try {
         alert("Critical Error: Store Init Failed. Please Refresh.");
     }
 }
-console.log("SDP Store Fully Loaded - VERSION: 2026-02-19-FIXED-FINAL");
+

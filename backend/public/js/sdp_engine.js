@@ -42,7 +42,7 @@ window.SDPEngine = {
             // Boosted scale (0-0.8) for better speaker output
             const targetGain = vol * 0.8; 
             this.masterGain.gain.setTargetAtTime(targetGain, this.audioCtx.currentTime, 0.1);
-            console.log(`[SDPEngine] Volume set to ${Math.round(vol * 100)}% (Boosted Gain: ${targetGain.toFixed(3)})`);
+
         }
     },
 
@@ -172,4 +172,5 @@ window.SDPEngine = {
         this.audioCtx = null;
     }
 };
+
 

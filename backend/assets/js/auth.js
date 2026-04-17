@@ -5,7 +5,7 @@ const Auth = {
     async checkAuth() {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('/api.php?action=me', {
+            const response = await fetch('https://sdp-backend-production-c758.up.railway.app/api/me', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const res = await response.json();
@@ -17,7 +17,7 @@ const Auth = {
 
     // Login using mobile and pin
     async login(mobile, pin) {
-        const response = await fetch('/api.php?action=login', {
+        const response = await fetch('https://sdp-backend-production-c758.up.railway.app/api/auth/login', {
             method: 'POST',
             body: JSON.stringify({ mobile, pin }),
             headers: { 'Content-Type': 'application/json' }
@@ -27,7 +27,7 @@ const Auth = {
 
     // Register a new user
     async register(userData) {
-        const response = await fetch('/api.php?action=register', {
+        const response = await fetch('https://sdp-backend-production-c758.up.railway.app/api/auth/register', {
             method: 'POST',
             body: JSON.stringify(userData),
             headers: { 'Content-Type': 'application/json' }
@@ -40,7 +40,7 @@ const Auth = {
         try {
             await ApiClient.post('/auth/logout');
         } catch (e) {
-            console.error('Logout error', e);
+            // Silently handle logout error
         } finally {
             // Always redirect to landing page on logout
             window.location.href = '../public/index.html';

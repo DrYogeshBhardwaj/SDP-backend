@@ -11,8 +11,7 @@
             
             // Self-healing: If kit_activated is missing but user is logged in, refresh
             if (user && user.id && user.kit_activated === undefined) {
-                console.log("[Dashboard] Refreshing session to sync kit status...");
-                const url = '/api.php?action=me';
+                const url = SINAANK_CONFIG.getApiUrl('me');
                 fetch(url, {
                     headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                 }).then(r => r.json()).then(data => {
@@ -30,7 +29,7 @@
       const token = localStorage.getItem("token");
 
       if (!session || !token) {
-        window.location.href = "/login.html";
+        window.location.href = "/join.html";
         return;
       }
 
@@ -38,7 +37,7 @@
         const user = JSON.parse(session);
 
         if (!user || !user.name) {
-          window.location.href = "/login.html";
+          window.location.href = "/join.html";
           return;
         }
 
@@ -488,7 +487,7 @@
                     }
                 }
             } catch(e) {
-                console.warn('Could not refresh user data:', e);
+                // Silently handle error for production
             }
 
             // Fetch finance balance

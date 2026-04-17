@@ -4,7 +4,6 @@
  * Uses event delegation to handle dynamic elements (Admin/SPA).
  */
 (function () {
-    console.log("Validator Initialized");
 
     document.body.addEventListener('input', function (e) {
         const target = e.target;
@@ -44,3 +43,4 @@
         }
     });
 })();
+

@@ -153,7 +153,7 @@
                 if (ctx.state === 'suspended') await ctx.resume();
                 
                 await startSound.play();
-                console.log("[Audio] Therapy Start Sound Played");
+
             } catch (err) {
                 console.warn("[Audio] Blocked or failed", err);
             }
@@ -162,7 +162,6 @@
             if (btnNew) { btnNew.disabled = true; btnNew.textContent = 'तैयार हो रहा है...'; }
             if (btnCont) { btnCont.disabled = true; }
 
-            console.log(`[SDP] Initializing ${isNew ? 'New' : 'Return'} Therapy`);
             await FocusUIController.setup({ module: 'SDP', isNew: isNew });
         }
 
@@ -192,3 +191,4 @@
     </script>
 </body>
 </html>
+
