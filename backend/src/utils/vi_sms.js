@@ -11,10 +11,10 @@ const generateOTP = () => {
 };
 
 /**
- * Sends OTP via 2Factor.in using the STRICT Positional DLT Template API.
- * This ensures the message matches your registered template EXACTLY.
+ * Sends OTP via 2Factor.in using the Transactional SMS (R1 API).
+ * This forces SMS delivery and avoids automated voice fallback.
  * 
- * Format: https://2factor.in/API/V1/{API_KEY}/SMS/{MOBILE}/{OTP}/{TEMPLATE_NAME}
+ * Endpoint: POST https://2factor.in/API/R1/
  * 
  * @param {string} mobile - 10-digit mobile number
  * @returns {Promise<any>} - { Status: "Success", Details: "SessionId" }
@@ -24,15 +24,15 @@ const sendOTP = async (mobile) => {
         const apiKey = process.env.TWO_FACTOR_API_KEY;
         if (!apiKey) throw new Error("TWO_FACTOR_API_KEY is missing in environment.");
 
-        // DLT Template Name (MUST be exactly as shown in 2Factor Dashboard)
-        const templateName = process.env.TWO_FACTOR_TEMPLATE || "SINAANK_OTP";
-
+        const senderId = process.env.TWO_FACTOR_SENDER_ID || "MKUNDL";
+        const templateName = process.env.TWO_FACTOR_TEMPLATE || "MKUNDLI_OTP";
+        
         // 1. Generate OTP Manually
         const otp = generateOTP();
 
         // 2. Prepare Mobile Number
         let fMobile = String(mobile);
-        if (!fMobile.startsWith('91')) {
+        if (!fMobile.startsWith('91') && fMobile.length === 10) {
             fMobile = `91${fMobile}`;
         }
 
@@ -40,24 +40,35 @@ const sendOTP = async (mobile) => {
         const expiresAt = Date.now() + 5 * 60 * 1000;
         otpStorage.set(mobile, { otp, expiresAt });
 
-        // 4. DLT Compliant URL (Using Option 1: SMS/{MOBILE}/{OTP})
-        const url = `https://2factor.in/API/V1/${apiKey}/SMS/${fMobile}/${otp}`;
+        // 4. Construct R1 Payload
+        const payload = {
+            module: "TRANS_SMS",
+            apikey: apiKey,
+            to: fMobile,
+            from: senderId,
+            templatename: templateName,
+            var1: otp
+        };
 
-        // Mandatory Log (Masking API Key)
-        const logUrl = url.replace(apiKey, "HIDDEN_KEY");
-        console.log(`OTP URL: ${logUrl}`);
+        // Add DLT IDs if available in environment
+        if (process.env.TWO_FACTOR_PE_ID) payload.EntityId = process.env.TWO_FACTOR_PE_ID;
+        if (process.env.TWO_FACTOR_TEMPLATE_ID) payload.TemplateId = process.env.TWO_FACTOR_TEMPLATE_ID;
 
-        const response = await axios.get(url);
+        const url = "https://2factor.in/API/R1/";
+        
+        console.log(`[R1 SMS] Sending OTP to ${fMobile} using template ${templateName}...`);
+
+        const response = await axios.post(url, payload);
         
         if (response.data && response.data.Status === 'Success') {
-            console.log(`[SMS] Success! Delivery UUID: ${response.data.Details}`);
+            console.log(`[R1 SMS] Success! UUID: ${response.data.Details}`);
             return { Status: 'Success', Details: mobile };
         } else {
-            console.warn("[SMS] Failed to send:", response.data);
+            console.warn("[R1 SMS] Failed to send:", response.data);
             return response.data;
         }
     } catch (error) {
-        console.error("[SMS] 2Factor Error:", error.response ? error.response.data : error.message);
+        console.error("[R1 SMS] 2Factor Error:", error.response ? error.response.data : error.message);
         throw error;
     }
 };
