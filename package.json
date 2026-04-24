@@ -2,7 +2,18 @@
   "name": "sinaank-therapy-root",
   "version": "1.0.0",
   "scripts": {
-    "start": "cd backend && npm start",
-    "postinstall": "cd backend && npm install && npm run postinstall"
+    "start": "node backend/src/server.js",
+    "postinstall": "cd backend && npx prisma generate && npx prisma db push && node scratch/promote_admin.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "axios": "^1.15.1",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.3",
+    "prisma": "^5.22.0",
+    "razorpay": "^2.9.6"
   }
 }
