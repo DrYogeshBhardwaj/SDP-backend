@@ -1,21 +1,17 @@
-const successResponse = (res, statusCode = 200, message = 'Success', data = null) => {
-    const response = {
+const successResponse = (res, statusCode, message, data = null) => {
+    return res.status(statusCode).json({
         success: true,
-        message
-    };
-    if (data) response.data = data;
-    return res.status(statusCode).json(response);
+        message,
+        data
+    });
 };
 
-const errorResponse = (res, statusCode = 500, message = 'Internal Server Error', error = null) => {
-    const response = {
+const errorResponse = (res, statusCode, message, error = null) => {
+    return res.status(statusCode).json({
         success: false,
-        message
-    };
-    if (process.env.NODE_ENV === 'development' && error) {
-        response.error = error.message || error;
-    }
-    return res.status(statusCode).json(response);
+        message,
+        error
+    });
 };
 
 module.exports = {

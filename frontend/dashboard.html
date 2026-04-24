@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Sinaank V1</title>
+    <link rel="stylesheet" href="css/v1.css">
+    <script src="js/config.js"></script>
+    <style>
+        .dashboard-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        .stat-card {
+            padding: 2rem;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 0.5rem 0;
+        }
+        .header {
+            padding: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body class="scientific-grid">
+    <div class="header">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <div id="user-avatar-container" onclick="document.getElementById('avatar-input').click()" style="position: relative; cursor: pointer;">
+                <div id="user-avatar" style="width: 45px; height: 45px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #000; font-weight: 800; font-size: 1.2rem; overflow: hidden;">S</div>
+                <div style="position: absolute; bottom: 0; right: 0; background: #000; border-radius: 50%; width: 15px; height: 15px; display: flex; align-items: center; justify-content: center; font-size: 10px; border: 1px solid var(--primary);">✎</div>
+                <input type="file" id="avatar-input" style="display: none;" accept="image/*" onchange="uploadAvatar(this)">
+            </div>
+            <div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div id="user-name" style="font-weight: 700; font-size: 1.1rem;">Sinaank User</div>
+                    <button onclick="editName()" style="background: none; border: none; color: var(--primary); cursor: pointer; font-size: 0.8rem; padding: 0;">[Edit]</button>
+                </div>
+                <div id="user-mobile" style="font-size: 0.8rem; color: var(--text-dim);">ID: --</div>
+            </div>
+        </div>
+        <button onclick="logout()" style="background:none; border:1px solid #333; color:#666; padding:8px 16px; border-radius:8px; cursor:pointer;">Logout</button>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- Reordered Therapy Session to TOP -->
+        <div class="stat-card glass" style="grid-column: 1 / -1; padding: 3rem; background: linear-gradient(135deg, rgba(0,216,255,0.1) 0%, rgba(0,0,0,0.5) 100%);">
+            <div class="card-title" style="color: var(--primary);">Therapy Session</div>
+            <h2 style="font-size: 2rem; margin-bottom: 1.5rem;">Ready for Synchronization?</h2>
+            <button onclick="location.href='therapy.html'" class="btn-primary" style="padding: 15px 40px; font-size: 1.1rem;">Connect Frequencies</button>
+            <p style="font-size: 0.7rem; color: var(--text-dim); margin-top: 1rem;">LOCKED FOR PRECISION CALIBRATION</p>
+        </div>
+        <div class="stat-card glass">
+            <div class="card-title">Balance</div>
+            <div class="stat-value" id="min-balance">--</div>
+            <p>Minutes Remaining</p>
+        </div>
+
+        <div class="stat-card glass">
+            <div class="card-title">Earnings</div>
+            <div class="stat-value" id="cash-balance">₹--</div>
+            <p>MLM Wallet</p>
+            <button onclick="requestPayout()" class="btn-primary" style="margin-top: 10px; padding: 5px 15px; font-size: 0.7rem; background: rgba(255,255,255,0.1);">Withdraw Earnings</button>
+        </div>
+
+        <div class="stat-card glass">
+            <div class="card-title">Direct Referrals</div>
+            <div class="stat-value" id="direct-count">--</div>
+            <p>Level 1 Partners</p>
+        </div>
+
+        <div class="stat-card glass">
+            <div class="card-title">Team Size</div>
+            <div class="stat-value" id="team-count">--</div>
+            <p>Total Network</p>
+        </div>
+
+        <!-- Middle Section: Ledger (Left) + Support (Right) -->
+        <div class="stat-card glass" style="grid-column: 1 / span 2; min-height: 450px; text-align: left;">
+            <div class="card-title">Commission Ledger</div>
+            <div style="height: 350px; overflow-y: auto; margin-top: 1rem; border-top: 1px solid var(--border-glass);">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                    <thead style="position: sticky; top: 0; background: var(--bg-deep); z-index: 1;">
+                        <tr style="color: var(--primary); text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px;">
+                            <th style="padding: 12px; text-align: left;">Date</th>
+                            <th style="padding: 12px; text-align: left;">Activity</th>
+                            <th style="padding: 12px; text-align: right;">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ledger-body">
+                        <!-- Transactions -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Payment & Support Section -->
+        <div class="stat-card glass" id="support-hub" style="grid-column: 3 / span 1; display: flex; flex-direction: column; text-align: left; padding: 1.5rem;">
+            <div class="card-title" style="font-size: 0.8rem; margin-bottom: 1rem;">Payment Identity</div>
+            <div id="upi-section" style="margin-bottom: 1.5rem; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                <div id="upi-display" style="display: none;">
+                    <label style="font-size: 0.6rem; color: var(--primary);">ACTIVE UPI ID (LOCKED 🔒)</label>
+                    <div id="active-upi" style="font-size: 1.1rem; color: #fff; margin-top: 5px; font-family: monospace;">--</div>
+                </div>
+                <div id="upi-input-group">
+                    <label style="font-size: 0.6rem; color: var(--primary);">SET UPI ID (FOR PAYOUTS)</label>
+                    <div style="display: flex; gap: 10px; margin-top: 5px;">
+                        <input type="text" id="upi-input" placeholder="example@upi" style="flex: 1; padding: 8px; background: #000; border: 1px solid var(--border-glass); border-radius: 4px; color: #fff;">
+                        <button onclick="saveUpiId()" class="btn-primary" style="padding: 0 15px;">SAVE</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-title" style="font-size: 0.8rem; margin-bottom: 1rem;">Support Hub</div>
+            <div id="support-chat" style="flex: 1; height: 180px; overflow-y: auto; padding-right: 5px; margin-bottom: 15px; border-bottom: 1px solid var(--border-glass);">
+                <div style="color: var(--text-dim); text-align: center; margin-top: 1rem;">No queries yet.</div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="query-input" placeholder="Enter query..." style="flex: 1; padding: 8px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); border-radius: 5px; color: #fff;">
+                <button onclick="submitQuery()" class="btn-primary">SEND</button>
+            </div>
+        </div>
+            </div>
+        </div>
+
+        <!-- Referral & Therapy Section -->
+        <div class="stat-card glass" style="grid-column: 1 / span 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2.5rem;">
+            <div class="card-title" style="margin-bottom: 0.5rem; color: var(--primary);">Growth Engine</div>
+            <p style="font-size: 0.7rem; color: var(--text-dim); margin-bottom: 1.5rem;">Invite partners via frequency match</p>
+            
+            <div id="qrcode-container" style="padding: 1.5rem; background: #fff; border-radius: 16px; box-shadow: 0 0 20px rgba(0,216,255,0.2); transition: transform 0.3s ease;">
+                <div id="qrcode"></div>
+            </div>
+
+            <div id="referral-link" style="margin-top: 1.5rem; font-family: monospace; font-size: 0.7rem; color: var(--primary); word-break: break-all; opacity: 0.8;">Loading Link...</div>
+            
+            <div style="display: flex; gap: 10px; width: 100%; margin-top: 1rem;">
+                <!-- Fixed text visibility: black text on white-ish button -->
+                <button onclick="copyToClipboard()" class="btn-primary" style="flex: 1; padding: 10px; font-size: 0.75rem; background: #fff; color: #000; border: none; font-weight: 700;">Copy Link</button>
+                <button onclick="shareWhatsApp()" class="btn-primary" style="flex: 2; padding: 10px; font-size: 0.75rem; background: #25D366; color: #fff;">Share WhatsApp</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        let currentLink = "";
+
+        function formatDate(dateStr) {
+            const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+            const d = new Date(dateStr);
+            return `${String(d.getDate()).padStart(2, '0')}-${months[d.getMonth()]}-${d.getFullYear()}`;
+        }
+
+        async function requestPayout() {
+            const amount = prompt("Enter amount to withdraw (Min ₹500):", "500");
+            if (!amount) return;
+            
+            const token = localStorage.getItem('session');
+            const res = await fetch(CONFIG.API_BASE_URL + '/api/user/payout-request', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` 
+                },
+                body: JSON.stringify({ amount: parseFloat(amount) })
+            });
+            const data = await res.json();
+            alert(data.message);
+            if (data.success) loadProfile();
+        }
+
+        async function submitQuery() {
+            const input = document.getElementById('query-input');
+            const msg = input.value;
+            if (!msg) return;
+
+            const token = localStorage.getItem('session');
+            const res = await fetch(CONFIG.API_BASE_URL + '/api/user/query', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` 
+                },
+                body: JSON.stringify({ subject: 'User Query', message: msg })
+            });
+            const data = await res.json();
+            
+            input.value = '';
+            loadMyQueries(); // Refresh chat
+        }
+
+        async function loadMyQueries() {
+            const token = localStorage.getItem('session');
+            const res = await fetch(CONFIG.API_BASE_URL + '/api/user/queries', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                const chat = document.getElementById('support-chat');
+                chat.innerHTML = data.data.map(q => `
+                    <div style="text-align: right; margin-bottom: 15px;">
+                        <div style="display: inline-block; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 12px 12px 0 12px; font-size: 0.85rem;">
+                            ${q.message}
+                            <div style="font-size: 0.6rem; color: var(--text-dim); margin-top: 4px;">${formatDate(q.createdAt)}</div>
+                        </div>
+                    </div>
+                    ${q.response ? `
+                        <div style="text-align: left; margin-bottom: 15px;">
+                            <div style="display: inline-block; background: rgba(0,200,83,0.1); border: 1px solid rgba(0,200,83,0.2); padding: 8px 12px; border-radius: 12px 12px 12px 0; font-size: 0.85rem; color: #fff;">
+                                <span style="color: var(--primary); font-weight: 700; font-size: 0.6rem; display: block; margin-bottom: 4px;">ADMIN REPLY</span>
+                                ${q.response}
+                            </div>
+                        </div>
+                    ` : ''}
+                `).join('') || '<div style="color: var(--text-dim); text-align: center; margin-top: 2rem;">No queries yet.</div>';
+                chat.scrollTop = chat.scrollHeight;
+            }
+        }
+
+        async function saveUpiId() {
+            const upi = document.getElementById('upi-input').value;
+            if (!upi || !upi.includes('@')) return alert("Please enter a valid UPI ID (e.g. name@bank)");
+
+            const token = localStorage.getItem('session');
+            const res = await fetch(CONFIG.API_BASE_URL + '/api/user/upi', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` 
+                },
+                body: JSON.stringify({ upiId: upi })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert("UPI ID Saved & Locked 🔒");
+                loadProfile();
+            } else {
+                alert(data.message);
+            }
+        }
+
+        async function loadProfile() {
+            const token = localStorage.getItem('session');
+            if (!token) return window.location.href = "join.html";
+
+            loadMyQueries();
+
+            try {
+                const res = await fetch(CONFIG.API_BASE_URL + '/api/me', {
+                    headers: {'Authorization': `Bearer ${token}`}
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    const u = data.data;
+                    document.getElementById('user-name').innerText = u.name || 'Sinaank User';
+                    document.getElementById('user-mobile').innerText = u.mobile;
+                    
+                    // UPI State Logic
+                    if (u.upiId) {
+                        document.getElementById('upi-input-group').style.display = 'none';
+                        document.getElementById('upi-display').style.display = 'block';
+                        document.getElementById('active-upi').innerText = u.upiId;
+                    }
+
+                    // Update Stat Cards
+                    document.getElementById('min-balance').innerText = u.minutesBalance;
+                    document.getElementById('cash-balance').innerText = `₹${u.cashBalance || 0}`;
+                    
+                    document.getElementById('direct-count').innerText = u.directCount || 0;
+                    document.getElementById('team-count').innerText = u.teamCount || 0;
+
+                    // Render Ledger
+                    const ledgerBody = document.getElementById('ledger-body');
+                    let totalEarnings = 0;
+                    
+                    ledgerBody.innerHTML = u.transactions.map(t => {
+                        totalEarnings += t.amount;
+                        return `
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td style="padding: 12px; color: var(--text-dim);">${formatDate(t.createdAt)}</td>
+                                <td style="padding: 12px; font-weight: 600;">${t.description}</td>
+                                <td style="padding: 12px; text-align: right; color: var(--primary);">+₹${t.amount}</td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    // Add Total Row
+                    ledgerBody.innerHTML += `
+                        <tr style="border-top: 2px solid var(--border-glass); background: rgba(255,255,255,0.02);">
+                            <td colspan="2" style="padding: 15px; text-align: right; font-weight: 800; text-transform: uppercase; color: var(--text-dim);">Total Earnings</td>
+                            <td style="padding: 15px; text-align: right; font-weight: 800; color: var(--primary); font-size: 1.1rem;">₹${totalEarnings}</td>
+                        </tr>
+                    `;
+                    
+                    // Profile & Referral
+                    currentLink = `http://${window.location.host}/join.html?ref=${u.referralCode}`;
+                    document.getElementById('referral-link').innerText = currentLink;
+                    
+                    new QRCode(document.getElementById("qrcode"), {
+                        text: currentLink,
+                        width: 156,
+                        height: 156
+                    });
+                } else {
+                    alert("Profile Error: " + data.message);
+                    logout();
+                }
+            } catch (e) { 
+                console.error(e);
+                alert("Network/Auth Error: " + e.message);
+            }
+        }
+
+        function shareWhatsApp() {
+            const text = encodeURIComponent(`Join Sinaank Digital Therapy 🌿 Precision frequency calibration for neurology. Start yours here: ${currentLink}`);
+            window.open(`https://wa.me/?text=${text}`, '_blank');
+        }
+
+        function copyToClipboard() {
+            navigator.clipboard.writeText(currentLink);
+            alert("Referral Link Copied!");
+        }
+
+        async function editName() {
+            const newName = prompt("Enter your full name:", document.getElementById('user-name').innerText);
+            if (!newName || newName === document.getElementById('user-name').innerText) return;
+
+            const token = localStorage.getItem('session');
+            const res = await fetch(CONFIG.API_BASE_URL + '/api/user/update-profile', {
+                method: 'PUT',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` 
+                },
+                body: JSON.stringify({ name: newName })
+            });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('user-name').innerText = newName;
+                alert("Name updated!");
+            }
+        }
+
+        function uploadAvatar(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const avatar = document.getElementById('user-avatar');
+                    avatar.innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
+                    localStorage.setItem('sinaank_avatar', e.target.result);
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = "index.html";
+        }
+
+        // Initialize avatar from local storage
+        const savedAvatar = localStorage.getItem('sinaank_avatar');
+        if (savedAvatar) {
+            document.getElementById('user-avatar').innerHTML = `<img src="${savedAvatar}" style="width:100%; height:100%; object-fit:cover;">`;
+        }
+
+        loadProfile();
+        // Poll for AI replies every 5 seconds
+        setInterval(loadMyQueries, 5000);
+    </script>
+</body>
+</html>

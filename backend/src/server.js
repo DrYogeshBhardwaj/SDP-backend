@@ -1,144 +1,58 @@
 require('dotenv').config();
-
-process.on("uncaughtException", (err) => {
-  console.error("UNCAUGHT:", err);
-});
-
-process.on("unhandledRejection", (err) => {
-  console.error("UNHANDLED:", err);
-});
-
 const express = require('express');
 const cors = require('cors');
-const helmet = require('helmet');
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
-const morgan = require('morgan');
-const cookieParser = require('cookie-parser');
 const path = require('path');
-
-const authRoutes = require('./modules/auth/auth.routes');
-const otpRoutes = require('./modules/auth/otp.routes');
-const productRoutes = require('./modules/products/product.routes');
-const minutesRoutes = require('./modules/minutes/minutes.routes');
-const seederRoutes = require('./modules/seeder/seeder.routes');
-const financeRoutes = require('./modules/finance/finance.routes');
-const adminRoutes = require('./modules/admin/admin.routes');
-const expenseRoutes = require('./modules/admin/expense.routes');
-const messageRoutes = require('./modules/communication/message.routes');
-const announcementRoutes = require('./modules/communication/announcement.routes');
-const adminAnnouncementRoutes = require('./modules/communication/admin.announcement.routes');
-const exportRoutes = require('./modules/admin/export.routes');
-const referralRoutes = require('./modules/referral/referral.routes');
-
-const paymentRoutes = require('./routes/payment.routes');
-
-const { errorResponse } = require('./utils/response');
-const minutesController = require('./modules/minutes/minutes.controller');
+const { PrismaClient } = require('@prisma/client');
 
 const app = express();
+const prisma = new PrismaClient();
+const PORT = process.env.PORT || 5000;
 
-const allowedOrigins = [
-    'http://localhost:3000',
-    'http://localhost:5000',
-    'http://127.0.0.1:5000',
-    'https://sinaank.com',
-    'https://www.sinaank.com'
-];
-
+// Middleware
 app.use(cors({
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true
+    origin: (origin, callback) => {
+        // Allow all origins for production stability
+        callback(null, true);
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
+app.use(express.json());
 
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-app.use('/api', (req, res, next) => {
-    if (req.method === 'POST') {
-        const contentType = req.headers['content-type'];
-        if (!contentType || !contentType.includes('application/json')) {
-            return errorResponse(res, 400, 'Content-Type must be application/json');
-        }
-    }
+// Log all incoming requests for debugging
+app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
     next();
 });
 
-app.use(cookieParser());
-app.use(morgan('dev'));
+// Routes
+app.use('/api', require('./routes/auth.routes'));
+app.use('/api/payment', require('./routes/payment.routes'));
+app.use('/api/therapy', require('./routes/therapy.routes'));
+app.use('/api/admin', require('./routes/admin.routes'));
+app.use('/api/user', require('./routes/user.routes'));
 
-app.use(helmet({
-    contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "https://checkout.razorpay.com"],
-            frameSrc: ["'self'", "https://api.razorpay.com"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-            fontSrc: ["'self'", "https://fonts.gstatic.com"],
-            imgSrc: ["'self'", "data:", "https://*"],
-            connectSrc: ["'self'", "https://api.razorpay.com", "https://2factor.in"]
-        }
-    },
-    crossOriginEmbedderPolicy: false
-}));
+// Serve Frontend
+app.use(express.static(path.join(__dirname, '../../frontend')));
 
-app.use("/api/payment", require("./routes/payment.routes"));
+// Health Check
+app.get('/health', (req, res) => res.json({ status: 'Sinaank V1 Active' }));
 
-app.use('/public', express.static(path.join(__dirname, "../public")));
-app.use('/assets', express.static(path.join(__dirname, "../assets")));
-app.use('/dashboard', express.static(path.join(__dirname, "../dashboard")));
-app.use(express.static(path.join(__dirname, "../public")));
-
-app.use('/api/auth', authRoutes);
-app.use('/api/auth', otpRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/minutes', minutesRoutes);
-app.use('/api/seeder', seederRoutes);
-app.use('/api/finance', financeRoutes);
-app.use('/api/admin/expenses', expenseRoutes);
-app.use('/api/admin/export', exportRoutes);
-app.use('/api/admin/announcements', adminAnnouncementRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/messages', messageRoutes);
-app.use('/api/announcements', announcementRoutes);
-app.use('/api/referral', referralRoutes);
-app.use('/api/payment', paymentRoutes);
-
-app.use((req, res, next) => {
-    if (req.originalUrl.startsWith('/api')) return next();
-    res.sendFile(path.join(__dirname, "../public", "index.html"));
+// Final fallback - SPA support
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../../frontend/index.html'));
 });
 
+// JSON Error Middleware - ENSURE ALL ERRORS ARE JSON
 app.use((err, req, res, next) => {
-    const statusCode = err.status || 500;
-    const message = err.message || 'Internal Server Error';
-    return errorResponse(res, statusCode, message);
+    console.error('[GLOBAL_ERROR]', err);
+    res.status(err.status || 500).json({
+        success: false,
+        message: err.message || 'Internal Server Error'
+    });
 });
 
-app.get('/api/debug-ping', (req, res) => {
-    return res.json({ status: "ANTIGRAVITY_PING_OK", env: process.env.NODE_ENV || 'development' });
-});
-
-setInterval(() => {
-    minutesController.autoAbandonSessions();
-}, 60 * 1000);
-
-setInterval(async () => {
-    try {
-        const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-        const result = await prisma.rateLimit.deleteMany({
-            where: { createdAt: { lt: yesterday } }
-        });
-        if (result.count > 0) {
-            console.log(`Cleanup: Deleted ${result.count} old rate limit records.`);
-        }
-    } catch (e) {
-        console.error('Cleanup Error:', e);
-    }
-}, 10 * 60 * 1000);
-
-const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log("Server running on", PORT);
+    console.log(`\x1b[32m[SINAANK V1]\x1b[0m Server running on http://localhost:${PORT}`);
 });

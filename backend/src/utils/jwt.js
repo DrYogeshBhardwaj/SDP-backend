@@ -1,14 +1,15 @@
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'sdp_super_secret_key_123';
-const JWT_EXPIRES_IN = '7d';
-
 const generateToken = (payload) => {
-    return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+    return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
 };
 
 const verifyToken = (token) => {
-    return jwt.verify(token, JWT_SECRET);
+    try {
+        return jwt.verify(token, process.env.JWT_SECRET);
+    } catch (err) {
+        return null;
+    }
 };
 
 module.exports = {

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Frequency Engine | Sinaank V1</title>
+    <link rel="stylesheet" href="css/v1.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #000; /* Backdrop for gradient */
+            transition: background 2s ease;
+        }
+        .therapy-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, var(--p1-color, #080B12), var(--p2-color, #080B12));
+            z-index: -1;
+            transition: all 3s ease;
+            opacity: 0.8;
+        }
+        .engine-card {
+            width: 100%;
+            max-width: 440px;
+            padding: 2.5rem;
+            text-align: center;
+        }
+        .timer-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        .option-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-glass);
+            color: #fff;
+            padding: 1rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .option-btn.active {
+            border-color: var(--primary);
+            background: rgba(255, 213, 79, 0.1);
+        }
+        .pulse-text {
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            animation: pulse 2s infinite ease-in-out;
+            color: var(--primary);
+            margin-bottom: 2rem;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+        }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body class="scientific-grid">
+    <div class="therapy-overlay" id="gradient-bg"></div>
+
+    <!-- Step 1: Selection -->
+    <div id="setup-screen" class="engine-card glass">
+        <h2 style="margin-bottom: 0.5rem;" id="setup-title">Frequency Setup</h2>
+        <p style="color: var(--text-dim); font-size: 0.9rem;" id="setup-desc">Targeting mobile identity frequencies.</p>
+        
+        <div class="timer-options">
+            <button class="option-btn" onclick="setTime(2, this)">2 MIN</button>
+            <button class="option-btn active" onclick="setTime(5, this)">5 MIN</button>
+            <button class="option-btn" onclick="setTime(10, this)">10 MIN</button>
+        </div>
+
+        <button onclick="startSession()" class="btn-primary" style="width: 100%;">
+            Synchronize
+        </button>
+        <button onclick="window.location.href='dashboard.html'" style="margin-top: 1rem; background: none; border: none; color: var(--text-dim); font-size: 0.8rem; cursor: pointer;">Cancel</button>
+    </div>
+
+    <!-- Step 2: Session -->
+    <div id="session-screen" class="engine-card hidden">
+        <div class="pulse-text" id="status-text">Balancing...</div>
+        <div id="countdown" style="font-size: 3.5rem; font-weight: 800; font-family: 'Outfit'; margin-bottom: 2rem;">05:00</div>
+        
+        <div style="color: var(--text-dim); font-size: 0.8rem; margin-bottom: 3rem;">
+            🎧 Headphones Active • Stereo Panning Enforced
+        </div>
+
+        <button onclick="endSession(true)" class="btn-primary" style="background: none; border: 1px solid var(--border-glass); color: #fff;">
+            End session
+        </button>
+    </div>
+
+    <script>
+        const PLANET_COLORS = {
+            1: "#FF6A00", 2: "#CFCFFF", 3: "#FFD54F", 4: "#5E35B1",
+            5: "#00C853", 6: "#FF9ED1", 7: "#00ACC1", 8: "#2B2B2B", 9: "#FF2E2E"
+        };
+        
+        const sessionToken = localStorage.getItem("session");
+        let selectedDuration = 5;
+        let timer = null;
+        let audioCtx, p1Osc, p2Osc, p1Pan, p2Pan, masterGain;
+        let currentPlanets = [1, 2];
+
+        async function init() {
+            const res = await fetch('/api/therapy/params', {
+                headers: { 'Authorization': `Bearer ${sessionToken}` }
+            });
+            const { data } = await res.json();
+            
+            if (data.currentGoal.planets) {
+                currentPlanets = data.currentGoal.planets.split(',').map(Number);
+                document.getElementById('setup-title').innerText = "Goal Mode: " + data.currentGoal.type;
+            } else {
+                currentPlanets = [data.mobileIdentity.mobaank || 1, data.mobileIdentity.yogank || 2];
+                document.getElementById('setup-title').innerText = "Identity Mode";
+            }
+            
+            // Set colors
+            document.body.style.setProperty('--p1-color', PLANET_COLORS[currentPlanets[0]]);
+            document.body.style.setProperty('--p2-color', PLANET_COLORS[currentPlanets[1]]);
+        }
+
+        function setTime(m, btn) {
+            selectedDuration = m;
+            document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('countdown').innerText = `${m.toString().padStart(2,'0')}:00`;
+        }
+
+        async function startSession() {
+            // Validate on server
+            const res = await fetch('/api/therapy/start', {
+                method: 'POST',
+                headers: { 
+                    'Authorization': `Bearer ${sessionToken}`,
+                    'Content-Type': 'application/json' 
+                }
+            });
+            const data = await res.json();
+            if (!data.success) return alert(data.error);
+
+            document.getElementById('setup-screen').classList.add('hidden');
+            document.getElementById('session-screen').classList.remove('hidden');
+            
+            initAudio();
+            startTimer();
+        }
+
+        function initAudio() {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            masterGain = audioCtx.createGain();
+            masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
+            masterGain.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 2); // Soft fade-in
+            masterGain.connect(audioCtx.destination);
+
+            // Left Planet
+            p1Osc = audioCtx.createOscillator();
+            p1Pan = audioCtx.createStereoPanner();
+            p1Osc.frequency.value = 200 + (currentPlanets[0] * 5);
+            p1Pan.pan.value = -1;
+            p1Osc.connect(p1Pan).connect(masterGain);
+            p1Osc.start();
+
+            // Right Planet
+            p2Osc = audioCtx.createOscillator();
+            p2Pan = audioCtx.createStereoPanner();
+            p2Osc.frequency.value = 200 + (currentPlanets[1] * 5.1);
+            p2Pan.pan.value = 1;
+            p2Osc.connect(p2Pan).connect(masterGain);
+            p2Osc.start();
+        }
+
+        function startTimer() {
+            let totalSecs = selectedDuration * 60;
+            timer = setInterval(async () => {
+                totalSecs--;
+                const mins = Math.floor(totalSecs / 60);
+                const secs = totalSecs % 60;
+                document.getElementById('countdown').innerText = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+                
+                if (totalSecs <= 0) endSession(false);
+            }, 1000);
+        }
+
+        async function endSession(manual = false) {
+            clearInterval(timer);
+            if (masterGain) {
+                masterGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1);
+                setTimeout(() => audioCtx.close(), 1000);
+            }
+
+            const consumed = manual ? 0 : selectedDuration; // Only deduct if completed or proportional? User said "deduct minutes" on end.
+            if (selectedDuration > 0) {
+                await fetch('/api/therapy/end', {
+                    method: 'POST',
+                    headers: { 
+                        'Authorization': `Bearer ${sessionToken}`,
+                        'Content-Type': 'application/json' 
+                    },
+                    body: JSON.stringify({ minutesConsumed: selectedDuration })
+                });
+            }
+
+            alert(manual ? "Session stopped." : "Therapy Complete! Balance updated.");
+            window.location.href = "dashboard.html";
+        }
+
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Authentication | Sinaank V1</title>
+    <link rel="stylesheet" href="css/v1.css">
+    <style>
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+        }
+        .auth-card {
+            width: 100%;
+            max-width: 420px;
+            padding: 2.5rem;
+        }
+        .input-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        .input-group label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-glass);
+            padding: 14px;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            border-color: var(--primary);
+        }
+        .step { display: none; }
+        .step.active { display: block; }
+        .msg {
+            font-size: 0.85rem;
+            margin-top: 1rem;
+            min-height: 1.2rem;
+        }
+        .msg-error { color: #ff5252; }
+        .msg-success { color: #00c853; }
+    </style>
+</head>
+<body class="scientific-grid">
+    <div class="auth-container">
+        <div class="glow-orb" style="top: 10%; right: 10%;"></div>
+        
+        <div class="auth-card glass">
+            <div id="step-mobile" class="step active">
+                <h2 style="margin-bottom: 0.5rem;">Access Identity</h2>
+                <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 2rem;">Enter your mobile number to receive frequency access.</p>
+                
+                <div class="input-group">
+                    <label>Mobile Number</label>
+                    <input type="tel" id="mobile" placeholder="98XXXXXXXX" maxlength="10">
+                </div>
+                <button onclick="sendOTP()" class="btn-primary" style="width: 100%;">Connect</button>
+            </div>
+
+            <div id="step-otp" class="step">
+                <h2 style="margin-bottom: 0.5rem;">Verify Signal</h2>
+                <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 2rem;">Enter the 6-digit verification code.</p>
+                
+                <div class="input-group">
+                    <label>OTP Code</label>
+                    <input type="number" id="otp" placeholder="XXXXXX">
+                </div>
+                <button onclick="verifyOTP()" class="btn-primary" style="width: 100%;">Authorize</button>
+                <div style="margin-top: 1rem;">
+                    <a href="#" onclick="showStep('mobile')" style="color: var(--text-dim); font-size: 0.8rem;">Change Number</a>
+                </div>
+            </div>
+
+            <div id="msg" class="msg"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "";
+
+        function showStep(id) {
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+            document.getElementById('step-' + id).classList.add('active');
+        }
+
+        function showMsg(m, type='') {
+            const el = document.getElementById('msg');
+            el.innerText = m;
+            el.className = 'msg ' + (type ? 'msg-' + type : '');
+        }
+
+        async function sendOTP() {
+            const mobile = document.getElementById('mobile').value;
+            if (mobile.length !== 10) return showMsg('Invalid Mobile', 'error');
+
+            showMsg('Establishing connection...');
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/send-otp`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ mobile })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showMsg('Signal sent.', 'success');
+                    showStep('otp');
+                } else {
+                    showMsg(data.error || 'Failed to send signal', 'error');
+                }
+            } catch (e) { showMsg('Network error', 'error'); }
+        }
+
+        async function verifyOTP() {
+            const mobile = document.getElementById('mobile').value;
+            const otp = document.getElementById('otp').value;
+            
+            showMsg('Authenticating...');
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/verify-otp`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ mobile, otp })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    if (data.data.isNew) {
+                        // Automatic Registration for V1
+                        return await registerNewUser(mobile);
+                    } else {
+                        // Existing User Login
+                        return await performLogin(mobile);
+                    }
+                } else {
+                    showMsg('Invalid Code', 'error');
+                }
+            } catch (e) { showMsg('Authentication failed', 'error'); }
+        }
+
+        async function registerNewUser(mobile) {
+            showMsg('Creating V1 Identity...');
+            const sponsorCode = localStorage.getItem('refCode') || '';
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/register`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ mobile, sponsorCode })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    saveAndRedirect(data.data.token, mobile);
+                } else {
+                    showMsg(data.error || 'Registration failed', 'error');
+                }
+            } catch (e) { showMsg('Registration error', 'error'); }
+        }
+
+        async function performLogin(mobile) {
+            showMsg('Accessing Identity...');
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ mobile })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    saveAndRedirect(data.data.token, mobile);
+                }
+            } catch (e) { showMsg('Login failed', 'error'); }
+        }
+
+        function saveAndRedirect(token, mobile) {
+            localStorage.setItem('session', token);
+            localStorage.setItem('mobile', mobile);
+            showMsg('Access Granted!', 'success');
+            setTimeout(() => window.location.href = "dashboard.html", 800);
+        }
+
+        // Auto-fill Ref code from URL
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('ref')) localStorage.setItem('refCode', params.get('ref'));
+    </script>
+</body>
+</html>

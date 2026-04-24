@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sinaank Admin | Neural Monitor</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="stylesheet" href="css/v1.css">
+    <style>
+        .admin-layout {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            min-height: 100vh;
+        }
+        .sidebar {
+            background: var(--bg-deep);
+            border-right: 1px solid var(--border-glass);
+            padding: 2rem;
+        }
+        .sidebar-nav { margin-top: 3rem; }
+        .nav-item {
+            padding: 12px 20px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--text-dim);
+            transition: 0.3s;
+        }
+        .nav-item.active {
+            background: var(--primary);
+            color: #000;
+            font-weight: 700;
+        }
+        .admin-content { padding: 3rem; }
+        .view { display: none; }
+        .view.active { display: block; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid var(--border-glass); }
+        th { color: var(--primary); font-size: 0.8rem; text-transform: uppercase; }
+        
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .badge-active { background: #00c85322; color: #00c853; }
+        .badge-blocked { background: #ff525222; color: #ff5252; }
+
+        /* Tree Styles */
+        .tree-node {
+            margin-left: 20px;
+            padding-left: 15px;
+            border-left: 1px solid var(--border-glass);
+            margin-top: 10px;
+        }
+        .tree-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.03);
+            padding: 10px 15px;
+            border-radius: 6px;
+            border: 1px solid var(--border-glass);
+            width: fit-content;
+            min-width: 200px;
+            transition: 0.3s;
+        }
+        .tree-item:hover {
+            background: rgba(255,255,255,0.07);
+            border-color: var(--primary);
+        }
+        .tree-id { color: var(--primary); font-family: monospace; font-size: 0.8rem; font-weight: 800; }
+        .tree-name { font-size: 0.9rem; font-weight: 500; }
+        .tree-meta { font-size: 0.7rem; color: var(--text-dim); }
+
+        .alert-banner {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            animation: slideIn 0.3s ease-out;
+        }
+        .alert-warning { background: rgba(255, 152, 0, 0.1); border: 1px solid #ff9800; color: #ff9800; }
+        .alert-critical { background: rgba(255, 82, 82, 0.1); border: 1px solid #ff5252; color: #ff5252; }
+        
+        @keyframes slideIn {
+            from { transform: translateY(-10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            font-weight: 700;
+        }
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+    </style>
+</head>
+<body class="scientific-grid">
+    <div class="admin-layout">
+        <div class="sidebar">
+            <div class="card-title" style="font-size: 1.5rem;">SINAANK V1<br><span style="font-size: 0.7rem; color: var(--primary);">ADMIN CONTROL</span></div>
+            <div class="sidebar-nav">
+                <div class="nav-item active" onclick="showView('wholesale', this)">1. Wholesale</div>
+                <div class="nav-item" onclick="showView('cash', this)">2. Cash Management</div>
+                <div class="nav-item" onclick="showView('edit', this)">3. Edit Users</div>
+                <div class="nav-item" onclick="showView('queries', this)">4. General Queries</div>
+                <div class="nav-item" onclick="showView('tree', this)">5. Network Tree</div>
+            </div>
+        </div>
+
+        <div class="admin-content">
+            <div id="view-wholesale" class="view active">
+                <h2 style="font-size: 2.5rem; letter-spacing: -1px; margin-bottom: 2rem;">Wholesale Overview</h2>
+                
+                <!-- Alerts Section -->
+                <div id="admin-alerts" style="margin-bottom: 2rem;"></div>
+
+                <div class="dashboard-grid" style="margin-top: 2rem; grid-template-columns: repeat(2, 1fr);">
+                    <div class="stat-card glass" style="padding: 2.5rem;">
+                        <div class="card-title">Total Cash IN</div>
+                        <div class="stat-value" id="stats-total-in" style="font-size: 4rem; color: #00c853;">₹--</div>
+                        <p style="color: var(--text-dim); font-size: 0.7rem;">TOTAL REVENUE RECORDED</p>
+                    </div>
+                    <div class="stat-card glass" style="padding: 2.5rem;">
+                        <div class="card-title">Total Cash OUT</div>
+                        <div class="stat-value" id="stats-total-out" style="font-size: 4rem; color: #ff5252;">₹--</div>
+                        <p style="color: var(--text-dim); font-size: 0.7rem;">TOTAL WITHDRAWALS PAID</p>
+                    </div>
+                    <div class="stat-card glass" style="padding: 2.5rem; background: rgba(0, 200, 83, 0.05);">
+                        <div class="card-title">Revenue (Today)</div>
+                        <div class="stat-value" id="stats-today-in" style="font-size: 3rem; color: #00c853;">₹--</div>
+                        <p style="color: var(--text-dim);">DATE: <span class="current-date-display">--</span></p>
+                    </div>
+                    <div class="stat-card glass" style="padding: 2.5rem; background: rgba(255, 171, 0, 0.05);">
+                        <div class="card-title">To-be-Paid (Next Liability)</div>
+                        <div class="stat-value" id="stats-liability" style="font-size: 3rem; color: #ffab00;">₹--</div>
+                        <p style="color: var(--text-dim);">CURRENT COLLECTIVE WALLETS</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cash View -->
+            <div id="view-cash" class="view">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2>Cash Management</h2>
+                    <button onclick="sweepBalances()" class="btn-primary" style="background: var(--primary); color: #000; font-weight: 800; border: none; padding: 10px 20px;">🔄 SWEEP BALANCES TO PAYOUTS</button>
+                </div>
+                <div style="margin-top: 2rem; display: flex; gap: 20px; border-bottom: 1px solid var(--border-glass);">
+                    <button class="tab-btn" id="tab-requests" onclick="switchCashTab('requests')">ACTIVE REQUESTS</button>
+                    <button class="tab-btn active" id="tab-pending" onclick="switchCashTab('pending')">LIABILITY BREAKDOWN (PENDING BALANCES)</button>
+                </div>
+
+                <!-- Requests Table -->
+                <div id="cash-requests-section" class="stat-card glass" style="margin-top: 1rem; padding: 0;">
+                    <table id="payout-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>User Mobile</th>
+                                <th>Payment Info (Amount + UPI)</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="payout-table-body"></tbody>
+                    </table>
+                </div>
+
+                <!-- Pending Balances Table -->
+                <div id="cash-pending-section" class="stat-card glass" style="margin-top: 1rem; padding: 0; display: none;">
+                    <table id="pending-balance-table">
+                        <thead>
+                            <tr>
+                                <th>User Mobile</th>
+                                <th>Name</th>
+                                <th>Current Balance</th>
+                                <th>UPI ID</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pending-balance-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Edit View -->
+            <div id="view-edit" class="view">
+                <h2>User Management</h2>
+                <div class="stat-card glass" style="margin-top: 2rem; padding: 0;">
+                    <table id="user-table">
+                        <thead>
+                            <tr>
+                                <th>Joined</th>
+                                <th>Mobile</th>
+                                <th>Name</th>
+                                <th>Role</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Queries View -->
+            <div id="view-queries" class="view">
+                <h2>General Queries & Support</h2>
+                <div class="stat-card glass" style="margin-top: 2rem; padding: 0;">
+                    <table id="query-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>User</th>
+                                <th>Subject</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="query-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tree View -->
+            <div id="view-tree" class="view">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2>MLM Network Hierarchy</h2>
+                    <button onclick="loadNetworkTree()" class="btn-primary" style="padding: 8px 15px; font-size: 0.8rem;">🔄 REFRESH TREE</button>
+                </div>
+                <div class="stat-card glass" style="padding: 2rem; overflow-x: auto;">
+                    <div id="tree-container" class="tree-root">
+                        <!-- Tree nodes will be injected here -->
+                        <div style="text-align: center; padding: 3rem; color: var(--text-dim);">Loading Network Structure...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="edit-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center;">
+        <div class="stat-card glass" style="width: 400px; padding: 2rem;">
+            <div class="card-title">Edit User Profile</div>
+            <input type="hidden" id="edit-user-id">
+            <div style="margin-top: 1.5rem;">
+                <label style="font-size: 0.7rem; color: var(--primary);">FULL NAME</label>
+                <input type="text" id="edit-name" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); border-radius: 4px; color: #fff; margin-bottom: 1rem;">
+                
+                <label style="font-size: 0.7rem; color: var(--primary);">STATUS</label>
+                <select id="edit-status" style="width: 100%; padding: 10px; background: #111; border: 1px solid var(--border-glass); border-radius: 4px; color: #fff; margin-bottom: 1rem;">
+                    <option value="ACTIVE">ACTIVE</option>
+                    <option value="BLOCKED">BLOCKED</option>
+                </select>
+
+                <label style="font-size: 0.7rem; color: var(--primary);">ROLE</label>
+                <select id="edit-role" style="width: 100%; padding: 10px; background: #111; border: 1px solid var(--border-glass); border-radius: 4px; color: #fff; margin-bottom: 1rem;">
+                    <option value="PARTNER">PARTNER</option>
+                    <option value="ADMIN">ADMIN</option>
+                </select>
+
+                <label style="font-size: 0.7rem; color: var(--primary);">MINUTES BALANCE</label>
+                <input type="number" id="edit-minutes" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); border-radius: 4px; color: #fff; margin-bottom: 1rem;">
+
+                <label style="font-size: 0.7rem; color: var(--primary);">UPI ID (ADMIN OVERRIDE)</label>
+                <input type="text" id="edit-upi" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); border-radius: 4px; color: #fff; margin-bottom: 1.5rem;">
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="saveUserChanges()" class="btn-primary" style="flex: 1;">SAVE CHANGES</button>
+                <button onclick="closeEditModal()" class="btn-primary" style="flex: 1; background: #444;">CANCEL</button>
+            </div>
+        </div>
+    </div>
+    <!-- Query View Modal -->
+    <div id="query-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 101; align-items: center; justify-content: center;">
+        <div class="stat-card glass" style="width: 500px; padding: 2rem;">
+            <div class="card-title">Support Query Details</div>
+            <input type="hidden" id="view-query-id">
+            <div style="margin-top: 1.5rem;">
+                <label style="font-size: 0.7rem; color: var(--primary);">FROM MOBILE</label>
+                <div id="view-query-mobile" style="padding: 10px; background: rgba(255,255,255,0.05); border-radius: 4px; margin-bottom: 1rem; font-family: monospace;">--</div>
+
+                <label style="font-size: 0.7rem; color: var(--primary);">MESSAGE</label>
+                <div id="view-query-msg" style="padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); border-radius: 4px; margin-bottom: 1rem; min-height: 80px; font-size: 0.9rem;">--</div>
+                
+                <label style="font-size: 0.7rem; color: var(--primary);">ADMIN RESPONSE</label>
+                <textarea id="view-query-response" placeholder="Type your response here..." style="width: 100%; height: 80px; padding: 10px; background: #111; border: 1px solid var(--border-glass); border-radius: 4px; color: #fff; margin-bottom: 1rem; resize: none;"></textarea>
+
+                <label style="font-size: 0.7rem; color: var(--primary);">TICKET STATUS</label>
+                <select id="view-query-status" style="width: 100%; padding: 10px; background: #111; border: 1px solid var(--border-glass); border-radius: 4px; color: #fff; margin-bottom: 1.5rem;">
+                    <option value="PENDING">PENDING</option>
+                    <option value="RESOLVED">RESOLVED</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="saveQueryResponse()" class="btn-primary" style="flex: 1;">SAVE & CLOSE</button>
+                <button onclick="closeQueryModal()" class="btn-primary" style="flex: 1; background: #444;">DISMISS</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function formatDate(dateStr) {
+            const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+            const d = new Date(dateStr);
+            return `${String(d.getDate()).padStart(2, '0')}-${months[d.getMonth()]}-${d.getFullYear()}`;
+        }
+
+        // Set current date on wholesale
+        document.querySelectorAll('.current-date-display').forEach(el => el.innerText = formatDate(new Date()));
+
+        function showView(v, el) {
+            document.querySelectorAll('.view').forEach(e => e.classList.remove('active'));
+            document.getElementById('view-'+v).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
+            el.classList.add('active');
+            
+            if (v === 'wholesale') loadStats();
+            if (v === 'cash') switchCashTab('pending');
+            if (v === 'edit') loadUsers();
+            if (v === 'queries') loadQueries();
+            if (v === 'tree') loadNetworkTree();
+        }
+
+        function switchCashTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab-'+tab).classList.add('active');
+            
+            if (tab === 'requests') {
+                document.getElementById('cash-requests-section').style.display = 'block';
+                document.getElementById('cash-pending-section').style.display = 'none';
+                loadPayouts();
+            } else {
+                document.getElementById('cash-requests-section').style.display = 'none';
+                document.getElementById('cash-pending-section').style.display = 'block';
+                loadPendingBalances();
+            }
+        }
+
+        async function api(path, method = 'GET', body = null) {
+            const token = localStorage.getItem('session');
+            if (!token) { window.location.href = 'join.html'; return; }
+            
+            try {
+                const options = {
+                    method,
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                };
+                if (body) options.body = JSON.stringify(body);
+
+                const res = await fetch(`${CONFIG.API_BASE_URL}/admin${path}`, options);
+                const data = await res.json();
+                
+                if (res.status === 401) { alert('Session Expired. Please Login Again.'); window.location.href = 'join.html'; }
+                if (res.status === 403) { alert('Permission Denied: You are not an Admin. Please Login with Admin number.'); window.location.href = 'join.html'; }
+                
+                return data;
+            } catch (err) {
+                console.error('API Error:', err);
+                return { success: false };
+            }
+        }
+
+        async function loadStats() {
+            const data = await api('/stats');
+            if (data.success) {
+                const s = data.data.wholesale;
+                document.getElementById('stats-total-in').innerText = '₹' + s.totalIn;
+                document.getElementById('stats-total-out').innerText = '₹' + s.totalOut;
+                document.getElementById('stats-today-in').innerText = '₹' + s.todayIn;
+                document.getElementById('stats-liability').innerText = '₹' + s.totalLiability;
+
+                // Alerts
+                const alertsDiv = document.getElementById('admin-alerts');
+                alertsDiv.innerHTML = s.alerts.map(a => `
+                    <div class="alert-banner alert-${a.type.toLowerCase()}">
+                        <span style="font-size: 1.2rem;">${a.type === 'CRITICAL' ? '🚫' : '⚠️'}</span>
+                        <div>${a.message}</div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        async function loadPayouts() {
+            const data = await api('/payouts');
+            if (data.success) {
+                if (data.data.length === 0) {
+                    document.getElementById('payout-table-body').innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 3rem; color: var(--text-dim);">No active payout requests found.</td></tr>`;
+                    return;
+                }
+                document.getElementById('payout-table-body').innerHTML = data.data.map(p => `
+                    <tr>
+                        <td>${formatDate(p.createdAt)}</td>
+                        <td>${p.user.mobile}</td>
+                        <td>
+                            <div style="font-weight: 800; font-size: 1.1rem; color: #fff;">₹${p.amount}</div>
+                            <div style="color: var(--primary); font-family: monospace; font-size: 0.8rem;">UPI: ${p.user.upiId || 'NOT SET'}</div>
+                        </td>
+                        <td><span class="badge badge-${p.status.toLowerCase()}">${p.status}</span></td>
+                        <td>
+                            ${p.status === 'PENDING' ? `
+                                <button onclick="processPayout('${p.id}', 'APPROVED')" class="btn-primary" style="padding: 4px 8px; font-size:0.6rem; background:#00c853;">APPROVE</button>
+                                <button onclick="processPayout('${p.id}', 'REJECTED')" class="btn-primary" style="padding: 4px 8px; font-size:0.6rem; background:#ff5252;">X</button>
+                            ` : p.status === 'APPROVED' ? `
+                                <button onclick="processPayout('${p.id}', 'PAID')" class="btn-primary" style="padding: 4px 8px; font-size:0.6rem; background: var(--primary); color:#000;">CONFIRM PAID</button>
+                            ` : `
+                                <div style="font-size: 0.6rem; color: var(--text-dim);">UTR: ${p.transactionId || '-'}</div>
+                            `}
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        async function loadPendingBalances() {
+            const data = await api('/pending-balances');
+            if (data.success) {
+                if (data.data.length === 0) {
+                    document.getElementById('pending-balance-table-body').innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 3rem; color: var(--text-dim);">No pending liabilities found. System is clean!</td></tr>`;
+                    return;
+                }
+                document.getElementById('pending-balance-table-body').innerHTML = data.data.map(w => `
+                    <tr>
+                        <td>${w.user.mobile}</td>
+                        <td>${w.user.name || '-'}</td>
+                        <td style="font-weight:800; color:#fff;">₹${w.balance}</td>
+                        <td style="font-family:monospace; color:var(--primary);">${w.user.upiId || 'NOT SET'}</td>
+                        <td>
+                            <button onclick="switchViewToEditAndFind('${w.user.id}')" class="btn-primary" style="padding: 4px 8px; font-size:0.6rem;">MANAGE</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        async function switchViewToEditAndFind(userId) {
+            await showView('edit', document.querySelectorAll('.nav-item')[2]);
+            setTimeout(() => editUser(userId), 100);
+        }
+
+        async function sweepBalances() {
+            if (!confirm("This will automatically create Payout requests for ALL users with a balance and a saved UPI ID. Continue?")) return;
+
+            const data = await api('/sweep-payouts', 'POST');
+            if (data.success) {
+                alert(data.message);
+                loadStats();
+                switchCashTab('requests');
+            } else {
+                alert('Sweep failed: ' + (data.message || 'Unknown error'));
+            }
+        }
+
+        async function processPayout(id, status) {
+            let transactionId = null;
+            if (status === 'PAID') {
+                transactionId = prompt("Enter Transaction ID / UTR Number:");
+                if (!transactionId) return;
+            } else {
+                if(!confirm('Move payout to ' + status + '?')) return;
+            }
+
+            const data = await api('/payout/' + id, 'PUT', { status, transactionId });
+            if (data.success) loadPayouts();
+        }
+
+        let allUsers = [];
+
+        async function loadUsers() {
+            const data = await api('/users');
+            if (data.success) {
+                allUsers = data.data;
+                document.getElementById('user-table-body').innerHTML = allUsers.map(u => `
+                    <tr>
+                        <td>${formatDate(u.createdAt)}</td>
+                        <td>${u.mobile}</td>
+                        <td>${u.name || '-'}</td>
+                        <td>${u.role}</td>
+                        <td><span class="badge badge-${u.status.toLowerCase()}">${u.status}</span></td>
+                        <td><button onclick="editUser('${u.id}')" class="btn-primary" style="padding: 4px 12px; font-size: 0.7rem;">EDIT</button></td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        function editUser(id) {
+            const user = allUsers.find(u => u.id === id);
+            if (!user) return;
+
+            document.getElementById('edit-user-id').value = user.id;
+            document.getElementById('edit-name').value = user.name || '';
+            document.getElementById('edit-status').value = user.status;
+            document.getElementById('edit-role').value = user.role;
+            document.getElementById('edit-minutes').value = user.minutesBalance;
+            document.getElementById('edit-upi').value = user.upiId || '';
+            
+            document.getElementById('edit-modal').style.display = 'flex';
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').style.display = 'none';
+        }
+
+        async function saveUserChanges() {
+            const id = document.getElementById('edit-user-id').value;
+            const payload = {
+                name: document.getElementById('edit-name').value,
+                status: document.getElementById('edit-status').value,
+                role: document.getElementById('edit-role').value,
+                minutesBalance: document.getElementById('edit-minutes').value,
+                upiId: document.getElementById('edit-upi').value
+            };
+
+            const data = await api('/user/' + id, 'PUT', payload);
+            if (data.success) {
+                alert('User updated successfully!');
+                closeEditModal();
+                loadUsers();
+            } else {
+                alert('Failed to update user.');
+            }
+        }
+
+        let allQueries = [];
+
+        async function loadQueries() {
+            const data = await api('/queries');
+            if (data.success) {
+                allQueries = data.data;
+                document.getElementById('query-table-body').innerHTML = allQueries.map(q => `
+                    <tr>
+                        <td>${formatDate(q.createdAt)}</td>
+                        <td>${q.user.mobile}</td>
+                        <td>${q.subject}</td>
+                        <td><span class="badge badge-${q.status.toLowerCase()}">${q.status}</span></td>
+                        <td><button onclick="viewQuery('${q.id}')" class="btn-primary" style="padding: 4px 12px; font-size: 0.7rem;">VIEW</button></td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        function viewQuery(id) {
+            const query = allQueries.find(q => q.id === id);
+            if (!query) return;
+
+            document.getElementById('view-query-id').value = query.id;
+            document.getElementById('view-query-mobile').innerText = query.user.mobile;
+            document.getElementById('view-query-msg').innerText = query.message;
+            document.getElementById('view-query-response').value = query.response || '';
+            document.getElementById('view-query-status').value = query.status;
+            
+            document.getElementById('query-modal').style.display = 'flex';
+        }
+
+        function closeQueryModal() {
+            document.getElementById('query-modal').style.display = 'none';
+        }
+
+        async function saveQueryResponse() {
+            const id = document.getElementById('view-query-id').value;
+            const payload = {
+                response: document.getElementById('view-query-response').value,
+                status: document.getElementById('view-query-status').value
+            };
+
+            const data = await api('/query/' + id, 'PUT', payload);
+            if (data.success) {
+                alert('Support ticket updated!');
+                closeQueryModal();
+                loadQueries();
+            } else {
+                alert('Failed to update query.');
+            }
+        }
+
+        async function loadNetworkTree() {
+            try {
+                console.log('Fetching network tree...');
+                const data = await api('/network-tree');
+                const container = document.getElementById('tree-container');
+                
+                if (!data.success) {
+                    container.innerHTML = `<div style="color: #ff5252; padding: 2rem; text-align: center;">Error: ${data.message || 'Failed to load tree'}</div>`;
+                    return;
+                }
+
+                const users = data.data;
+                container.innerHTML = ''; 
+
+                // Build User Map
+                const userMap = {};
+                const adminId = users.find(u => u.mobile.trim() === '9211755211')?.id;
+
+                users.forEach(u => {
+                    // Hide Admin 9211755211
+                    if (u.id === adminId) return;
+                    userMap[u.id] = { ...u, children: [] };
+                });
+                
+                const roots = [];
+                users.forEach(u => {
+                    const mappedUser = userMap[u.id];
+                    if (!mappedUser) return; // Skip if user is admin
+
+                    // A root is someone whose sponsor is the hidden Admin, or has no sponsor at all
+                    const sponsorId = u.sponsorId;
+                    const sponsorIsAdmin = sponsorId === adminId;
+
+                    if (sponsorId && userMap[sponsorId] && !sponsorIsAdmin) {
+                        userMap[sponsorId].children.push(mappedUser);
+                    } else {
+                        roots.push(mappedUser);
+                    }
+                });
+
+                if (roots.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; padding: 3rem; color: var(--text-dim);">No visible network structure found.</div>';
+                    return;
+                }
+
+                // Sort roots to put 8851168290 on top if present
+                roots.sort((a, b) => {
+                    if (a.mobile.trim() === '8851168290') return -1;
+                    if (b.mobile.trim() === '8851168290') return 1;
+                    return 0;
+                });
+
+                const treeFragment = renderNodes(roots);
+                container.appendChild(treeFragment);
+                console.log('Tree rendered successfully.');
+
+            } catch (err) {
+                console.error('Tree Load Error:', err);
+                document.getElementById('tree-container').innerHTML = `<div style="color: #ff5252; padding: 2rem; text-align: center;">Critical JS Error: ${err.message}</div>`;
+            }
+        }
+
+        function renderNodes(nodes) {
+            const levelContainer = document.createElement('div');
+            nodes.forEach(node => {
+                const nodeWrapper = document.createElement('div');
+                nodeWrapper.className = 'tree-node';
+
+                // Safe formatting
+                let displayDate = 'N/A';
+                try { 
+                    if (node.createdAt) displayDate = formatDate(node.createdAt);
+                } catch (e) { console.warn('Date fail:', node.createdAt); }
+
+                nodeWrapper.innerHTML = `
+                    <div class="tree-item">
+                        <div style="display: flex; flex-direction: column;">
+                            <div class="tree-id">${node.mobile ? node.mobile.trim() : 'NO MOBILE'}</div>
+                            <div class="tree-name">${node.name ? node.name.trim() : 'Anonymous'}</div>
+                            <div class="tree-meta">${node.role || 'PARTNER'} • Joined ${displayDate}</div>
+                        </div>
+                    </div>
+                `;
+
+                if (node.children && node.children.length > 0) {
+                    nodeWrapper.appendChild(renderNodes(node.children));
+                }
+                levelContainer.appendChild(nodeWrapper);
+            });
+            return levelContainer;
+        }
+
+        // Initial Load
+        loadStats();
+    </script>
+</body>
+</html>

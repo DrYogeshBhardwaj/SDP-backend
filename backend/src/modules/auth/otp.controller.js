@@ -1,95 +1,65 @@
-const { successResponse, errorResponse } = require('../../utils/response');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-const { generateToken } = require('../../utils/jwt');
-const { sendOTP, verifyOTP } = require('../../utils/vi_sms');
-const { recordFailure, resetFailures } = require('../../middlewares/dbRateLimiter');
+const { successResponse, errorResponse } = require('../../utils/response');
+const axios = require('axios');
 
-// OTP SEND (Real Session API)
-exports.sendOtp = async (req, res, next) => {
+/**
+ * 2Factor.in OTP Integration (V1 Stable)
+ * This is a fallback to avoid DLT/Template mismatch issues.
+ */
+
+// SEND OTP (2Factor.in)
+const sendOTP = async (req, res) => {
+    console.log(">>> OTP API HIT (2FACTOR) <<<");
     try {
         const { mobile } = req.body;
-        if (!mobile || !/^[0-9]{10}$/.test(mobile)) {
-            return errorResponse(res, 400, 'Please provide a valid 10-digit mobile number.');
-        }
+        if (!mobile || mobile.length !== 10) return errorResponse(res, 400, 'Invalid Mobile');
 
-        const result = await sendOTP(mobile);
+        const apiKey = process.env.TWO_FACTOR_API_KEY;
+        // Using AUTOGEN for speed + Template Name (MKUNDLI_OTP)
+        const url = `https://2factor.in/API/V1/${apiKey}/SMS/${mobile}/AUTOGEN/MKUNDLI_OTP`;
 
-        if (result.Status === 'Success') {
-            return successResponse(res, 200, 'OTP भेजा गया', {
-                sessionId: result.Details
-            });
+        const response = await axios.get(url);
+        console.log("2FACTOR RESPONSE:", response.data);
+
+        if (response.data.Status === "Success") {
+            // Details contains the SessionId required for verification
+            return successResponse(res, 200, 'OTP sent successfully', { sessionId: response.data.Details });
         } else {
-            return errorResponse(res, 400, 'OTP भेजने में समस्या हुई। कृपया मोबाइल नंबर जांचें या बाद में प्रयास करें।');
+            return errorResponse(res, 400, response.data.Details || 'OTP Send Failed');
         }
-    } catch (error) {
-        console.error('OTP Sending Error:', error);
-        next(error);
+
+    } catch (err) {
+        console.error('[2FACTOR_SEND_ERR]', err.response?.data || err.message);
+        return errorResponse(res, 500, 'Failed to send OTP (Gateway Error)');
     }
 };
 
-// OTP VERIFY (Real Session API)
-exports.verifyOtp = async (req, res, next) => {
+// VERIFY OTP (2Factor.in)
+const verifyOTP = async (req, res) => {
     try {
-        const { mobile, otp, sessionId } = req.body;
-        if (!mobile || !otp || !sessionId) {
-            return errorResponse(res, 400, 'Mobile, OTP, and SessionId are required.');
+        const { sessionId, otp, mobile } = req.body;
+        if (!sessionId || !otp) return errorResponse(res, 400, 'SessionId and OTP required');
+
+        const apiKey = process.env.TWO_FACTOR_API_KEY;
+        const url = `https://2factor.in/API/V1/${apiKey}/SMS/VERIFY/${sessionId}/${otp}`;
+
+        const response = await axios.get(url);
+        console.log(`[2FACTOR_VERIFY] Session: ${sessionId}, Response:`, response.data);
+
+        if (response.data.Status === "Success") {
+            // Check if user exists for registration/login redirect logic
+            // Note: We use the mobile number passed from frontend state
+            const user = await prisma.user.findUnique({ where: { mobile } });
+            return successResponse(res, 200, 'OTP Verified', { exists: !!user });
+        } else {
+            return errorResponse(res, 400, response.data.Details || 'Invalid OTP');
         }
 
-        // Verify with 2Factor
-        try {
-            const result = await verifyOTP(sessionId, otp);
-            if (result.Status !== 'Success' || result.Details !== 'OTP Matched') {
-                throw new Error("Invalid OTP");
-            }
-            // OTP Verified - Reset Failures
-            await resetFailures(req, 'otp');
-        } catch (err) {
-            console.warn('OTP Verification attempt failed:', err.message);
-            await recordFailure(req, 'otp');
-            return errorResponse(res, 400, 'गलत कोड दर्ज हुआ है। कृपया पुनः प्रयास करें।');
-        }
-
-        // Check if user exists
-        const user = await prisma.user.findUnique({
-            where: { mobile }
-        });
-
-        // USER EXISTS → LOGIN
-        if (user) {
-            if (user.status === 'BLOCKED') {
-                return errorResponse(res, 403, 'Account is blocked');
-            }
-
-            const token = generateToken({
-                userId: user.id,
-                role: user.role,
-                cid: user.cid
-            });
-
-            res.cookie('jwt', token, {
-                httpOnly: true,
-                secure: true,
-                sameSite: 'none',
-                maxAge: 7 * 24 * 60 * 60 * 1000
-            });
-
-            return successResponse(res, 200, 'OTP verified successfully', {
-                userExists: true,
-                token, 
-                user: { id: user.id, name: user.name, role: user.role, kit_activated: user.kit_activated, plan_type: user.plan_type }
-            });
-        }
-
-        // NEW USER → REGISTER FLOW
-        return successResponse(res, 200, 'OTP verified successfully', {
-            userExists: false
-        });
-
-    } catch (error) {
-        console.error('OTP Verification System Error:', error);
-        next(error);
+    } catch (err) {
+        console.error('[2FACTOR_VERIFY_ERR]', err.response?.data || err.message);
+        return errorResponse(res, 400, 'Verification failed (OTP Expired or Invalid)');
     }
 };
 
-
+module.exports = { sendOTP, verifyOTP };

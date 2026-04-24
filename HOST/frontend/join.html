@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Identity Access | Sinaank V1</title>
+    <link rel="stylesheet" href="css/v1.css">
+    <script src="js/config.js"></script>
+    <style>
+        .auth-card {
+            width: 400px;
+            padding: 3rem;
+            margin: 10vh auto;
+            text-align: center;
+        }
+        input {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-glass);
+            padding: 12px;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1.1rem;
+            margin: 1.5rem 0;
+            outline: none;
+            text-align: center;
+        }
+        .step { display: none; }
+        .step.active { display: block; }
+    </style>
+</head>
+<body class="scientific-grid">
+    <div class="auth-card glass">
+        <!-- STEP 1: MOBILE ENTRY -->
+        <div id="step-mobile" class="step">
+            <div class="card-title">Identity Check</div>
+            <h2>Enter Mobile</h2>
+            <input type="tel" id="mobile" placeholder="98XXXXXXXX" maxlength="10">
+            <button onclick="sendOTP()" class="btn-primary" style="width: 100%;">Get OTP</button>
+        </div>
+
+        <!-- STEP 2: OTP VERIFICATION -->
+        <div id="step-otp" class="step">
+            <div class="card-title">Security Gateway</div>
+            <h2>Enter OTP</h2>
+            <input type="number" id="otp" placeholder="XXXXXX">
+            <button onclick="verifyOTP()" class="btn-primary" style="width: 100%;">Authorize</button>
+            <p style="margin-top: 1rem; cursor: pointer; text-decoration: underline; font-size: 0.8rem;" onclick="location.href='join.html'">Change Mobile</p>
+        </div>
+        
+        <p id="msg" style="margin-top: 1.5rem; font-size: 0.9rem;"></p>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlMobile = urlParams.get('mobile');
+
+        // Logic to show correct step on load
+        if (urlMobile) {
+            document.getElementById('step-otp').classList.add('active');
+        } else {
+            document.getElementById('step-mobile').classList.add('active');
+        }
+
+        async function sendOTP() {
+            const mobile = document.getElementById('mobile').value;
+            if (mobile.length !== 10) return showMsg("Invalid Mobile", "error");
+            
+            showMsg("Establishing Connection...");
+            try {
+                const res = await fetch(CONFIG.API_BASE_URL + '/api/send-otp', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ mobile })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    localStorage.setItem('sessionId', data.data.sessionId);
+                    window.location.href = `join.html?mobile=${mobile}`;
+                } else {
+                    showMsg(data.message || "Failed to send OTP", "error");
+                }
+            } catch (e) { showMsg("Network Error", "error"); }
+        }
+
+        async function verifyOTP() {
+            const otp = document.getElementById('otp').value;
+            if (!otp) return showMsg("Please enter OTP", "error");
+            
+            const sessionId = localStorage.getItem('sessionId');
+            
+            showMsg('Authorizing Identity...');
+            try {
+                const res = await fetch(CONFIG.API_BASE_URL + '/api/verify-otp', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ mobile: urlMobile, otp, sessionId })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    if (data.data.exists) {
+                        return performLogin(urlMobile);
+                    } else {
+                        // NEW USER -> GO TO PAYMENT PAGE
+                        localStorage.setItem('temp_mobile', urlMobile);
+                        sessionStorage.setItem('temp_mobile', urlMobile);
+                        window.location.href = `payment.html?mobile=${urlMobile}`;
+                    }
+                } else {
+                    showMsg('Invalid OTP', 'error');
+                }
+            } catch (e) { showMsg('Verification failed', 'error'); }
+        }
+
+        async function performLogin(mobile) {
+            showMsg('Accessing Identity...');
+            const res = await fetch(CONFIG.API_BASE_URL + '/api/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ mobile })
+            });
+            const data = await res.json();
+            if (data.success) {
+                localStorage.setItem('session', data.data.token);
+                localStorage.setItem('mobile', mobile);
+                window.location.href = "dashboard.html";
+            }
+        }
+
+
+
+
+        function showMsg(m, type='') {
+            const el = document.getElementById('msg');
+            el.innerText = m;
+            el.style.color = type === 'error' ? '#ff5252' : '#00c853';
+        }
+
+        // Handle referral in URL
+        if (urlParams.get('ref')) localStorage.setItem('refCode', urlParams.get('ref'));
+    </script>
+</body>
+</html>
