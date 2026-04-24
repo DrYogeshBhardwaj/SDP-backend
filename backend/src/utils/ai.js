@@ -32,7 +32,7 @@ async function getAIResponse(userMessage) {
     
     for (const model of models) {
         try {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+            const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${key}`;
             const response = await axios.post(url, {
                 contents: [{
                     parts: [{
