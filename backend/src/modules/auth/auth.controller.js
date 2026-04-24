@@ -23,23 +23,32 @@ const login = async (req, res) => {
 const getMe = async (req, res) => {
     try {
         const userId = req.user.userId;
+        // Fetch user basic data first
         const user = await prisma.user.findUnique({
-             where: { id: userId },
-             include: { 
-                 wallets: true,
-                 transactions: {
-                     where: { category: { not: 'REGISTRATION_FEE' } },
-                     include: { 
-                         fromUser: { 
-                             select: { mobile: true, name: true } 
-                         } 
-                     },
-                     orderBy: { createdAt: 'desc' },
-                     take: 50
-                 }
-             }
+            where: { id: userId },
+            include: { wallets: true }
         });
+
         if (!user) return errorResponse(res, 404, 'User no longer exists');
+
+        let transactions = [];
+        try {
+            // Try fetching with fromUser details
+            const txData = await prisma.transaction.findMany({
+                where: { userId, category: { not: 'REGISTRATION_FEE' } },
+                include: { fromUser: { select: { mobile: true, name: true } } },
+                orderBy: { createdAt: 'desc' },
+                take: 50
+            });
+            transactions = txData;
+        } catch (e) {
+            console.error('Prisma Include Fail, using simple tx fetch:', e.message);
+            transactions = await prisma.transaction.findMany({
+                where: { userId, category: { not: 'REGISTRATION_FEE' } },
+                orderBy: { createdAt: 'desc' },
+                take: 50
+            });
+        }
 
         const cashBalance = user.wallets.find(w => w.type === 'CASH')?.balance || 0;
 
@@ -64,7 +73,7 @@ const getMe = async (req, res) => {
             cashBalance: cashBalance,
             directCount,
             teamCount,
-            transactions: user.transactions,
+            transactions: transactions,
             dailyMinutesUsed: user.dailyMinutesUsed,
             referralCode: user.referralCode,
             upiId: user.upiId,
