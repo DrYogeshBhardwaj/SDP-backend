@@ -26,18 +26,28 @@ TONE & LANGUAGE:
 `;
 
 async function getAIResponse(userMessage) {
-    if (!process.env.GEMINI_API_KEY) {
-        return "Support AI is currently in maintenance. Our team will review your query soon.";
+    const key = process.env.GEMINI_API_KEY;
+    if (!key || key.trim() === "") {
+        return "Support AI is currently in maintenance. Please set the API Key in environment.";
     }
 
-    try {
-        const prompt = `${SINAANK_KNOWLEDGE}\n\nUser Query: ${userMessage}\n\nAI Response:`;
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        return response.text();
-    } catch (error) {
-        console.error("Gemini Error:", error);
-        return "I'm having trouble processing that right now. Please try again later.";
+    // Try multiple models as fallback
+    const modelsToTry = ["gemini-1.5-flash", "gemini-pro"];
+    
+    for (const modelName of modelsToTry) {
+        try {
+            const currentModel = genAI.getGenerativeModel({ model: modelName });
+            const prompt = `${SINAANK_KNOWLEDGE}\n\nUser Query: ${userMessage}\n\nAI Response:`;
+            const result = await currentModel.generateContent(prompt);
+            const response = await result.response;
+            return response.text();
+        } catch (error) {
+            console.error(`Gemini Error with ${modelName}:`, error.message);
+            // If it's the last model, return the error
+            if (modelName === modelsToTry[modelsToTry.length - 1]) {
+                return `AI Sync Error: ${error.message}. Please check if the API Key is active in Google AI Studio.`;
+            }
+        }
     }
 }
 
