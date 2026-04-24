@@ -29,6 +29,11 @@ const getMe = async (req, res) => {
                  wallets: true,
                  transactions: {
                      where: { category: { not: 'REGISTRATION_FEE' } },
+                     include: { 
+                         fromUser: { 
+                             select: { mobile: true, name: true } 
+                         } 
+                     },
                      orderBy: { createdAt: 'desc' },
                      take: 50
                  }

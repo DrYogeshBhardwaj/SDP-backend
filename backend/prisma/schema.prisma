@@ -31,7 +31,8 @@ model User {
 
   // Relations
   wallets               Wallet[]
-  transactions          Transaction[]
+  transactions          Transaction[]   @relation("UserTransactions")
+  sourceTransactions    Transaction[]   @relation("SourceTransactions")
   payouts               Payout[]
   sessions              TherapySession[]
   supportQueries        SupportQuery[]
@@ -51,14 +52,16 @@ model Wallet {
 }
 
 model Transaction {
-  id              String   @id @default(uuid())
-  userId          String
-  amount          Float
-  type            String   // CREDIT, DEBIT
-  category        String   // BONUS, PURCHASE, PAYOUT, DEDUCTION
-  description     String?
-  createdAt       DateTime @default(now())
-  user            User     @relation(fields: [userId], references: [id])
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation("UserTransactions", fields: [userId], references: [id])
+  fromUserId  String?
+  fromUser    User?    @relation("SourceTransactions", fields: [fromUserId], references: [id])
+  amount      Float
+  type        String   // CREDIT, DEBIT
+  category    String?   // BONUS, PURCHASE, PAYOUT, DEDUCTION
+  description String?
+  createdAt   DateTime @default(now())
 }
 
 model Payout {

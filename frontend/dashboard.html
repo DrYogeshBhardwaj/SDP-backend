@@ -95,6 +95,8 @@
                     <thead style="position: sticky; top: 0; background: var(--bg-deep); z-index: 1;">
                         <tr style="color: var(--primary); text-transform: uppercase; font-size: 0.7rem; letter-spacing: 1px;">
                             <th style="padding: 12px; text-align: left;">Date</th>
+                            <th style="padding: 12px; text-align: left;">Mobile No</th>
+                            <th style="padding: 12px; text-align: left;">Name</th>
                             <th style="padding: 12px; text-align: left;">Activity</th>
                             <th style="padding: 12px; text-align: right;">Amount</th>
                         </tr>
@@ -290,9 +292,13 @@
                     
                     ledgerBody.innerHTML = u.transactions.map(t => {
                         totalEarnings += t.amount;
+                        const fromMobile = t.fromUser ? t.fromUser.mobile : '--';
+                        const fromName = t.fromUser ? (t.fromUser.name || 'Partner') : '--';
                         return `
                             <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                                 <td style="padding: 12px; color: var(--text-dim);">${formatDate(t.createdAt)}</td>
+                                <td style="padding: 12px; font-family: monospace;">${fromMobile}</td>
+                                <td style="padding: 12px;">${fromName}</td>
                                 <td style="padding: 12px; font-weight: 600;">${t.description}</td>
                                 <td style="padding: 12px; text-align: right; color: var(--primary);">+₹${t.amount}</td>
                             </tr>
@@ -302,7 +308,7 @@
                     // Add Total Row
                     ledgerBody.innerHTML += `
                         <tr style="border-top: 2px solid var(--border-glass); background: rgba(255,255,255,0.02);">
-                            <td colspan="2" style="padding: 15px; text-align: right; font-weight: 800; text-transform: uppercase; color: var(--text-dim);">Total Earnings</td>
+                            <td colspan="4" style="padding: 15px; text-align: right; font-weight: 800; text-transform: uppercase; color: var(--text-dim);">Total Earnings</td>
                             <td style="padding: 15px; text-align: right; font-weight: 800; color: var(--primary); font-size: 1.1rem;">₹${totalEarnings}</td>
                         </tr>
                     `;

@@ -6,6 +6,7 @@
     "postinstall": "cd backend && npx prisma generate && npx prisma db push && node scratch/promote_admin.js"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.21.0",
     "@prisma/client": "^5.22.0",
     "axios": "^1.15.1",
     "bcrypt": "^6.0.0",

@@ -62,6 +62,7 @@ const registerUser = async ({ mobile, sponsorCode, name, upiId }) => {
             await tx.transaction.create({
                 data: {
                     userId: sponsorId,
+                    fromUserId: user.id,
                     amount: 100,
                     type: 'CREDIT',
                     category: 'BONUS',
@@ -79,6 +80,7 @@ const registerUser = async ({ mobile, sponsorCode, name, upiId }) => {
                 await tx.transaction.create({
                     data: {
                         userId: sponsorObj.sponsorId,
+                        fromUserId: user.id,
                         amount: 80,
                         type: 'CREDIT',
                         category: 'BONUS',

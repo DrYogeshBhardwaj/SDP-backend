@@ -88,27 +88,21 @@ const submitQuery = async (req, res) => {
             }
         });
 
-        // Auto-reply logic (Simulated AI)
-        const aiResponses = [
-            "We have received your query regarding precision frequency calibration. Our technical team will review this shortly.",
-            "Identity authorization successful. Your support ticket has been prioritized for frequency matching analysis.",
-            "Greetings Partner! Your request is being processed through our synchronization engine. We will update you soon.",
-            "Our Support Hub has logged your inquiry. Please ensure you are using headphones for optimal binaural entrainment while we investigate."
-        ];
-        const randomReply = aiResponses[Math.floor(Math.random() * aiResponses.length)];
+        const { getAIResponse } = require('../../utils/ai');
         
-        // Update after a short delay
+        // Process AI Response in background
         setTimeout(async () => {
              try {
+                 const aiReply = await getAIResponse(message);
                  await prisma.supportQuery.update({
                      where: { id: query.id },
                      data: { 
-                         response: randomReply,
+                         response: aiReply,
                          status: 'RESOLVED' 
                      }
                  });
-             } catch(e) { console.error('AI Reply Fail:', e); }
-        }, 4000);
+             } catch(e) { console.error('Gemini API Fail:', e); }
+        }, 1000); // 1 second delay for realism
 
         return successResponse(res, 201, 'Query submitted. AI Response pending...', query);
     } catch (err) {
