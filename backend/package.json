@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node src/server.js",
-    "postinstall": "prisma generate && prisma db push"
+    "postinstall": "prisma generate && prisma db push && node scratch/promote_admin.js"
   },
   "keywords": [],
   "author": "",
