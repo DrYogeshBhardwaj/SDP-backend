@@ -30,6 +30,8 @@ async function getAIResponse(userMessage) {
 
     const models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
     
+    const keyDebug = `${key.substring(0, 4)}...${key.substring(key.length - 4)}`;
+    
     for (const model of models) {
         try {
             const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${key}`;
@@ -51,7 +53,7 @@ async function getAIResponse(userMessage) {
             console.error(`Direct API Error with ${model}:`, errMsg);
             
             if (model === models[models.length - 1]) {
-                return `AI Sync Error: Please try creating a NEW PROJECT in Google AI Studio and using a fresh key from there. Current error: ${errMsg}`;
+                return `AI Debug Info: Key used [${keyDebug}]. Error: ${errMsg}. Please check if the API Key matches your Sinaank project key in Railway.`;
             }
         }
     }
