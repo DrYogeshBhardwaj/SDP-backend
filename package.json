@@ -1,0 +1,8 @@
+{
+  "name": "sinaank-therapy-root",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "cd backend && npm start",
+    "postinstall": "cd backend && npm install && npm run postinstall"
+  }
+}
