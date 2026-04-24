@@ -73,8 +73,12 @@ const getMe = async (req, res) => {
             goalLockUntil: user.goalLockUntil
         });
     } catch (err) {
-        console.error('[PROFILE_FETCH_ERR]', err);
-        return errorResponse(res, 500, 'Profile fetch failed');
+        console.error('[PROFILE_FETCH_ERR_FULL]', {
+            message: err.message,
+            stack: err.stack,
+            userId: req.user?.userId
+        });
+        return errorResponse(res, 500, `Profile fetch failed: ${err.message}`);
     }
 };
 
