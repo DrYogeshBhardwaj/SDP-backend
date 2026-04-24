@@ -31,8 +31,8 @@ async function getAIResponse(userMessage) {
         return "Support AI is currently in maintenance. Please set the API Key in environment.";
     }
 
-    // Try multiple models as fallback
-    const modelsToTry = ["gemini-1.5-flash", "gemini-pro"];
+    // Try latest model names
+    const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro"];
     
     for (const modelName of modelsToTry) {
         try {
