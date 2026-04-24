@@ -28,7 +28,14 @@ async function getAIResponse(userMessage) {
         return "Support AI is currently in maintenance. Please set the API Key in environment.";
     }
 
-    const models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
+    const models = [
+        "gemini-1.5-flash-latest",
+        "gemini-1.5-flash",
+        "gemini-1.5-pro-latest",
+        "gemini-1.5-pro",
+        "gemini-1.0-pro",
+        "gemini-pro"
+    ];
     
     const keyDebug = `${key.substring(0, 4)}...${key.substring(key.length - 4)}`;
     
