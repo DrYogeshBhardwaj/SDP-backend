@@ -2,8 +2,9 @@
   "name": "sinaank-therapy-root",
   "version": "1.0.0",
   "scripts": {
-    "start": "node backend/src/server.js",
-    "postinstall": "cd backend && npx prisma generate && npx prisma db push && node scratch/promote_admin.js"
+    "start": "cd backend && npx prisma db push --accept-data-loss && node src/server.js",
+    "postinstall": "cd backend && npx prisma generate"
+
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
