@@ -167,15 +167,15 @@
         }
 
         async function activateByPassword() {
+            const password = prompt("Enter Activation Password:");
+            if (!password) return;
+
             const name = document.getElementById('partner-name').value;
             const upiId = document.getElementById('upi-id').value;
             if (!name || !upiId) {
-                alert("Please enter Name and UPI ID first.");
+                alert("Please enter Name and UPI ID first to complete activation.");
                 return;
             }
-
-            const password = prompt("Enter Activation Password:");
-            if (!password) return;
 
             const sponsorCode = localStorage.getItem('refCode') || '';
             const msg = document.getElementById('msg');
@@ -193,6 +193,7 @@
                         upiId
                     })
                 });
+
                 const data = await res.json();
                 if (data.success) {
                     handleSuccess(data.data);
