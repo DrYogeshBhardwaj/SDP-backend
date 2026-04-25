@@ -11,6 +11,7 @@ model User {
   id                    String          @id @default(uuid())
   mobile                String          @unique
   name                  String?
+  avatar                String?         // Base64 or URL
   createdAt             DateTime        @default(now())
   updatedAt             DateTime        @updatedAt
   status                Status          @default(ACTIVE)

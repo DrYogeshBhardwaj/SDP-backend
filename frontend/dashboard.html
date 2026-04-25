@@ -126,7 +126,7 @@
             </div>
 
             <div class="card-title" style="font-size: 0.8rem; margin-bottom: 1rem;">Support Hub</div>
-            <div id="support-chat" style="flex: 1; height: 180px; overflow-y: auto; padding-right: 5px; margin-bottom: 15px; border-bottom: 1px solid var(--border-glass);">
+            <div id="support-chat" style="height: 250px; overflow-y: auto; padding-right: 5px; margin-bottom: 15px; border-bottom: 1px solid var(--border-glass); scroll-behavior: smooth;">
                 <div style="color: var(--text-dim); text-align: center; margin-top: 1rem;">No queries yet.</div>
             </div>
             <div style="display: flex; gap: 10px;">
@@ -279,6 +279,10 @@
                         document.getElementById('active-upi').innerText = u.upiId;
                     }
 
+                    if (u.avatar) {
+                        document.getElementById('user-avatar').innerHTML = `<img src="${u.avatar}" style="width:100%; height:100%; object-fit:cover;">`;
+                    }
+                    
                     // Update Stat Cards
                     document.getElementById('min-balance').innerText = u.minutesBalance;
                     document.getElementById('cash-balance').innerText = `₹${u.cashBalance || 0}`;
@@ -362,13 +366,24 @@
             }
         }
 
-        function uploadAvatar(input) {
+        async function uploadAvatar(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = async function(e) {
+                    const base64 = e.target.result;
                     const avatar = document.getElementById('user-avatar');
-                    avatar.innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
-                    localStorage.setItem('sinaank_avatar', e.target.result);
+                    avatar.innerHTML = `<img src="${base64}" style="width:100%; height:100%; object-fit:cover;">`;
+                    
+                    // Save to DB
+                    const token = localStorage.getItem('session');
+                    await fetch(CONFIG.API_BASE_URL + '/api/user/update-profile', {
+                        method: 'PUT',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}` 
+                        },
+                        body: JSON.stringify({ avatar: base64 })
+                    });
                 }
                 reader.readAsDataURL(input.files[0]);
             }
@@ -377,12 +392,6 @@
         function logout() {
             localStorage.clear();
             window.location.href = "index.html";
-        }
-
-        // Initialize avatar from local storage
-        const savedAvatar = localStorage.getItem('sinaank_avatar');
-        if (savedAvatar) {
-            document.getElementById('user-avatar').innerHTML = `<img src="${savedAvatar}" style="width:100%; height:100%; object-fit:cover;">`;
         }
 
         loadProfile();
