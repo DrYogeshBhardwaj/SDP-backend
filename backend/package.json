@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node src/server.js",
-    "postinstall": "prisma generate && prisma db push --accept-data-loss && node scratch/promote_admin.js"
+    "start": "prisma generate && prisma db push --accept-data-loss && node src/server.js",
+    "postinstall": "prisma generate"
+
 
   },
   "keywords": [],
