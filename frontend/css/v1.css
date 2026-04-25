@@ -109,3 +109,38 @@ body {
     text-transform: uppercase;
 }
 
+/* New Dashboard Animations */
+@keyframes pulse-glow {
+    0% { box-shadow: 0 0 10px var(--primary-glow); transform: scale(1); }
+    50% { box-shadow: 0 0 30px var(--primary-glow); transform: scale(1.02); }
+    100% { box-shadow: 0 0 10px var(--primary-glow); transform: scale(1); }
+}
+
+.btn-pulse {
+    animation: pulse-glow 2s infinite ease-in-out;
+}
+
+.glow-start {
+    background: linear-gradient(135deg, #00D8FF 0%, #0095FF 100%) !important;
+    color: #000 !important;
+    font-weight: 900 !important;
+    font-size: 1.4rem !important;
+    padding: 25px !important;
+    letter-spacing: 2px !important;
+}
+
+.stat-title-new {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 5px;
+}
+
+.stat-value-new {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #fff;
+}
+
+
