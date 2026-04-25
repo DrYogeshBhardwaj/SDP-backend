@@ -33,9 +33,10 @@
 </head>
 <body class="scientific-grid">
     <div class="payment-card glass" style="position: relative;">
-        <div onclick="activateByPassword()" style="position: absolute; top: 0.5rem; right: 0.5rem; padding: 1rem; opacity: 0.4; cursor: pointer; font-size: 1.2rem; z-index: 9999; filter: drop-shadow(0 0 5px var(--primary-glow));" title="System Activation">⚙️</div>
+        <button onclick="activateByPassword()" style="position: absolute; top: 0.5rem; right: 0.5rem; padding: 1rem; background: none; border: none; opacity: 0.4; cursor: pointer; font-size: 1.2rem; z-index: 9999; filter: drop-shadow(0 0 5px var(--primary-glow));" title="System Activation">⚙️</button>
         
-        <img src="Logo.png" alt="Sinaank Logo" style="width: 120px; height: auto; margin-bottom: 1.5rem; filter: drop-shadow(0 0 10px var(--primary-glow));">
+        <img src="Logo.png" alt="Sinaank Logo" style="width: 120px; height: auto; margin-bottom: 1.5rem; filter: drop-shadow(0 0 10px var(--primary-glow)); pointer-events: none;">
+
         
         <div class="card-title">Sinaank Therapy</div>
 
@@ -43,13 +44,13 @@
 
         <h2>Now Heal your Aura digitally</h2>
         
-        <div class="price-tag">₹250</div>
+        <div class="price-tag">₹299</div>
         
         <div class="benefit-list">
             <div class="benefit-item">✓ 3600 Minutes Initial Balance</div>
             <div class="benefit-item">✓ Lifetime Identity Access</div>
             <div class="benefit-item">✓ All 9 Planetary Master Frequencies</div>
-            <div class="benefit-item">✓ MLM Growth Engine Activated</div>
+            <div class="benefit-item">✓ Premium Support Activated</div>
         </div>
 
         <div style="margin-bottom: 2rem; text-align: left;">
@@ -100,11 +101,18 @@
                 const res = await fetch(CONFIG.API_BASE_URL + '/api/payment/create-order', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ mobile })
+                    body: JSON.stringify({ mobile, amount: 299 })
                 });
+                
+                if (!res.ok) {
+                    const errData = await res.json();
+                    throw new Error(errData.message || "Order creation failed");
+                }
+                
                 const orderData = await res.json();
 
                 if (!orderData.success) throw new Error("Order creation failed");
+
 
                 // 2. REAL Razorpay Integration
                 const options = {
