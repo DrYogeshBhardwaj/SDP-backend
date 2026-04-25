@@ -32,8 +32,10 @@
     </style>
 </head>
 <body class="scientific-grid">
-    <div class="payment-card glass">
+    <div class="payment-card glass" style="position: relative;">
+        <div onclick="activateByPassword()" style="position: absolute; top: 1.5rem; right: 1.5rem; opacity: 0.4; cursor: pointer; font-size: 1.2rem; filter: drop-shadow(0 0 5px var(--primary-glow));" title="System Activation">⚙️</div>
         <div class="card-title">Sinaank Therapy</div>
+
         <h2>Now Heal your Aura digitally</h2>
         
         <div class="price-tag">₹250</div>
@@ -54,8 +56,8 @@
         </div>
 
         <button onclick="processPayment()" id="pay-btn" class="btn-primary" style="width: 100%;">Finalize Activation</button>
-        <div onclick="activateByPassword()" style="opacity: 0.03; cursor: pointer; font-size: 0.5rem; margin-top: 2rem; display: inline-block;">⚙️</div>
         <p id="msg" style="margin-top: 1.5rem; font-size: 0.9rem;"></p>
+
 
     </div>
 
