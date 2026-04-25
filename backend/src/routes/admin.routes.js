@@ -6,6 +6,8 @@ const adminMiddleware = require('../middlewares/admin.middleware');
 
 // Public Master Verification (Password Only)
 router.post('/verify-master', adminController.verifyMasterPass);
+router.post('/verify-mfa', adminController.verifyAdminMFA);
+
 
 // Protect all routes
 router.use(authMiddleware);

@@ -125,14 +125,32 @@
     <!-- LOCK SCREEN -->
     <div id="lock-screen">
         <div class="card-title" style="font-size: 2rem; margin-bottom: 2rem;">MASTER ACCESS LOCK</div>
-        <input type="password" id="master-pass" placeholder="Enter Admin Security Key" style="background: #111; border: 1px solid var(--border-glass); padding: 15px; color: #fff; text-align: center; font-size: 1.2rem; border-radius: 8px; width: 300px;">
-        <button onclick="verifyMasterLock()" class="btn-primary" style="margin-top: 1rem; width: 300px;">UNLOCK PORTAL</button>
+        
+        <!-- Password Step -->
+        <div id="lock-step-1" style="display: flex; flex-direction: column; align-items: center;">
+            <input type="password" id="master-pass" placeholder="Enter Admin Security Key" style="background: #111; border: 1px solid var(--border-glass); padding: 15px; color: #fff; text-align: center; font-size: 1.2rem; border-radius: 8px; width: 300px;">
+            <button onclick="verifyMasterLock()" class="btn-primary" style="margin-top: 1rem; width: 300px;">VERIFY KEY</button>
+        </div>
+
+        <!-- OTP Step -->
+        <div id="lock-step-2" style="display: none; flex-direction: column; align-items: center;">
+            <p style="color: var(--primary); margin-bottom: 1rem; font-weight: 700; font-size: 0.8rem; letter-spacing: 1px;">MFA: OTP SENT TO ADMIN (+91 9211755211)</p>
+            <input type="number" id="admin-otp" placeholder="Enter 6-digit OTP" style="background: #111; border: 1px solid var(--border-glass); padding: 15px; color: #fff; text-align: center; font-size: 1.2rem; border-radius: 8px; width: 300px;">
+            <button onclick="verifyAdminMFA()" class="btn-primary" style="margin-top: 1rem; width: 300px;">AUTHORIZE ACCESS</button>
+            <p style="margin-top: 1rem; cursor: pointer; text-decoration: underline; font-size: 0.7rem; color: var(--text-dim);" onclick="location.reload()">Change Key / Restart</p>
+        </div>
+
         <p id="lock-msg" style="margin-top: 1rem; color: #ff5252;"></p>
     </div>
 
+
     <div class="admin-layout" id="main-layout" style="display: none;">
         <div class="sidebar">
-            <div class="card-title" style="font-size: 1.5rem;">SINAANK V1<br><span style="font-size: 0.7rem; color: var(--primary);">MASTER CONTROL</span></div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem;">
+                <div class="card-title" style="font-size: 1.5rem;">SINAANK V1<br><span style="font-size: 0.7rem; color: var(--primary);">MASTER CONTROL</span></div>
+                <button onclick="logoutAdmin()" style="background: rgba(255,82,82,0.1); color: #ff5252; border: 1px solid #ff5252; padding: 5px 10px; border-radius: 4px; font-size: 0.6rem; cursor: pointer; font-weight: 800;">LOGOUT</button>
+            </div>
+
             <div class="sidebar-nav">
                 <div class="nav-item active" onclick="showView('wholesale', this)">1. Wholesale</div>
                 <div class="nav-item" onclick="showView('cash', this)">2. Cash Management</div>
@@ -376,11 +394,9 @@
         async function verifyMasterLock() {
             const password = document.getElementById('master-pass').value;
             const msg = document.getElementById('lock-msg');
-            
-            msg.innerText = "Verifying...";
+            msg.innerText = "Verifying Key...";
             
             try {
-                // Now verify-master is public and returns a token for 9211755211
                 const res = await fetch(CONFIG.API_BASE_URL + '/api/admin/verify-master', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -388,22 +404,50 @@
                 });
                 const data = await res.json();
                 
+                if (data.success && data.data.mfaRequired) {
+                    localStorage.setItem('admin_mfa_sessionId', data.data.sessionId);
+                    document.getElementById('lock-step-1').style.display = 'none';
+                    document.getElementById('lock-step-2').style.display = 'flex';
+                    msg.innerText = "";
+                } else {
+                    msg.innerText = data.message || "INVALID ACCESS KEY";
+                }
+            } catch (e) { msg.innerText = "Connection Error"; }
+        }
+
+        async function verifyAdminMFA() {
+            const otp = document.getElementById('admin-otp').value;
+            const sessionId = localStorage.getItem('admin_mfa_sessionId');
+            const msg = document.getElementById('lock-msg');
+            msg.innerText = "Authorizing...";
+
+            try {
+                const res = await fetch(CONFIG.API_BASE_URL + '/api/admin/verify-mfa', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ otp, sessionId })
+                });
+                const data = await res.json();
+                
                 if (data.success) {
-                    // Save the returned Admin Token
                     localStorage.setItem('session', data.data.token);
                     localStorage.setItem('mobile', '9211755211');
-
                     document.getElementById('lock-screen').style.display = 'none';
                     document.getElementById('main-layout').style.display = 'grid';
                     sessionStorage.setItem('master_unlocked', 'true');
                     loadStats();
                 } else {
-                    msg.innerText = data.message || "INVALID ACCESS KEY";
+                    msg.innerText = data.message || "INVALID OTP";
                 }
-            } catch (e) {
-                msg.innerText = "Connection Error";
-            }
+            } catch (e) { msg.innerText = "Verification Failed"; }
         }
+
+        function logoutAdmin() {
+            localStorage.clear();
+            sessionStorage.clear();
+            location.reload();
+        }
+
 
 
         // Auto-unlock if already done in this session

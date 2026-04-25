@@ -1,6 +1,8 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { successResponse, errorResponse } = require('../../utils/response');
+const axios = require('axios');
+
 
 /**
  * V1 Admin Controller (Rebirth)
@@ -318,23 +320,31 @@ const verifyMasterPass = async (req, res) => {
         const masterPass = config ? config.value : '725653A';
         
         if (password === masterPass) {
-            // Log Success
+            // Log Key Success
             await prisma.securityLog.create({
                 data: {
-                    event: 'ADMIN_LOGIN_SUCCESS',
-                    details: `Master Password verification successful. IP: ${ip}`,
+                    event: 'ADMIN_KEY_SUCCESS',
+                    details: `Master Key verified. Triggering MFA OTP to Admin. IP: ${ip}`,
                     ip
                 }
             });
 
-            // FIND THE ADMIN USER
-            const admin = await prisma.user.findUnique({ where: { mobile: '9211755211' } });
-            if (!admin) return errorResponse(res, 404, 'Admin Identity missing in DB. Run restore script.');
+            // TRIGGER OTP TO ADMIN (9211755211)
+            const mobile = '9211755211';
+            const apiKey = process.env.TWO_FACTOR_API_KEY;
+            const url = `https://2factor.in/API/V1/${apiKey}/SMS/${mobile}/AUTOGEN/MKUNDLI_OTP`;
 
-            const { generateToken } = require('../../utils/jwt');
-            const token = generateToken({ userId: admin.id });
+            const response = await axios.get(url);
+            
+            if (response.data.Status === "Success") {
+                return successResponse(res, 200, 'Master Key Valid. OTP Sent.', { 
+                    mfaRequired: true, 
+                    sessionId: response.data.Details 
+                });
+            } else {
+                return errorResponse(res, 500, 'MFA OTP Gateway failed. Try again.');
+            }
 
-            return successResponse(res, 200, 'Unlocked', { token });
         } else {
             // Log Failure
             await prisma.securityLog.create({
@@ -351,6 +361,46 @@ const verifyMasterPass = async (req, res) => {
         return errorResponse(res, 500, 'Verification failed');
     }
 };
+
+const verifyAdminMFA = async (req, res) => {
+    try {
+        const { sessionId, otp } = req.body;
+        const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+
+        if (!sessionId || !otp) return errorResponse(res, 400, 'SessionId and OTP required');
+
+        const apiKey = process.env.TWO_FACTOR_API_KEY;
+        const url = `https://2factor.in/API/V1/${apiKey}/SMS/VERIFY/${sessionId}/${otp}`;
+
+        const response = await axios.get(url);
+
+        if (response.data.Status === "Success") {
+            // FIND THE ADMIN USER
+            const admin = await prisma.user.findUnique({ where: { mobile: '9211755211' } });
+            if (!admin) return errorResponse(res, 404, 'Admin Identity missing. Run restore script.');
+
+            // Log Success
+            await prisma.securityLog.create({
+                data: { event: 'ADMIN_MFA_SUCCESS', details: `MFA Verified. Login complete. IP: ${ip}`, ip }
+            });
+
+            const { generateToken } = require('../../utils/jwt');
+            const token = generateToken({ userId: admin.id });
+
+            return successResponse(res, 200, 'Access Granted', { token });
+        } else {
+             // Log MFA Failure
+             await prisma.securityLog.create({
+                data: { event: 'ADMIN_MFA_FAILURE', details: `Invalid Admin OTP attempt: ${otp}. IP: ${ip}`, ip }
+            });
+            return errorResponse(res, 400, 'Invalid Admin OTP');
+        }
+    } catch (err) {
+        console.error('[ADMIN_MFA_ERR]', err.response?.data || err.message);
+        return errorResponse(res, 400, 'MFA Verification failed');
+    }
+};
+
 
 const getSecurityLogs = async (req, res) => {
     try {
@@ -381,6 +431,8 @@ module.exports = {
     getSystemConfig,
     updateSystemConfig,
     verifyMasterPass,
-    getSecurityLogs
+    getSecurityLogs,
+    verifyAdminMFA
 };
+
 
