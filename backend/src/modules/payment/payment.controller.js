@@ -59,7 +59,8 @@ const simulateSuccess = async (req, res) => {
         if (!order) return errorResponse(res, 404, 'Order not found');
 
         // Logic for Upgrade
-        const plan = order.amount === 2900 ? 'BUSINESS' : 'BASIC';
+        const plan = 'PREMIUM';
+
         
         await prisma.$transaction([
             prisma.paymentOrder.update({

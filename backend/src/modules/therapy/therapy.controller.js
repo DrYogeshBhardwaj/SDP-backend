@@ -17,8 +17,9 @@ const startSession = async (req, res) => {
         
         // Plan Enforcement
         if (user.plan === 'FREE' && reqDuration > 2) {
-            return errorResponse(res, 403, 'FREE plan is limited to 2 minutes. Please upgrade for longer sessions.');
+            return errorResponse(res, 403, 'FREE plan is limited to 2 minutes. Please upgrade to PREMIUM for longer sessions.');
         }
+
 
         if (user.minutesBalance < reqDuration) return errorResponse(res, 400, 'Insufficient balance');
         if (user.dailyMinutesUsed + reqDuration > 15) return errorResponse(res, 400, 'Daily limit reached');

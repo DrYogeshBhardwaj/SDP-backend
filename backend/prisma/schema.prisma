@@ -145,7 +145,7 @@ model SystemConfig {
 
 enum Plan {
   FREE
-  BASIC
-  BUSINESS
+  PREMIUM
 }
+
 
