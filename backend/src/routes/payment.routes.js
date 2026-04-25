@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const paymentController = require('../modules/payment/payment.controller');
 
-const auth = require('../middlewares/authMiddleware');
+const { authMiddleware: auth } = require('../middlewares/authMiddleware');
+
 
 router.post('/create-order', (req, res, next) => {
     if (req.headers.authorization) return auth(req, res, next);

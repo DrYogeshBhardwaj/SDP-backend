@@ -167,4 +167,5 @@ const verifyPasswordPayment = async (req, res) => {
     }
 };
 
-module.exports = { createOrder, verifyPayment, verifyPasswordPayment };
+module.exports = { createOrder, verifyPayment, verifyPasswordPayment, simulateSuccess };
+
