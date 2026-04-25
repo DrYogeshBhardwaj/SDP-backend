@@ -43,7 +43,34 @@ const endSession = async (req, res) => {
         const { sessionId, minutesUsed } = req.body;
         const userId = req.user.userId;
 
+        const user = await prisma.user.findUnique({ where: { id: userId } });
+        if (!user) return errorResponse(res, 404, 'User not found');
+        
         const actualMin = Math.min(minutesUsed || 1, 15);
+
+        // Streak Logic
+        let newStreak = user.streak || 0;
+        const now = new Date();
+        const lastSession = user.lastSessionAt;
+
+        if (!lastSession) {
+            newStreak = 1;
+        } else {
+            const todayStr = now.toDateString();
+            const lastDateStr = new Date(lastSession).toDateString();
+            
+            const yesterday = new Date();
+            yesterday.setDate(now.getDate() - 1);
+            const yesterdayStr = yesterday.toDateString();
+
+            if (lastDateStr === yesterdayStr) {
+                newStreak += 1;
+            } else if (lastDateStr === todayStr) {
+                // Keep current streak
+            } else {
+                newStreak = 1;
+            }
+        }
 
         await prisma.$transaction([
             prisma.therapySession.update({
@@ -55,12 +82,15 @@ const endSession = async (req, res) => {
                 data: {
                     minutesBalance: { decrement: actualMin },
                     dailyMinutesUsed: { increment: actualMin },
-                    totalMinutesConsumed: { increment: actualMin }
+                    totalMinutesConsumed: { increment: actualMin },
+                    lastSessionAt: new Date(),
+                    streak: newStreak
                 }
             })
         ]);
 
-        return successResponse(res, 200, 'Session completed', { minUsed: actualMin });
+        return successResponse(res, 200, 'Session completed', { minUsed: actualMin, streak: newStreak });
+
     } catch (err) {
         return errorResponse(res, 500, 'End failed');
     }

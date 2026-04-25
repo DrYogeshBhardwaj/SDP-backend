@@ -24,6 +24,7 @@ model User {
   dailyMinutesUsed      Int             @default(0)
   totalMinutesConsumed  Int             @default(0)
   lastSessionAt         DateTime?
+  streak                Int             @default(0)
   
   // MLM Goal / Lock Settings
   goalType              String?         // MAN, TAN, DHAN, STABILITY, CUSTOM

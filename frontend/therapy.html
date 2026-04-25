@@ -227,7 +227,10 @@
                 <h3 style="margin: 1.5rem 0 1rem;">Select your purpose</h3>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 2rem;">
-                    <button class="planet-btn" onclick="applyQuickCombo('MONEY')" style="padding: 15px; border-color: #FFD700; font-weight: 800;">💰 MONEY</button>
+                    <button class="planet-btn" onclick="applyQuickCombo('MONEY')" style="padding: 15px; border-color: #FFD700; font-weight: 800; position: relative;">
+                        💰 MONEY
+                        <span style="position: absolute; top: -8px; right: -5px; background: var(--primary); color: #000; font-size: 0.5rem; padding: 2px 5px; border-radius: 4px; letter-spacing: 0;">RECOMMENDED</span>
+                    </button>
                     <button class="planet-btn" onclick="applyQuickCombo('EDUCATION')" style="padding: 15px; border-color: #00D8FF; font-weight: 800;">📚 EDUCATION</button>
                     <button class="planet-btn" onclick="applyQuickCombo('HEALTH')" style="padding: 15px; border-color: #FF5252; font-weight: 800;">🩺 HEALTH</button>
                     <button class="planet-btn" onclick="applyQuickCombo('PEACE')" style="padding: 15px; border-color: #fff; font-weight: 800;">🧘 PEACE</button>
@@ -297,6 +300,50 @@
             <div class="timer-display" id="timer" style="filter: drop-shadow(0 0 20px var(--primary-glow));">02:00</div>
             <div style="margin-top: 4rem;">
                 <button onclick="endTherapy()" class="btn-primary" style="background: rgba(255,255,255,0.1); border: 1px solid #ff5252; color: #ff5252;">END SESSION</button>
+            </div>
+        </div>
+
+        <!-- Completion View -->
+        <div id="completion-view" class="view-content" style="display: none;">
+            <div class="stat-card glass" style="width: 100%; max-width: 450px; padding: 3rem;">
+                <h1 style="font-size: 2.5rem; color: var(--primary);">Session Complete</h1>
+                <p style="margin: 1.5rem 0 2.5rem; color: #fff;">Your energy is now balanced</p>
+                
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <button onclick="showImpact()" class="btn-primary" style="background: var(--primary); color: #000;">VIEW IMPACT</button>
+                    <button onclick="startAgain()" class="btn-primary" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass);">START AGAIN</button>
+                </div>
+
+                <div style="margin-top: 2rem; border-top: 1px solid var(--border-glass); padding-top: 1.5rem;">
+                    <p style="font-size: 0.6rem; color: var(--text-dim); margin-bottom: 10px;">SHARE YOUR EXPERIENCE</p>
+                    <button onclick="shareSession()" class="btn-primary" style="background: #25D366; color: #fff; font-size: 0.8rem; width: 100%;">SHARE WHATSAPP</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Impact View -->
+        <div id="impact-view" class="view-content" style="display: none;">
+            <div class="stat-card glass" style="width: 100%; max-width: 450px; padding: 2.5rem; text-align: left;">
+                <h2 style="color: var(--primary); margin-bottom: 1.5rem;">Energy Shift Report</h2>
+                
+                <div style="margin-bottom: 2rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>Focus Level</span> <span style="color: #00c853;">↑ 85%</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>Stress Relief</span> <span style="color: #00c853;">↑ 92%</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span>Aura Alignment</span> <span style="color: #00c853;">↑ 78%</span>
+                    </div>
+                </div>
+
+                <div style="font-size: 0.7rem; color: var(--text-dim); margin-bottom: 10px;">PLANETS ACTIVATED</div>
+                <div id="impact-planets" style="display: flex; gap: 10px; margin-bottom: 2rem;">
+                    <!-- Activated Planets -->
+                </div>
+
+                <button onclick="window.location.href='dashboard.html'" class="btn-primary" style="width: 100%;">GO TO DASHBOARD</button>
             </div>
         </div>
 
@@ -478,19 +525,21 @@
                     reader.readAsDataURL(file);
                 }
                 const label = input.parentElement;
-                label.style.borderColor = 'var(--primary)';
-                label.style.background = 'rgba(255, 215, 0, 0.05)';
                 validateGlobalBtn();
             }
         }
 
+        let currentSessionPlanets = [];
 
         async function startTherapy() {
+
             const mode = currentMode.toUpperCase();
             let sessionPlanets = [];
             if (mode === 'AUTO') sessionPlanets = autoPlanets;
             else if (mode === 'COMBO') sessionPlanets = selectedPlanets;
             else if (mode === 'CHOICE') sessionPlanets = autoPlanets; // Use auto analysis for custom mode base
+
+            currentSessionPlanets = sessionPlanets;
 
             const token = localStorage.getItem('session');
             const res = await fetch(CONFIG.API_BASE_URL + '/api/therapy/start', {
@@ -505,8 +554,8 @@
             timeLeft = selectedTime * 60;
             
             document.getElementById('timer').innerText = `${String(selectedTime).padStart(2,'0')}:00`;
-            document.getElementById('setup-view').style.display = 'none';
-            document.getElementById('session-view').style.display = 'block';
+            document.querySelectorAll('.view-content').forEach(v => v.style.display = 'none');
+            document.getElementById('session-view').style.display = 'flex';
             document.getElementById('vortex').style.display = 'flex';
             document.getElementById('active-mode-label').innerText = `${mode} Frequency Active`;
 
@@ -515,7 +564,22 @@
             } else {
                 initBinaural(sessionPlanets);
             }
+            playTone(440, 880, 0.5); // Activation tone
             startTimer();
+        }
+
+        function playTone(f1, f2, dur) {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(f1, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(f2, audioCtx.currentTime + dur);
+            gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
+            osc.connect(gain).connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + dur);
         }
 
         function initBinaural(p) {
@@ -572,6 +636,12 @@
                 const m = Math.floor(timeLeft / 60);
                 const s = timeLeft % 60;
                 document.getElementById('timer').innerText = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+                
+                // Subtle pulse at midpoint
+                if (timeLeft === Math.floor((selectedTime * 60) / 2)) {
+                    playTone(220, 220, 1);
+                }
+
                 if (timeLeft <= 0) endTherapy();
             }, 1000);
         }
@@ -581,9 +651,7 @@
             if (osc1) { try { osc1.stop(); osc2.stop(); } catch(e){} }
             if (personalAudio) { personalAudio.pause(); }
             
-            document.getElementById('session-status-text').innerText = "Session Complete";
-            document.getElementById('active-mode-label').innerText = "Your energy is now balanced";
-            document.getElementById('active-mode-label').style.color = "var(--primary)";
+            playTone(880, 440, 1); // Calming chime
 
             const token = localStorage.getItem('session');
             await fetch(CONFIG.API_BASE_URL + '/api/therapy/end', {
@@ -592,9 +660,30 @@
                 body: JSON.stringify({ sessionId, minutesUsed: selectedTime })
             });
 
-            setTimeout(() => {
-                window.location.href = "dashboard.html";
-            }, 3000);
+            document.getElementById('session-view').style.display = 'none';
+            document.getElementById('vortex').style.display = 'none';
+            document.getElementById('completion-view').style.display = 'flex';
+        }
+
+        function showImpact() {
+            document.getElementById('completion-view').style.display = 'none';
+            document.getElementById('impact-view').style.display = 'flex';
+            
+            const impactPlanets = document.getElementById('impact-planets');
+            impactPlanets.innerHTML = currentSessionPlanets.map(p => `
+                <div style="background: ${p.color}; width: 15px; height: 15px; border-radius: 50%;" title="${p.name}"></div>
+            `).join('');
+        }
+
+        function startAgain() {
+            document.getElementById('completion-view').style.display = 'none';
+            document.getElementById('setup-view').style.display = 'flex';
+            startTherapy();
+        }
+
+        function shareSession() {
+            const text = encodeURIComponent(`I just tried Sinaank Therapy. Felt something different. 🌿 Try it here: http://${window.location.host}`);
+            window.open(`https://wa.me/?text=${text}`, '_blank');
         }
 
         init();
