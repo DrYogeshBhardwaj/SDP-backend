@@ -311,12 +311,22 @@ const updateSystemConfig = async (req, res) => {
 const verifyMasterPass = async (req, res) => {
     try {
         const { password } = req.body;
+        const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
         const config = await prisma.systemConfig.findUnique({ where: { key: 'ADMIN_MASTER_PASS' } });
         
         // Fallback to initial password if not set in DB yet
         const masterPass = config ? config.value : '725653A';
         
         if (password === masterPass) {
+            // Log Success
+            await prisma.securityLog.create({
+                data: {
+                    event: 'ADMIN_LOGIN_SUCCESS',
+                    details: `Master Password verification successful. IP: ${ip}`,
+                    ip
+                }
+            });
+
             // FIND THE ADMIN USER
             const admin = await prisma.user.findUnique({ where: { mobile: '9211755211' } });
             if (!admin) return errorResponse(res, 404, 'Admin Identity missing in DB. Run restore script.');
@@ -326,6 +336,14 @@ const verifyMasterPass = async (req, res) => {
 
             return successResponse(res, 200, 'Unlocked', { token });
         } else {
+            // Log Failure
+            await prisma.securityLog.create({
+                data: {
+                    event: 'ADMIN_LOGIN_FAILURE',
+                    details: `Incorrect Master Password attempt: ${password}. IP: ${ip}`,
+                    ip
+                }
+            });
             return errorResponse(res, 401, 'Invalid Master Key');
         }
     } catch (err) {
@@ -333,6 +351,19 @@ const verifyMasterPass = async (req, res) => {
         return errorResponse(res, 500, 'Verification failed');
     }
 };
+
+const getSecurityLogs = async (req, res) => {
+    try {
+        const logs = await prisma.securityLog.findMany({
+            take: 50,
+            orderBy: { createdAt: 'desc' }
+        });
+        return successResponse(res, 200, 'Security Logs', logs);
+    } catch (err) {
+        return errorResponse(res, 500, 'Failed to fetch security logs');
+    }
+};
+
 
 
 module.exports = { 
@@ -349,5 +380,7 @@ module.exports = {
     getNetworkTree,
     getSystemConfig,
     updateSystemConfig,
-    verifyMasterPass
+    verifyMasterPass,
+    getSecurityLogs
 };
+

@@ -139,7 +139,9 @@
                 <div class="nav-item" onclick="showView('edit', this)">3. Edit Users</div>
                 <div class="nav-item" onclick="showView('queries', this)">4. General Queries</div>
                 <div class="nav-item" onclick="showView('tree', this)">5. Network Tree</div>
-                <div class="nav-item" onclick="showView('settings', this)">6. System Settings</div>
+                <div class="nav-item" onclick="showView('security', this)">6. Security Audit</div>
+                <div class="nav-item" onclick="showView('settings', this)">7. System Settings</div>
+
                 <div style="margin-top: 3rem; padding: 20px; border-top: 1px solid var(--border-glass);">
                     <button onclick="runDiagnostics()" class="btn-primary" style="width: 100%; font-size: 0.7rem; background: rgba(255,255,255,0.05);">🔍 RUN DIAGNOSTICS</button>
                 </div>
@@ -273,6 +275,25 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Security Audit View -->
+            <div id="view-security" class="view">
+                <h2>Security Audit & Access Logs</h2>
+                <div class="stat-card glass" style="margin-top: 2rem; padding: 0;">
+                    <table id="security-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Event</th>
+                                <th>Details</th>
+                                <th>IP Address</th>
+                            </tr>
+                        </thead>
+                        <tbody id="security-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
 
             <!-- Settings View -->
             <div id="view-settings" class="view">
@@ -462,8 +483,10 @@
             if (v === 'edit') loadUsers();
             if (v === 'queries') loadQueries();
             if (v === 'tree') loadNetworkTree();
+            if (v === 'security') loadSecurityLogs();
             if (v === 'settings') loadSettings();
         }
+
 
         function switchCashTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -718,6 +741,21 @@
                 alert('Failed to update query.');
             }
         }
+
+        async function loadSecurityLogs() {
+            const data = await api('/security-logs');
+            if (data.success) {
+                document.getElementById('security-table-body').innerHTML = data.data.map(l => `
+                    <tr style="${l.event.includes('FAILURE') ? 'background: rgba(255,82,82,0.05);' : ''}">
+                        <td style="font-size: 0.7rem; color: var(--text-dim);">${formatDate(l.createdAt)} ${new Date(l.createdAt).toLocaleTimeString()}</td>
+                        <td><span class="badge ${l.event.includes('SUCCESS') ? 'badge-active' : 'badge-blocked'}">${l.event}</span></td>
+                        <td style="font-size: 0.8rem;">${l.details}</td>
+                        <td style="font-family: monospace; font-size: 0.7rem;">${l.ip}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+
 
         async function loadNetworkTree() {
             try {

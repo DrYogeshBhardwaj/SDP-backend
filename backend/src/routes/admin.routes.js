@@ -26,4 +26,7 @@ router.get('/config', adminController.getSystemConfig);
 router.post('/update-config', adminController.updateSystemConfig);
 
 
+router.get('/security-logs', adminController.getSecurityLogs);
+
 module.exports = router;
+
