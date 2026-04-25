@@ -188,6 +188,17 @@
     </style>
 </head>
 <body class="scientific-grid">
+    <!-- Upgrade Popup -->
+    <div id="upgrade-popup" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(10px);">
+        <div class="glass" style="width: 400px; padding: 3rem; text-align: center; border: 1px solid var(--primary);">
+            <div style="font-size: 0.6rem; color: var(--primary); letter-spacing: 3px; font-weight: 800; margin-bottom: 1rem;">UPGRADE REQUIRED</div>
+            <h2 style="font-size: 1.8rem; margin-bottom: 1rem;">Unlock Full Sinaank Therapy</h2>
+            <p style="color: var(--text-dim); margin-bottom: 2rem; font-size: 0.9rem;">Upgrade to BASIC or BUSINESS for 10-15 minute deep sessions and daily alignment.</p>
+            <button onclick="window.location.href='dashboard.html'" class="btn-primary glow-start" style="width: 100%;">UPGRADE NOW</button>
+            <button onclick="document.getElementById('upgrade-popup').style.display='none'" style="margin-top: 1rem; background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 0.8rem;">Maybe later</button>
+        </div>
+    </div>
+
     <div class="therapy-container">
         <img id="personal-image-preview" src="" alt="">
         <div id="glow-l" class="frequency-indicator"></div>
@@ -287,8 +298,8 @@
                 <div class="card-title" style="font-size: 0.6rem;">SESSION DURATION</div>
                 <div class="time-selector" style="margin: 1rem 0;">
                     <button class="time-btn" onclick="setTime(2, this)">2 MIN</button>
-                    <button class="time-btn" onclick="setTime(5, this)">5 MIN</button>
-                    <button class="time-btn active" onclick="setTime(10, this)">10 MIN</button>
+                    <button class="time-btn" onclick="setTime(5, this)">5 MIN <small style="display:block; font-size:0.5rem; opacity:0.5;">LOCK</small></button>
+                    <button class="time-btn active" onclick="setTime(10, this)">10 MIN <small style="display:block; font-size:0.5rem; opacity:0.5;">LOCK</small></button>
                 </div>
                 <button onclick="startTherapy()" id="global-sync-btn" class="btn-primary glow-start btn-pulse" style="width: 100%; padding: 25px; margin-top: 1rem;">START SINAANK THERAPY</button>
             </div>
@@ -315,8 +326,9 @@
                 </div>
 
                 <div style="margin-top: 2rem; border-top: 1px solid var(--border-glass); padding-top: 1.5rem;">
-                    <p style="font-size: 0.6rem; color: var(--text-dim); margin-bottom: 10px;">SHARE YOUR EXPERIENCE</p>
-                    <button onclick="shareSession()" class="btn-primary" style="background: #25D366; color: #fff; font-size: 0.8rem; width: 100%;">SHARE WHATSAPP</button>
+                    <div style="font-size: 0.65rem; color: var(--primary); margin-bottom: 10px; font-weight: 800;">YOU FELT THE SHIFT...</div>
+                    <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 15px;">Go deeper with full Sinaank Therapy</p>
+                    <button onclick="window.location.href='dashboard.html'" class="btn-primary" style="background: var(--primary); color: #000; font-size: 0.8rem; width: 100%;">UNLOCK FULL ACCESS</button>
                 </div>
             </div>
         </div>
@@ -388,6 +400,15 @@
                 userData = data.data;
                 document.getElementById('header-name').innerText = userData.name || 'Sinaank User';
                 document.getElementById('header-mobile').innerText = `+91 ${userData.mobile}`;
+                
+                if (userData.plan === 'FREE') {
+                    selectedTime = 2; // Default to 2 for free
+                    document.getElementById('timer').innerText = '02:00';
+                    const btns = document.querySelectorAll('.time-btn');
+                    btns.forEach(b => b.classList.remove('active'));
+                    btns[0].classList.add('active');
+                }
+
                 calculateAuto();
             }
             renderPlanetGrid();
@@ -441,10 +462,18 @@
         }
 
         function setTime(min, el) {
+            if (userData.plan === 'FREE' && min > 2) {
+                showUpgradePopup();
+                return;
+            }
             selectedTime = min;
             document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
             el.classList.add('active');
             document.getElementById('timer').innerText = `${String(min).padStart(2,'0')}:00`;
+        }
+
+        function showUpgradePopup() {
+            document.getElementById('upgrade-popup').style.display = 'flex';
         }
 
         function togglePlanet(btn, id) {
@@ -545,7 +574,11 @@
             const res = await fetch(CONFIG.API_BASE_URL + '/api/therapy/start', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`},
-                body: JSON.stringify({ goalType: mode, planets: sessionPlanets.map(p => p.name).join(',') })
+                body: JSON.stringify({ 
+                    goalType: mode, 
+                    planets: sessionPlanets.map(p => p.name).join(','),
+                    duration: selectedTime
+                })
             });
             const data = await res.json();
             if (!data.success) return alert(data.message);

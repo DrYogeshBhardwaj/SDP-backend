@@ -18,6 +18,8 @@ model User {
   role                  Role            @default(PARTNER)
   referralCode          String?         @unique
   sponsorId             String?
+  plan                  Plan            @default(FREE)
+
   
   // V1 Therapy Stats
   minutesBalance        Int             @default(3600)
@@ -140,3 +142,10 @@ model SystemConfig {
   value     String
   updatedAt DateTime @updatedAt
 }
+
+enum Plan {
+  FREE
+  BASIC
+  BUSINESS
+}
+

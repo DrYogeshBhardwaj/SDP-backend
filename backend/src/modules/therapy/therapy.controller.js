@@ -7,18 +7,26 @@ const { successResponse, errorResponse } = require('../../utils/response');
  */
 const startSession = async (req, res) => {
     try {
-        const { goalType, planets } = req.body;
+        const { goalType, planets, duration } = req.body;
         const userId = req.user.userId;
 
         const user = await prisma.user.findUnique({ where: { id: userId } });
         if (!user) return errorResponse(res, 404, 'User not found');
-        if (user.minutesBalance <= 0) return errorResponse(res, 400, 'Insufficient balance');
-        if (user.dailyMinutesUsed >= 15) return errorResponse(res, 400, 'Daily limit reached');
+        
+        const reqDuration = parseInt(duration) || 10;
+        
+        // Plan Enforcement
+        if (user.plan === 'FREE' && reqDuration > 2) {
+            return errorResponse(res, 403, 'FREE plan is limited to 2 minutes. Please upgrade for longer sessions.');
+        }
+
+        if (user.minutesBalance < reqDuration) return errorResponse(res, 400, 'Insufficient balance');
+        if (user.dailyMinutesUsed + reqDuration > 15) return errorResponse(res, 400, 'Daily limit reached');
 
         const session = await prisma.therapySession.create({
             data: {
                 userId,
-                duration: 15, // Max daily allow
+                duration: reqDuration,
                 status: 'ACTIVE'
             }
         });
@@ -33,6 +41,7 @@ const startSession = async (req, res) => {
         });
 
         return successResponse(res, 200, 'Session started', { sessionId: session.id });
+
     } catch (err) {
         return errorResponse(res, 500, 'Start failed');
     }

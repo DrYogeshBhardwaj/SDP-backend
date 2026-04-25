@@ -36,6 +36,16 @@
     </style>
 </head>
 <body class="scientific-grid">
+    <!-- Welcome Popup (First Time) -->
+    <div id="welcome-popup" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(10px);">
+        <div class="glass" style="width: 400px; padding: 3rem; text-align: center; border: 1px solid var(--primary);">
+            <div style="font-size: 0.6rem; color: var(--primary); letter-spacing: 3px; font-weight: 800; margin-bottom: 1rem;">SINAANK THERAPY</div>
+            <h2 style="font-size: 1.8rem; margin-bottom: 1rem;">Welcome to Sinaank Therapy</h2>
+            <p style="color: var(--text-dim); margin-bottom: 2rem; font-size: 0.9rem;">Just 2 minutes daily can shift your energy. Start your journey today.</p>
+            <button onclick="closeWelcome()" class="btn-primary glow-start" style="width: 100%;">START FIRST SESSION</button>
+        </div>
+    </div>
+
     <div class="header">
         <div style="display: flex; align-items: center; gap: 1rem;">
             <div id="user-avatar-container" onclick="document.getElementById('avatar-input').click()" style="position: relative; cursor: pointer;">
@@ -92,6 +102,12 @@
             <div class="stat-title-new">Your Network</div>
             <div class="stat-value-new" id="team-count">--</div>
             <div style="font-size: 0.6rem; color: var(--text-dim); margin-top: 5px;">Total Team Size</div>
+        </div>
+
+        <div class="stat-card glass" style="background: linear-gradient(135deg, rgba(255,106,0,0.1), transparent); border-color: rgba(255,106,0,0.3);">
+            <div class="stat-title-new">Daily Streak</div>
+            <div class="stat-value-new"><span id="user-streak">--</span> <small style="font-size: 1rem; opacity: 0.5;">Days 🔥</small></div>
+            <div style="font-size: 0.6rem; color: var(--text-dim); margin-top: 5px;">Alignment Streak</div>
         </div>
 
         <!-- 3. SHARE & EARN -->
@@ -266,6 +282,12 @@
                     document.getElementById('cash-balance').innerText = u.cashBalance || 0;
                     document.getElementById('direct-count').innerText = u.directCount || 0;
                     document.getElementById('team-count').innerText = u.teamCount || 0;
+                    document.getElementById('user-streak').innerText = u.streak || 0;
+
+                    // First Time Popup
+                    if (u.totalMinutesConsumed === 0 && !localStorage.getItem('welcomeShown')) {
+                        document.getElementById('welcome-popup').style.display = 'flex';
+                    }
 
                     // History
                     const ledgerBody = document.getElementById('ledger-body');
@@ -369,6 +391,12 @@
             window.location.href = "index.html";
         }
 
+        function closeWelcome() {
+            document.getElementById('welcome-popup').style.display = 'none';
+            localStorage.setItem('welcomeShown', 'true');
+            window.location.href = 'therapy.html';
+        }
+
         loadProfile();
         // Poll for AI replies every 5 seconds
         setInterval(loadMyQueries, 5000);
@@ -379,6 +407,9 @@
             <a href="terms.html">Terms & Conditions</a>
             <a href="privacy.html">Privacy Policy</a>
             <a href="therapy.html">Therapy Hub</a>
+        </div>
+        <div style="text-align: center; margin-top: 1rem; font-size: 0.6rem; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; opacity: 0.5;">
+            Based on frequency alignment principles
         </div>
         <div class="copyright">
             Copyright © 2026 Sinaank Therapy. All Rights Reserved.

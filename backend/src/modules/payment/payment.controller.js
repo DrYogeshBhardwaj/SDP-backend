@@ -15,11 +15,18 @@ const razorpay = new Razorpay({
  */
 const createOrder = async (req, res) => {
     try {
-        const { mobile } = req.body;
+        let mobile = req.body.mobile;
+        let amount = req.body.amount || 250;
+        
+        if (req.user) {
+            const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
+            if (user) mobile = user.mobile;
+        }
+
         if (!mobile) return errorResponse(res, 400, 'Mobile required');
 
         const order = await razorpay.orders.create({
-            amount: 25000, // 250 INR in paise
+            amount: amount * 100, // paise
             currency: "INR",
             receipt: `receipt_${Date.now()}_${mobile}`
         });
@@ -27,20 +34,60 @@ const createOrder = async (req, res) => {
         await prisma.paymentOrder.create({
             data: {
                 mobile,
-                amount: 250,
-                orderId: order.id // This is the official order_... ID
+                amount: amount,
+                orderId: order.id
             }
         });
 
         return successResponse(res, 201, 'Order Created', {
-            order_id: order.id,
-            amount: 25000,
+            orderId: order.id,
+            amount: amount * 100,
             key_id: process.env.RAZORPAY_KEY_ID
         });
     } catch (err) {
+        console.error('[ORDER_CREATE_ERROR]', err);
         return errorResponse(res, 500, 'Failed to create order');
     }
 };
+
+const simulateSuccess = async (req, res) => {
+    try {
+        const { orderId } = req.body;
+        const userId = req.user.userId;
+
+        const order = await prisma.paymentOrder.findUnique({ where: { orderId } });
+        if (!order) return errorResponse(res, 404, 'Order not found');
+
+        // Logic for Upgrade
+        const plan = order.amount === 2900 ? 'BUSINESS' : 'BASIC';
+        
+        await prisma.$transaction([
+            prisma.paymentOrder.update({
+                where: { orderId },
+                data: { status: 'PAID' }
+            }),
+            prisma.user.update({
+                where: { id: userId },
+                data: { plan }
+            }),
+            prisma.transaction.create({
+                data: {
+                    userId,
+                    amount: order.amount,
+                    type: 'CREDIT',
+                    category: 'PLAN_UPGRADE',
+                    description: `Upgraded to ${plan} Plan`
+                }
+            })
+        ]);
+
+        return successResponse(res, 200, 'Upgrade successful');
+    } catch (err) {
+        console.error('[SIMULATE_ERROR]', err);
+        return errorResponse(res, 500, 'Simulation failed');
+    }
+};
+
 
 const verifyPayment = async (req, res) => {
     try {
