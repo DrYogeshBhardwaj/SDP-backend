@@ -29,19 +29,18 @@ async function getAIResponse(userMessage) {
     }
 
     const models = [
-        "gemini-1.5-flash-latest",
-        "gemini-1.5-flash",
-        "gemini-1.5-pro-latest",
-        "gemini-1.5-pro",
-        "gemini-1.0-pro",
-        "gemini-pro"
+        "gemini-flash-latest",
+        "gemini-2.0-flash",
+        "gemini-2.5-flash",
+        "gemini-pro-latest",
+        "gemini-1.5-flash"
     ];
     
     const keyDebug = `${key.substring(0, 4)}...${key.substring(key.length - 4)}`;
     
     for (const model of models) {
         try {
-            const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${key}`;
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
             const response = await axios.post(url, {
                 contents: [{
                     parts: [{
@@ -56,11 +55,17 @@ async function getAIResponse(userMessage) {
                 return response.data.candidates[0].content.parts[0].text;
             }
         } catch (error) {
-            const errMsg = error.response ? JSON.stringify(error.response.data) : error.message;
+            let errMsg = error.response ? JSON.stringify(error.response.data) : error.message;
+            
+            // Special check for leaked key
+            if (error.response && error.response.status === 403 && errMsg.includes("leaked")) {
+                return "CRITICAL: The Gemini API Key has been reported as LEAKED by Google. Please generate a new key in Google AI Studio and update the server configuration.";
+            }
+
             console.error(`Direct API Error with ${model}:`, errMsg);
             
             if (model === models[models.length - 1]) {
-                return `AI Debug Info: Key used [${keyDebug}]. Error: ${errMsg}. Please check if the API Key matches your Sinaank project key in Railway.`;
+                return `AI Support is currently under load or configuration is pending. Error: ${errMsg}.`;
             }
         }
     }
