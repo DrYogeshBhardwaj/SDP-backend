@@ -296,7 +296,63 @@ const getSystemConfig = async (req, res) => {
     }
 };
 
+const createManualPayout = async (req, res) => {
+    try {
+        const { mobile, amount } = req.body;
+        const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+
+        if (!mobile || !amount || amount <= 0) return errorResponse(res, 400, 'Invalid Mobile or Amount');
+
+        const user = await prisma.user.findUnique({ where: { mobile } });
+        if (!user) return errorResponse(res, 404, 'User not found');
+
+        // Check if user has enough balance (Optional: Admin can override, so we just log it)
+        const wallet = await prisma.wallet.findFirst({ where: { userId: user.id, type: 'CASH' } });
+        const balance = wallet ? wallet.balance : 0;
+
+        const payout = await prisma.$transaction([
+            // Deduct from wallet
+            prisma.wallet.updateMany({
+                where: { userId: user.id, type: 'CASH' },
+                data: { balance: { decrement: parseFloat(amount) } }
+            }),
+            // Create Payout Record
+            prisma.payout.create({
+                data: {
+                    userId: user.id,
+                    amount: parseFloat(amount),
+                    status: 'PENDING'
+                }
+            }),
+            // Log Transaction
+            prisma.transaction.create({
+                data: {
+                    userId: user.id,
+                    amount: parseFloat(amount),
+                    type: 'DEBIT',
+                    category: 'PAYOUT_REQUEST',
+                    description: `Manual Admin Payout: ₹${amount}`
+                }
+            }),
+            // Log Security
+            prisma.securityLog.create({
+                data: {
+                    event: 'MANUAL_PAYOUT_CREATED',
+                    details: `Admin created manual payout of ₹${amount} for ${mobile}. IP: ${ip}`,
+                    ip
+                }
+            })
+        ]);
+
+        return successResponse(res, 201, 'Manual Payout Created', payout[1]);
+    } catch (err) {
+        console.error('[MANUAL_PAYOUT_ERR]', err);
+        return errorResponse(res, 500, 'Failed to create manual payout');
+    }
+};
+
 const updateSystemConfig = async (req, res) => {
+
     try {
         const { key, value } = req.body;
         const config = await prisma.systemConfig.upsert({
@@ -432,7 +488,6 @@ module.exports = {
     updateSystemConfig,
     verifyMasterPass,
     getSecurityLogs,
-    verifyAdminMFA
+    verifyAdminMFA,
+    createManualPayout
 };
-
-

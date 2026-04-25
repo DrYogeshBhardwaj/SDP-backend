@@ -134,8 +134,9 @@
 
         <!-- OTP Step -->
         <div id="lock-step-2" style="display: none; flex-direction: column; align-items: center;">
-            <p style="color: var(--primary); margin-bottom: 1rem; font-weight: 700; font-size: 0.8rem; letter-spacing: 1px;">MFA: OTP SENT TO ADMIN (+91 9211755211)</p>
-            <input type="number" id="admin-otp" placeholder="Enter 6-digit OTP" style="background: #111; border: 1px solid var(--border-glass); padding: 15px; color: #fff; text-align: center; font-size: 1.2rem; border-radius: 8px; width: 300px;">
+            <p style="color: var(--primary); margin-bottom: 1rem; font-weight: 700; font-size: 0.8rem; letter-spacing: 1px;">AUTHORIZATION REQUIRED: Check your registered device for the 6-digit code.</p>
+            <input type="number" id="admin-otp" placeholder="Enter OTP" style="background: #111; border: 1px solid var(--border-glass); padding: 15px; color: #fff; text-align: center; font-size: 1.2rem; border-radius: 8px; width: 300px;">
+
             <button onclick="verifyAdminMFA()" class="btn-primary" style="margin-top: 1rem; width: 300px;">AUTHORIZE ACCESS</button>
             <p style="margin-top: 1rem; cursor: pointer; text-decoration: underline; font-size: 0.7rem; color: var(--text-dim);" onclick="location.reload()">Change Key / Restart</p>
         </div>

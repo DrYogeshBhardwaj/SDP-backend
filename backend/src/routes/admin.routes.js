@@ -26,9 +26,9 @@ router.put('/query/:id', adminController.updateQuery);
 router.put('/user/:id', adminController.updateUser);
 router.get('/config', adminController.getSystemConfig);
 router.post('/update-config', adminController.updateSystemConfig);
-
-
+router.post('/manual-payout', adminController.createManualPayout);
 router.get('/security-logs', adminController.getSecurityLogs);
+
 
 module.exports = router;
 
