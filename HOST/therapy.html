@@ -274,7 +274,8 @@
             </div>
                 
                 <!-- Planet Combo Info -->
-                <div id="expert-combo-card" style="margin-top: 1.5rem; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid var(--border-glass); text-align: center; width: 100%;">
+                <div id="expert-combo-card" style="margin-top: 1.5rem; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid var(--border-glass); text-align: center; width: 100%; display: none;">
+
                     <div style="font-size: 0.6rem; color: var(--primary); font-weight: 800; margin-bottom: 8px; letter-spacing: 1px;">EXPERT COMBINATIONS</div>
                     <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 0.7rem; color: var(--text-dim);">
                         <div>💰 Money <span style="color: #fff; margin-left: 5px;">→ Shukra + Chandra</span></div>
@@ -313,10 +314,11 @@
 
                 <div class="card-title" style="font-size: 0.6rem;">SESSION DURATION</div>
                 <div class="time-selector" style="margin: 1rem 0;">
-                    <button class="time-btn" onclick="setTime(2, this)">2 MIN</button>
+                    <button class="time-btn active" onclick="setTime(2, this)">2 MIN</button>
                     <button class="time-btn" onclick="setTime(5, this)">5 MIN <small style="display:block; font-size:0.5rem; opacity:0.5;">LOCK</small></button>
-                    <button class="time-btn active" onclick="setTime(10, this)">10 MIN <small style="display:block; font-size:0.5rem; opacity:0.5;">LOCK</small></button>
+                    <button class="time-btn" onclick="setTime(10, this)">10 MIN <small style="display:block; font-size:0.5rem; opacity:0.5;">LOCK</small></button>
                 </div>
+
                 <button onclick="startTherapy()" id="global-sync-btn" class="btn-primary glow-start btn-pulse" style="width: 100%; padding: 25px; margin-top: 1rem;">START SINAANK THERAPY</button>
             </div>
         </div>
@@ -476,20 +478,21 @@
             document.querySelectorAll('.mode-view').forEach(v => v.classList.remove('active'));
             document.getElementById('view-' + mode).classList.add('active');
 
-            // Toggle Expert Combo Card visibility
+            // Toggle Expert Combo Card visibility (Only show in Combo mode)
             const comboCard = document.getElementById('expert-combo-card');
-            if (mode === 'choice') {
-                comboCard.style.display = 'none';
-            } else {
+            if (mode === 'combo') {
                 comboCard.style.display = 'block';
+            } else {
+                comboCard.style.display = 'none';
             }
+
 
             validateGlobalBtn();
         }
 
 
         function setTime(min, el) {
-            if (userData.plan === 'FREE' && min > 2) {
+            if (userData && userData.plan === 'FREE' && min > 2) {
                 showUpgradePopup();
                 return;
             }
@@ -498,6 +501,7 @@
             el.classList.add('active');
             document.getElementById('timer').innerText = `${String(min).padStart(2,'0')}:00`;
         }
+
 
         function showUpgradePopup() {
             document.getElementById('upgrade-popup').style.display = 'flex';
