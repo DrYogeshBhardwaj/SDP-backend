@@ -317,14 +317,23 @@ const verifyMasterPass = async (req, res) => {
         const masterPass = config ? config.value : '725653A';
         
         if (password === masterPass) {
-            return successResponse(res, 200, 'Unlocked');
+            // FIND THE ADMIN USER
+            const admin = await prisma.user.findUnique({ where: { mobile: '9211755211' } });
+            if (!admin) return errorResponse(res, 404, 'Admin Identity missing in DB. Run restore script.');
+
+            const { generateToken } = require('../../utils/jwt');
+            const token = generateToken({ userId: admin.id });
+
+            return successResponse(res, 200, 'Unlocked', { token });
         } else {
             return errorResponse(res, 401, 'Invalid Master Key');
         }
     } catch (err) {
+        console.error('[MASTER_VERIFY_ERROR]', err);
         return errorResponse(res, 500, 'Verification failed');
     }
 };
+
 
 module.exports = { 
     getStats, 

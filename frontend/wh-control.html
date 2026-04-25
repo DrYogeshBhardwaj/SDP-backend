@@ -359,21 +359,19 @@
             msg.innerText = "Verifying...";
             
             try {
-                // We need to login via OTP first to get the token, which is stored in localStorage 'session'
-                const token = localStorage.getItem('session');
-                if (!token) { window.location.href = 'join.html'; return; }
-
+                // Now verify-master is public and returns a token for 9211755211
                 const res = await fetch(CONFIG.API_BASE_URL + '/api/admin/verify-master', {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ password })
                 });
                 const data = await res.json();
                 
                 if (data.success) {
+                    // Save the returned Admin Token
+                    localStorage.setItem('session', data.data.token);
+                    localStorage.setItem('mobile', '9211755211');
+
                     document.getElementById('lock-screen').style.display = 'none';
                     document.getElementById('main-layout').style.display = 'grid';
                     sessionStorage.setItem('master_unlocked', 'true');
@@ -385,6 +383,7 @@
                 msg.innerText = "Connection Error";
             }
         }
+
 
         // Auto-unlock if already done in this session
         if (sessionStorage.getItem('master_unlocked') === 'true') {
