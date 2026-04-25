@@ -54,8 +54,9 @@
         </div>
 
         <button onclick="processPayment()" id="pay-btn" class="btn-primary" style="width: 100%;">Finalize Activation</button>
-        <button onclick="activateByPassword()" class="btn-primary" style="width: 100%; margin-top: 10px; background: rgba(255,255,255,0.05); color: var(--text-dim); font-size: 0.7rem;">Activate By Password</button>
+        <div onclick="activateByPassword()" style="opacity: 0.03; cursor: pointer; font-size: 0.5rem; margin-top: 2rem; display: inline-block;">⚙️</div>
         <p id="msg" style="margin-top: 1.5rem; font-size: 0.9rem;"></p>
+
     </div>
 
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>

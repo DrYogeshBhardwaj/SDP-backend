@@ -48,13 +48,13 @@
 
     <!-- Plans Modal -->
     <div id="plans-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1001; justify-content: center; align-items: center; backdrop-filter: blur(15px); padding: 1rem; overflow-y: auto;">
-        <div style="width: 100%; max-width: 900px; padding: 2rem 0;">
+        <div style="width: 100%; max-width: 700px; padding: 2rem 0;">
             <div style="text-align: center; margin-bottom: 3rem;">
                 <h2 style="font-size: 2.5rem; color: var(--primary);">Choose Your Alignment Plan</h2>
                 <p style="color: var(--text-dim);">Invest in your energy, grow your aura</p>
             </div>
             
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;">
                 <!-- FREE -->
                 <div class="glass" style="padding: 2.5rem; text-align: center; border: 1px solid var(--border-glass);">
                     <div style="font-size: 0.8rem; font-weight: 800; color: var(--text-dim);">FREE</div>
@@ -62,37 +62,24 @@
                     <ul style="list-style: none; padding: 0; text-align: left; font-size: 0.85rem; color: var(--text-dim); margin-bottom: 2rem;">
                         <li style="margin-bottom: 10px;">✓ 2 Min Therapy Session</li>
                         <li style="margin-bottom: 10px;">✓ Limited Daily Use</li>
-                        <li style="margin-bottom: 10px; opacity: 0.3;">✗ Full Session Access</li>
-                        <li style="margin-bottom: 10px; opacity: 0.3;">✗ Referral Earnings</li>
+                        <li style="margin-bottom: 10px; opacity: 0.3;">✗ 10-15 Min Full Sessions</li>
+                        <li style="margin-bottom: 10px; opacity: 0.3;">✗ Priority Alignment Mode</li>
                     </ul>
                     <button disabled class="btn-primary" style="width: 100%; opacity: 0.5;">CURRENT PLAN</button>
                 </div>
 
-                <!-- BASIC -->
+                <!-- PREMIUM -->
                 <div class="glass" style="padding: 2.5rem; text-align: center; border: 2px solid var(--primary); position: relative; transform: scale(1.05);">
                     <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--primary); color: #000; font-size: 0.6rem; font-weight: 800; padding: 4px 15px; border-radius: 20px;">MOST POPULAR</div>
-                    <div style="font-size: 0.8rem; font-weight: 800; color: var(--primary);">BASIC</div>
-                    <div style="font-size: 2.5rem; font-weight: 900; margin: 1rem 0;">₹779</div>
+                    <div style="font-size: 0.8rem; font-weight: 800; color: var(--primary);">PREMIUM</div>
+                    <div style="font-size: 2.5rem; font-weight: 900; margin: 1rem 0;">₹299</div>
                     <ul style="list-style: none; padding: 0; text-align: left; font-size: 0.85rem; color: #fff; margin-bottom: 2rem;">
                         <li style="margin-bottom: 10px;">✓ Full Therapy Access</li>
                         <li style="margin-bottom: 10px;">✓ 15 Min Daily Sessions</li>
-                        <li style="margin-bottom: 10px;">✓ All Modes (Auto/Combo)</li>
-                        <li style="margin-bottom: 10px; opacity: 0.3;">✗ Referral Earnings</li>
+                        <li style="margin-bottom: 10px;">✓ All Modes (Auto/Combo/Custom)</li>
+                        <li style="margin-bottom: 10px;">✓ Frequency Lock Protection</li>
                     </ul>
-                    <button onclick="upgradePlan('BASIC', 779)" class="btn-primary glow-start" style="width: 100%;">UPGRADE TO BASIC</button>
-                </div>
-
-                <!-- BUSINESS -->
-                <div class="glass" style="padding: 2.5rem; text-align: center; border: 1px solid #00D8FF;">
-                    <div style="font-size: 0.8rem; font-weight: 800; color: #00D8FF;">BUSINESS</div>
-                    <div style="font-size: 2.5rem; font-weight: 900; margin: 1rem 0;">₹2900</div>
-                    <ul style="list-style: none; padding: 0; text-align: left; font-size: 0.85rem; color: #fff; margin-bottom: 2rem;">
-                        <li style="margin-bottom: 10px;">✓ Full Therapy Access</li>
-                        <li style="margin-bottom: 10px;">✓ Referral Income Enabled</li>
-                        <li style="margin-bottom: 10px;">✓ 3-Level Team Earnings</li>
-                        <li style="margin-bottom: 10px;">✓ Direct Partner Bonus</li>
-                    </ul>
-                    <button onclick="upgradePlan('BUSINESS', 2900)" class="btn-primary" style="width: 100%; background: #00D8FF; border-color: #00D8FF;">GO BUSINESS</button>
+                    <button onclick="upgradePlan('PREMIUM', 299)" class="btn-primary glow-start" style="width: 100%;">UPGRADE TO PREMIUM</button>
                 </div>
             </div>
 
@@ -148,74 +135,22 @@
             </div>
         </div>
 
-        <!-- BUSINESS HOOK -->
-        <div id="business-hook" class="stat-card glass" style="grid-column: 1 / -1; display: none; padding: 2.5rem; background: linear-gradient(135deg, rgba(0,216,255,0.1), transparent); border: 1px solid rgba(0,216,255,0.2);">
-             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                <div style="text-align: left;">
-                    <h3 style="font-size: 1.5rem; margin: 0;">Earn with Sinaank Therapy</h3>
-                    <p style="color: var(--text-dim); font-size: 0.9rem; margin-top: 5px;">Share & grow your network with BUSINESS PLAN</p>
-                </div>
-                <button onclick="showPlans()" class="btn-primary" style="background: #fff; color: #000; padding: 12px 40px;">ACTIVATE BUSINESS</button>
-            </div>
-        </div>
-
         <!-- 2. CORE STATS -->
-        <div class="stat-card glass">
+        <div class="stat-card glass" style="grid-column: 1 / span 1;">
             <div class="stat-title-new">Therapy Balance</div>
             <div class="stat-value-new"><span id="min-balance">--</span> <small style="font-size: 1rem; opacity: 0.5;">min</small></div>
+            <div style="font-size: 0.6rem; color: var(--text-dim); margin-top: 5px;">Your Available Energy Minutes</div>
         </div>
 
-        <div class="stat-card glass">
-            <div class="stat-title-new">Wallet Earnings</div>
-            <div class="stat-value-new">₹<span id="cash-balance">--</span></div>
-            <button onclick="requestPayout()" style="margin-top: 10px; background: rgba(0,216,255,0.1); border: 1px solid var(--border-glass); color: var(--primary); padding: 5px 15px; border-radius: 5px; font-size: 0.7rem; cursor: pointer;">Withdraw</button>
-        </div>
-
-        <div class="stat-card glass">
-            <div class="stat-title-new">Direct Referrals</div>
-            <div class="stat-value-new" id="direct-count">--</div>
-            <div style="font-size: 0.6rem; color: var(--text-dim); margin-top: 5px;">Level 1 Partners</div>
-        </div>
-
-        <div class="stat-card glass">
-            <div class="stat-title-new">Your Network</div>
-            <div class="stat-value-new" id="team-count">--</div>
-            <div style="font-size: 0.6rem; color: var(--text-dim); margin-top: 5px;">Total Team Size</div>
-        </div>
-
-        <div class="stat-card glass" style="background: linear-gradient(135deg, rgba(255,106,0,0.1), transparent); border-color: rgba(255,106,0,0.3);">
+        <div class="stat-card glass" style="background: linear-gradient(135deg, rgba(255,106,0,0.1), transparent); border-color: rgba(255,106,0,0.3); grid-column: 2 / span 2;">
             <div class="stat-title-new">Daily Streak</div>
             <div class="stat-value-new"><span id="user-streak">--</span> <small style="font-size: 1rem; opacity: 0.5;">Days 🔥</small></div>
             <div style="font-size: 0.6rem; color: var(--text-dim); margin-top: 5px;">Alignment Streak</div>
         </div>
 
-        <!-- 3. SHARE & EARN -->
-        <div class="stat-card glass" style="grid-column: 1 / span 1; padding: 2rem;">
-            <div class="stat-title-new" style="margin-bottom: 1.5rem;">Share & Earn</div>
-            <div id="qrcode-container" style="padding: 1rem; background: #fff; border-radius: 12px; width: fit-content; margin: 0 auto;">
-                <div id="qrcode"></div>
-            </div>
-            <p style="font-size: 0.85rem; color: var(--text-dim); margin: 1.5rem 0;">Invite others to experience Sinaank Therapy</p>
-            <div style="display: flex; gap: 10px;">
-                <button onclick="copyToClipboard()" class="btn-primary" style="flex: 1; font-size: 0.7rem; background: #fff; color: #000;">COPY LINK</button>
-                <button onclick="shareWhatsApp()" class="btn-primary" style="flex: 1.5; font-size: 0.7rem; background: #25D366; color: #fff;">SHARE WHATSAPP</button>
-            </div>
-        </div>
-
-        <!-- 4. EARNINGS HISTORY -->
-        <div class="stat-card glass" style="grid-column: 2 / span 2; text-align: left;">
-            <div class="stat-title-new" style="margin-bottom: 1rem;">Earnings History</div>
-            <div style="height: 300px; overflow-y: auto;">
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
-                    <tbody id="ledger-body">
-                        <!-- Transactions -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
         <!-- 5. HELP & SUPPORT -->
         <div class="stat-card glass" id="support-hub" style="grid-column: 1 / -1; display: flex; flex-direction: column; text-align: left; padding: 2rem;">
+
             <div class="stat-title-new" style="margin-bottom: 1.5rem;">Help & Support</div>
             <div id="support-chat" style="height: 250px; overflow-y: auto; padding-right: 10px; margin-bottom: 15px; border-bottom: 1px solid var(--border-glass); scroll-behavior: smooth;">
                 <div style="color: var(--text-dim); text-align: center; margin-top: 2rem;">No messages yet. Ask anything about Sinaank!</div>
@@ -335,7 +270,9 @@
             } else {
                 alert(data.message);
             }
+        }
         async function loadProfile() {
+
             const token = localStorage.getItem('session');
             if (!token) return window.location.href = "join.html";
 
@@ -357,23 +294,19 @@
                     }
                     
                     // Stats
-                    document.getElementById('min-balance').innerText = u.minutesBalance;
-                    document.getElementById('cash-balance').innerText = u.cashBalance || 0;
-                    document.getElementById('direct-count').innerText = u.directCount || 0;
-                    document.getElementById('team-count').innerText = u.teamCount || 0;
-                    document.getElementById('user-streak').innerText = u.streak || 0;
+                    const setVal = (id, val) => { const el = document.getElementById(id); if(el) el.innerText = val; };
+                    setVal('min-balance', u.minutesBalance);
+                    setVal('user-streak', u.streak || 0);
                     
-                    document.getElementById('user-plan-badge').innerText = `${u.plan} PLAN`;
-                    if (u.plan === 'FREE') {
-                        document.getElementById('upgrade-card').style.display = 'block';
-                        document.getElementById('business-hook').style.display = 'block';
-                    } else if (u.plan === 'BASIC') {
-                        document.getElementById('upgrade-card').style.display = 'none';
-                        document.getElementById('business-hook').style.display = 'block';
-                    } else {
-                        document.getElementById('upgrade-card').style.display = 'none';
-                        document.getElementById('business-hook').style.display = 'none';
+                    const planBadge = document.getElementById('user-plan-badge');
+                    if (planBadge) planBadge.innerText = `${u.plan} PLAN`;
+                    
+                    const upgradeCard = document.getElementById('upgrade-card');
+                    if (upgradeCard) {
+                        upgradeCard.style.display = (u.plan === 'FREE') ? 'block' : 'none';
                     }
+
+
 
                     // First Time Popup
                     if (u.totalMinutesConsumed === 0 && !localStorage.getItem('welcomeShown')) {
