@@ -255,13 +255,25 @@
             <div id="view-choice" class="mode-view">
                 <div class="card-title">Personal Therapy Session</div>
                 <h3>Gāyatrī / Your Choice</h3>
-                <div style="margin-top: 1rem;">
-                    <label class="btn-choice" style="padding: 1.5rem;">
-                        <div style="font-weight: 700; font-size: 0.8rem;">CHOOSE AUDIO</div>
+                
+                <div style="margin-top: 1rem; text-align: left;">
+                    <label style="font-size: 0.6rem; color: var(--primary); font-weight: 800; display: block; margin-bottom: 5px;">SELECT PURPOSE</label>
+                    <select id="purpose-select" onchange="applyPurpose()" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); border-radius: 8px; color: #fff; margin-bottom: 1rem;">
+                        <option value="AUTO">Default (Auto Analysis)</option>
+                        <option value="MONEY">Money (Venus + Moon)</option>
+                        <option value="EDUCATION">Education (Jupiter + Rahu)</option>
+                        <option value="HEALTH">Health (Sun + Mars)</option>
+                        <option value="PEACE">Peace (Moon + Ketu)</option>
+                    </select>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <label class="btn-choice" style="padding: 1rem;">
+                        <div style="font-weight: 700; font-size: 0.7rem;">CHOOSE AUDIO</div>
                         <input type="file" id="input-audio" accept="audio/*" style="display: none;" onchange="handleFile(this, 'audio')">
                     </label>
-                    <label class="btn-choice" style="padding: 1.5rem;">
-                        <div style="font-weight: 700; font-size: 0.8rem;">CHOOSE VISUAL</div>
+                    <label class="btn-choice" style="padding: 1rem;">
+                        <div style="font-weight: 700; font-size: 0.7rem;">CHOOSE VISUAL</div>
                         <input type="file" id="input-image" accept="image/*" style="display: none;" onchange="handleFile(this, 'image')">
                     </label>
                 </div>
@@ -430,6 +442,24 @@
         }
 
         let choiceFiles = { audio: null, image: null };
+        let purposePlanets = [];
+
+        function applyPurpose() {
+            const val = document.getElementById('purpose-select').value;
+            if (val === 'AUTO') {
+                purposePlanets = autoPlanets;
+            } else if (val === 'MONEY') {
+                purposePlanets = [planets.find(p => p.name === 'Shukra'), planets.find(p => p.name === 'Chandra')];
+            } else if (val === 'EDUCATION') {
+                purposePlanets = [planets.find(p => p.name === 'Guru'), planets.find(p => p.name === 'Rahu')];
+            } else if (val === 'HEALTH') {
+                purposePlanets = [planets.find(p => p.name === 'Surya'), planets.find(p => p.name === 'Mangal')];
+            } else if (val === 'PEACE') {
+                purposePlanets = [planets.find(p => p.name === 'Chandra'), planets.find(p => p.name === 'Ketu')];
+            }
+            validateGlobalBtn();
+        }
+
         function handleFile(input, type) {
             if (input.files && input.files[0]) {
                 const file = input.files[0];
@@ -455,7 +485,10 @@
             let sessionPlanets = [];
             if (mode === 'AUTO') sessionPlanets = autoPlanets;
             else if (mode === 'COMBO') sessionPlanets = selectedPlanets;
-            else if (mode === 'CHOICE') sessionPlanets = [{name: 'Personal', color: '#FFD700', freq: 432}, {name: 'Personal', color: '#FFD700', freq: 432}]; 
+            else if (mode === 'CHOICE') {
+                if (purposePlanets && purposePlanets.length === 2) sessionPlanets = purposePlanets;
+                else sessionPlanets = autoPlanets; // Default to Auto as requested
+            } 
 
             const token = localStorage.getItem('session');
             const res = await fetch(CONFIG.API_BASE_URL + '/api/therapy/start', {
