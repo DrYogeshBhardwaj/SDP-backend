@@ -133,34 +133,42 @@
 <body class="scientific-grid">
     <div class="scanline"></div>
 
-    <section class="hero" style="height: auto; min-height: 100vh;">
+    <section class="hero" style="height: auto; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem 1rem;">
         <div class="aura-glow"></div>
         
-        <div class="hero-content">
-            <img src="Logo.png" alt="Sinaank Logo" style="width: 150px; height: auto; margin-bottom: 2rem; filter: drop-shadow(0 0 20px rgba(0, 216, 255, 0.4));">
-            <div class="top-label" style="color: #fff; background: rgba(0,216,255,0.1); padding: 5px 15px; border-radius: 50px; display: inline-block; margin-bottom: 2rem; letter-spacing: normal;">सीनांक थेरेपी | Sinaank Therapy</div>
-            <h1 style="overflow: visible; font-family: 'Hind', sans-serif;">2 मिनट में<br><span style="color: var(--brand-blue); background: linear-gradient(135deg, var(--brand-blue), #fff); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">अनुभव करें</span></h1>
-
-            <div class="tagline" style="font-family: 'Hind', sans-serif;">Calm • Focus • Deep Sleep<br><span style="font-size: 1.2rem; color: var(--brand-blue); font-weight: 700; margin-top: 1rem; display: block;">पहले अनुभव करें, फिर कमाएँ</span></div>
+        <div class="hero-content" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+            <!-- Center Logo -->
+            <img src="Logo.png" alt="Sinaank Logo" style="width: 150px; height: auto; margin-bottom: 2rem; filter: drop-shadow(0 0 20px rgba(0, 216, 255, 0.4)); display: block; margin-left: auto; margin-right: auto;">
             
-            <div class="feature-pills">
-                <div class="pill" style="background: rgba(0, 216, 255, 0.1); color: #fff; border-color: var(--brand-blue);">पहले 100 users – 20 मिनट FREE</div>
+            <div class="top-label" style="color: #fff; background: rgba(0,216,255,0.1); padding: 8px 20px; border-radius: 50px; display: inline-block; margin-bottom: 2rem; letter-spacing: 0; font-family: 'Hind', sans-serif; font-size: 0.9rem;">सीनांक थेरेपी | SINAANK THERAPY</div>
+            
+            <h1 style="font-family: 'Hind', sans-serif; font-weight: 700; line-height: 1.3; margin-bottom: 1rem; overflow: visible;">
+                2 मिनट में<br>
+                <span style="color: var(--brand-blue); text-shadow: 0 0 15px rgba(0,216,255,0.3);">अनुभव करें</span>
+            </h1>
+
+            <div class="tagline" style="font-family: 'Hind', sans-serif; margin-bottom: 2rem;">
+                <div style="font-size: 1.1rem; color: #fff; opacity: 0.9; margin-bottom: 10px;">Calm • Focus • Deep Sleep</div>
+                <div style="font-size: 1.3rem; color: var(--brand-blue); font-weight: 700;">पहले अनुभव करें, फिर कमाएँ</div>
+            </div>
+            
+            <div class="feature-pills" style="margin-bottom: 2.5rem;">
+                <div class="pill" style="background: rgba(0, 216, 255, 0.1); color: #fff; border: 1px solid var(--brand-blue); padding: 10px 20px; border-radius: 50px; font-size: 0.8rem; font-family: 'Hind', sans-serif;">पहले 100 users – 20 मिनट FREE</div>
             </div>
 
-            <button onclick="location.href='join.html'" class="btn-start" style="padding: 25px 80px; line-height: 1.2;">FREE शुरू करें</button>
+            <button onclick="location.href='join.html'" class="btn-start" style="padding: 20px 60px; font-size: 1.2rem; border-radius: 15px; font-family: 'Hind', sans-serif; font-weight: 700; background: linear-gradient(135deg, #00D8FF, #FF6A00); color: #fff; border: none; cursor: pointer; box-shadow: 0 10px 30px rgba(0,216,255,0.2);">FREE शुरू करें</button>
             
-            <div style="margin-top: 4rem; font-size: 0.8rem; color: #fff; letter-spacing: 1px; font-weight: 700; background: rgba(255,255,255,0.05); padding: 10px 20px; border-radius: 8px;">
+            <div style="margin-top: 4rem; font-size: 0.8rem; color: #fff; opacity: 0.6; background: rgba(255,255,255,0.03); padding: 12px 25px; border-radius: 10px; font-family: sans-serif;">
                 Experience the power of digital frequency alignment.
             </div>
         </div>
-
-        <!-- Visual Elements Decoration -->
+    </section>
+     <!-- Visual Elements Decoration -->
         <div class="floating-elements">
             <div class="planet" style="width: 100px; height: 100px; top: 15%; right: 10%; background: radial-gradient(circle at 30% 30%, #444, #000); opacity: 0.4;"></div>
             <div class="planet" style="width: 60px; height: 60px; bottom: 20%; left: 15%; background: radial-gradient(circle at 30% 30%, #555, #000); opacity: 0.3;"></div>
             <div style="position: absolute; width: 200px; height: 2px; background: linear-gradient(90deg, transparent, var(--brand-blue), transparent); top: 50%; left: 0; opacity: 0.2; transform: rotate(-45deg);"></div>
         </div>
-    </section>
 
     <footer class="main-footer">
         <div class="footer-links">
