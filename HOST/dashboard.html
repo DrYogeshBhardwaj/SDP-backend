@@ -457,6 +457,12 @@
             window.location.href = 'therapy.html';
         }
 
+        function logout() {
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.href = 'join.html';
+        }
+
         loadProfile();
         // Poll for AI replies every 5 seconds
         setInterval(loadMyQueries, 5000);

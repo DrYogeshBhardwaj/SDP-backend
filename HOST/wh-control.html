@@ -47,6 +47,10 @@
         }
         .badge-active { background: #00c85322; color: #00c853; }
         .badge-blocked { background: #ff525222; color: #ff5252; }
+        .badge-pending { background: #ffab0022; color: #ffab00; }
+        .badge-approved { background: #0091ea22; color: #0091ea; }
+        .badge-paid { background: #00c85322; color: #00c853; }
+        .badge-rejected { background: #ff525222; color: #ff5252; }
 
         /* Tree Styles */
         .tree-node {
@@ -202,8 +206,12 @@
             <div id="view-cash" class="view">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <h2>Cash Management</h2>
-                    <button onclick="sweepBalances()" class="btn-primary" style="background: var(--primary); color: #000; font-weight: 800; border: none; padding: 10px 20px;">🔄 SWEEP BALANCES TO PAYOUTS</button>
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="document.getElementById('manual-payout-modal').style.display='flex'" class="btn-primary" style="background: rgba(255,255,255,0.05); color: #fff; font-size: 0.7rem;">➕ CREATE MANUAL PAYOUT</button>
+                        <button onclick="sweepBalances()" class="btn-primary" style="background: var(--primary); color: #000; font-weight: 800; border: none; padding: 10px 20px;">🔄 SWEEP ALL BALANCES</button>
+                    </div>
                 </div>
+
                 <div style="margin-top: 2rem; display: flex; gap: 20px; border-bottom: 1px solid var(--border-glass);">
                     <button class="tab-btn" id="tab-requests" onclick="switchCashTab('requests')">ACTIVE REQUESTS</button>
                     <button class="tab-btn active" id="tab-pending" onclick="switchCashTab('pending')">LIABILITY BREAKDOWN (PENDING BALANCES)</button>
@@ -330,7 +338,27 @@
         </div>
     </div>
 
+    <!-- Manual Payout Modal -->
+    <div id="manual-payout-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 102; align-items: center; justify-content: center;">
+        <div class="stat-card glass" style="width: 400px; padding: 2rem;">
+            <div class="card-title">Create Manual Payout</div>
+            <p style="font-size: 0.7rem; color: var(--text-dim); margin-bottom: 1.5rem;">Note: This will deduct the amount from user's wallet and create a Payout record.</p>
+            
+            <label style="font-size: 0.7rem; color: var(--primary);">USER MOBILE</label>
+            <input type="tel" id="payout-mobile" placeholder="98XXXXXXXX" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); border-radius: 8px; color: #fff; margin-bottom: 1rem;">
+            
+            <label style="font-size: 0.7rem; color: var(--primary);">AMOUNT (₹)</label>
+            <input type="number" id="payout-amount" placeholder="500" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); border-radius: 8px; color: #fff; margin-bottom: 2rem;">
+
+            <div style="display: flex; gap: 10px;">
+                <button onclick="submitManualPayout()" class="btn-primary" style="flex: 1;">CREATE RECORD</button>
+                <button onclick="document.getElementById('manual-payout-modal').style.display='none'" class="btn-primary" style="flex: 1; background: #444;">CANCEL</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Edit User Modal -->
+
     <div id="edit-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center;">
         <div class="stat-card glass" style="width: 400px; padding: 2rem;">
             <div class="card-title">Edit User Profile</div>
@@ -634,16 +662,17 @@
                     return;
                 }
                 document.getElementById('pending-balance-table-body').innerHTML = data.data.map(w => `
-                    <tr>
+                    <tr style="${w.balance >= 500 ? 'background: rgba(0,200,83,0.05);' : ''}">
                         <td>${w.user.mobile}</td>
                         <td>${w.user.name || '-'}</td>
-                        <td style="font-weight:800; color:#fff;">₹${w.balance}</td>
+                        <td style="font-weight:800; color:${w.balance >= 500 ? '#00c853' : '#fff'};">₹${w.balance}</td>
                         <td style="font-family:monospace; color:var(--primary);">${w.user.upiId || 'NOT SET'}</td>
                         <td>
                             <button onclick="switchViewToEditAndFind('${w.user.id}')" class="btn-primary" style="padding: 4px 8px; font-size:0.6rem;">MANAGE</button>
                         </td>
                     </tr>
                 `).join('');
+
             }
         }
 
@@ -787,7 +816,26 @@
             }
         }
 
+        async function submitManualPayout() {
+            const mobile = document.getElementById('payout-mobile').value;
+            const amount = document.getElementById('payout-amount').value;
+
+            if (!mobile || !amount) return alert("All fields required");
+            if (!confirm(`Create payout of ₹${amount} for ${mobile}?`)) return;
+
+            const data = await api('/manual-payout', 'POST', { mobile, amount });
+            if (data.success) {
+                alert("Payout Record Created Successfully!");
+                document.getElementById('manual-payout-modal').style.display = 'none';
+                loadStats();
+                switchCashTab('requests');
+            } else {
+                alert("Failed: " + data.message);
+            }
+        }
+
         async function loadSecurityLogs() {
+
             const data = await api('/security-logs');
             if (data.success) {
                 document.getElementById('security-table-body').innerHTML = data.data.map(l => `

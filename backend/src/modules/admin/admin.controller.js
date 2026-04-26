@@ -131,6 +131,35 @@ const processPayout = async (req, res) => {
         const { id } = req.params;
         const { status, transactionId } = req.body;
 
+        // 1. Fetch payout to check current status and amount
+        const payout = await prisma.payout.findUnique({ where: { id } });
+        if (!payout) return errorResponse(res, 404, 'Payout not found');
+
+        // 2. If Rejecting, refund the user's wallet
+        if (status === 'REJECTED' && payout.status !== 'REJECTED') {
+            await prisma.$transaction([
+                prisma.payout.update({
+                    where: { id },
+                    data: { status, processedAt: new Date() }
+                }),
+                prisma.wallet.updateMany({
+                    where: { userId: payout.userId, type: 'CASH' },
+                    data: { balance: { increment: payout.amount } }
+                }),
+                prisma.transaction.create({
+                    data: {
+                        userId: payout.userId,
+                        amount: payout.amount,
+                        type: 'CREDIT',
+                        category: 'BONUS',
+                        description: `REFUND: Payout of ₹${payout.amount} was rejected.`
+                    }
+                })
+            ]);
+            return successResponse(res, 200, 'Payout rejected and amount refunded.');
+        }
+
+        // 3. Normal update (Approve, Paid, etc)
         const updated = await prisma.payout.update({
             where: { id },
             data: { 
@@ -142,6 +171,7 @@ const processPayout = async (req, res) => {
 
         return successResponse(res, 200, `Payout marked as ${status}`, updated);
     } catch (err) {
+        console.error('[ADMIN_PAYOUT_ERR]', err);
         return errorResponse(res, 500, 'Failed to process payout');
     }
 };

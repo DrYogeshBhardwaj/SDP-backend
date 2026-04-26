@@ -567,7 +567,7 @@
             const btn = document.getElementById('global-sync-btn');
             if (currentMode === 'auto') btn.disabled = false;
             else if (currentMode === 'combo') btn.disabled = (selectedPlanets.length !== 2);
-            else if (currentMode === 'choice') btn.disabled = !choiceFiles.audio;
+            else if (currentMode === 'choice') btn.disabled = !(choiceFiles.audio || choiceFiles.image);
         }
 
         let choiceFiles = { audio: null, image: null };
@@ -587,6 +587,12 @@
                     reader.readAsDataURL(file);
                 }
                 const label = input.parentElement;
+                label.style.borderColor = 'var(--primary)';
+                const statusDiv = label.querySelector('div');
+                if (statusDiv) {
+                    statusDiv.innerText = `✓ ${type.toUpperCase()} SELECTED`;
+                    statusDiv.style.color = 'var(--primary)';
+                }
                 validateGlobalBtn();
             }
         }
@@ -715,7 +721,9 @@
         async function endTherapy() {
             clearInterval(timerInterval);
             if (osc1) { try { osc1.stop(); osc2.stop(); } catch(e){} }
-            if (personalAudio) { personalAudio.pause(); }
+            if (personalAudio && typeof personalAudio.pause === 'function') { 
+                try { personalAudio.pause(); } catch(e) {} 
+            }
             
             playTone(880, 440, 1); // Calming chime
 

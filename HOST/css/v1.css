@@ -144,5 +144,18 @@ body {
     font-weight: 800;
     color: #fff;
 }
-
-
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .footer-links {
+        flex-direction: column;
+        gap: 15px;
+        align-items: center;
+    }
+    .main-footer {
+        padding: 3rem 1rem;
+    }
+    .copyright {
+        font-size: 0.65rem;
+        line-height: 1.4;
+    }
+}
