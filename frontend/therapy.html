@@ -242,9 +242,17 @@
                 </div>
                 <p id="auto-analysis-text" style="color: var(--primary); font-size: 0.7rem; margin-top: 10px; font-weight: 700; opacity: 0.8; letter-spacing: 1px;"></p>
 
+            <!-- Auto View Controls (Now inside Tab) -->
+            <div id="view-auto-controls" style="width: 100%; max-width: 400px; margin: 2rem auto 0; text-align: center;">
+                <div class="card-title" style="font-size: 0.6rem;">SESSION DURATION</div>
+                <div class="time-selector" style="margin: 1rem 0;">
+                    <button class="time-btn btn-t-2" onclick="setTime(2, this)">2 MIN</button>
+                    <button class="time-btn btn-t-5" onclick="setTime(5, this)">5 MIN 🔒</button>
+                    <button class="time-btn btn-t-10" onclick="setTime(10, this)">10 MIN 🔒</button>
+                </div>
+                <button onclick="startTherapy()" id="global-sync-btn" class="btn-primary glow-start btn-pulse" style="width: 100%; padding: 25px; margin-top: 1rem;">अनुभव शुरू करें (START)</button>
             </div>
-
-            <!-- Combo View -->
+        </div>
             <div id="view-combo" class="mode-view">
                 <div class="card-title">SMART COMBO THERAPY</div>
                 <h3 style="margin: 1.5rem 0 1rem;">Select your purpose</h3>
@@ -273,6 +281,15 @@
                 </div>
                 <button onclick="clearCombo()" class="btn-primary" style="background: rgba(255,82,82,0.1); color: #FF5252; font-size: 0.7rem; width: 100%; margin-top: 15px; border: 1px solid rgba(255,82,82,0.3);">CLEAR COMBINATION</button>
 
+                <div class="mode-controls" style="margin-top: 2rem; border-top: 1px solid var(--border-glass); padding-top: 1.5rem;">
+                    <div class="card-title" style="font-size: 0.6rem;">SESSION DURATION</div>
+                    <div class="time-selector" style="margin: 1rem 0;">
+                        <button class="time-btn btn-t-2" onclick="setTime(2, this)">2 MIN</button>
+                        <button class="time-btn btn-t-5" onclick="setTime(5, this)">5 MIN 🔒</button>
+                        <button class="time-btn btn-t-10" onclick="setTime(10, this)">10 MIN 🔒</button>
+                    </div>
+                    <button onclick="startTherapy()" class="btn-primary glow-start btn-pulse combo-start-btn" style="width: 100%; padding: 20px;" disabled>अनुभव शुरू करें (START)</button>
+                </div>
             </div>
                 
                 <!-- Planet Combo Info -->
@@ -300,30 +317,27 @@
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; justify-items: center;">
                     <label class="btn-choice" style="padding: 1.5rem; width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                        <div style="font-weight: 700; font-size: 0.8rem;">SELECT SOUND THERAPY</div>
+                        <div style="font-weight: 700; font-size: 0.8rem;" id="audio-status">SELECT SOUND THERAPY</div>
                         <input type="file" id="input-audio" accept="audio/*" style="display: none;" onchange="handleFile(this, 'audio')">
                     </label>
                     <label class="btn-choice" style="padding: 1.5rem; width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                        <div style="font-weight: 700; font-size: 0.8rem;">SELECT VISUAL THERAPY</div>
+                        <div style="font-weight: 700; font-size: 0.8rem;" id="image-status">SELECT VISUAL THERAPY</div>
                         <input type="file" id="input-image" accept="image/*" style="display: none;" onchange="handleFile(this, 'image')">
                     </label>
                 </div>
-            </div>
 
-
-            <!-- Common Setup Items (Time Selection) -->
-            <div style="width: 100%; max-width: 400px; margin: 2rem auto 0; text-align: center;">
-
-                <div class="card-title" style="font-size: 0.6rem;">SESSION DURATION</div>
-                <div class="time-selector" style="margin: 1rem 0;">
-                    <button id="btn-time-2" class="time-btn" onclick="setTime(2, this)">2 MIN</button>
-                    <button id="btn-time-5" class="time-btn" onclick="setTime(5, this)">5 MIN 🔒</button>
-                    <button id="btn-time-10" class="time-btn" onclick="setTime(10, this)">10 MIN 🔒</button>
+                <div class="mode-controls" style="margin-top: 2rem; border-top: 1px solid var(--border-glass); padding-top: 1.5rem;">
+                    <div class="card-title" style="font-size: 0.6rem;">SESSION DURATION</div>
+                    <div class="time-selector" style="margin: 1rem 0;">
+                        <button class="time-btn btn-t-2" onclick="setTime(2, this)">2 MIN</button>
+                        <button class="time-btn btn-t-5" onclick="setTime(5, this)">5 MIN 🔒</button>
+                        <button class="time-btn btn-t-10" onclick="setTime(10, this)">10 MIN 🔒</button>
+                    </div>
+                    <button onclick="startTherapy()" class="btn-primary glow-start btn-pulse choice-start-btn" style="width: 100%; padding: 20px;" disabled>अनुभव शुरू करें (START)</button>
                 </div>
-
-
-                <button onclick="startTherapy()" id="global-sync-btn" class="btn-primary glow-start btn-pulse" style="width: 100%; padding: 25px; margin-top: 1rem;">अनुभव शुरू करें (START)</button>
             </div>
+
+
         </div>
 
         <div id="session-view" class="view-content" style="display: none;">
@@ -426,12 +440,12 @@
                 if (userData.plan === 'FREE') {
                     selectedTime = 2;
                     document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
-                    document.getElementById('btn-time-2').classList.add('active');
+                    document.querySelectorAll('.btn-t-2').forEach(b => b.classList.add('active'));
                     document.getElementById('timer').innerText = "02:00";
                 } else {
                     selectedTime = 10;
                     document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
-                    document.getElementById('btn-time-10').classList.add('active');
+                    document.querySelectorAll('.btn-t-10').forEach(b => b.classList.add('active'));
                     document.getElementById('timer').innerText = "10:00";
                 }
 
@@ -487,6 +501,9 @@
             el.classList.add('active');
             document.querySelectorAll('.mode-view').forEach(v => v.classList.remove('active'));
             document.getElementById('view-' + mode).classList.add('active');
+            
+            // Toggle Auto Controls (Only show in Auto mode)
+            document.getElementById('view-auto-controls').style.display = (mode === 'auto') ? 'block' : 'none';
 
             // Toggle Expert Combo Card visibility (Only show in Combo mode)
             const comboCard = document.getElementById('expert-combo-card');
@@ -508,7 +525,7 @@
             }
             selectedTime = min;
             document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
-            el.classList.add('active');
+            document.querySelectorAll('.btn-t-' + min).forEach(b => b.classList.add('active'));
             document.getElementById('timer').innerText = `${String(min).padStart(2,'0')}:00`;
         }
 
@@ -572,10 +589,16 @@
         }
 
         function validateGlobalBtn() {
-            const btn = document.getElementById('global-sync-btn');
-            if (currentMode === 'auto') btn.disabled = false;
-            else if (currentMode === 'combo') btn.disabled = (selectedPlanets.length !== 2);
-            else if (currentMode === 'choice') btn.disabled = !(choiceFiles.audio || choiceFiles.image);
+            // Auto Mode
+            document.getElementById('global-sync-btn').disabled = false;
+
+            // Combo Mode
+            const comboBtn = document.querySelector('.combo-start-btn');
+            if (comboBtn) comboBtn.disabled = (selectedPlanets.length !== 2);
+
+            // Choice Mode
+            const choiceBtn = document.querySelector('.choice-start-btn');
+            if (choiceBtn) choiceBtn.disabled = !(choiceFiles.audio || choiceFiles.image);
         }
 
         let choiceFiles = { audio: null, image: null };
@@ -596,7 +619,8 @@
                 }
                 const label = input.parentElement;
                 label.style.borderColor = 'var(--primary)';
-                const statusDiv = label.querySelector('div');
+                const statusId = type === 'audio' ? 'audio-status' : 'image-status';
+                const statusDiv = document.getElementById(statusId);
                 if (statusDiv) {
                     statusDiv.innerText = `✓ ${type.toUpperCase()} SELECTED`;
                     statusDiv.style.color = 'var(--primary)';
