@@ -16,7 +16,7 @@ const razorpay = new Razorpay({
 const createOrder = async (req, res) => {
     try {
         let mobile = req.body.mobile;
-        let amount = req.body.amount || 250;
+        let amount = 299; // FIXED PRICE V1
         
         if (req.user) {
             const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
@@ -61,28 +61,74 @@ const simulateSuccess = async (req, res) => {
         // Logic for Upgrade
         const plan = 'PREMIUM';
 
-        
-        await prisma.$transaction([
-            prisma.paymentOrder.update({
+        // 3. ATOMIC UPGRADE + COMMISSION
+        await prisma.$transaction(async (tx) => {
+            // A. Mark Order
+            await tx.paymentOrder.update({
                 where: { orderId },
                 data: { status: 'PAID' }
-            }),
-            prisma.user.update({
+            });
+
+            // B. Unlock User
+            const user = await tx.user.update({
                 where: { id: userId },
-                data: { plan }
-            }),
-            prisma.transaction.create({
+                data: { 
+                    plan: 'PREMIUM',
+                    isBusinessUnlocked: true 
+                }
+            });
+
+            // C. Log Revenue
+            await tx.transaction.create({
                 data: {
                     userId,
                     amount: order.amount,
                     type: 'CREDIT',
                     category: 'PLAN_UPGRADE',
-                    description: `Upgraded to ${plan} Plan`
+                    description: `Upgraded to MASTER LICENSE (₹299)`
                 }
-            })
-        ]);
+            });
 
-        return successResponse(res, 200, 'Upgrade successful');
+            // D. MLM Commission Distribution (₹100 / ₹80)
+            if (user.sponsorId) {
+                // Level 1: ₹100
+                await tx.wallet.updateMany({
+                    where: { userId: user.sponsorId, type: 'CASH' },
+                    data: { balance: { increment: 100 } }
+                });
+                await tx.transaction.create({
+                    data: {
+                        userId: user.sponsorId,
+                        fromUserId: user.id,
+                        amount: 100,
+                        type: 'CREDIT',
+                        category: 'BONUS',
+                        description: `Direct Comm from ${user.mobile}`
+                    }
+                });
+
+                // Level 2: ₹80
+                const sponsor = await tx.user.findUnique({ where: { id: user.sponsorId } });
+                if (sponsor && sponsor.sponsorId) {
+                    await tx.wallet.updateMany({
+                        where: { userId: sponsor.sponsorId, type: 'CASH' },
+                        data: { balance: { increment: 80 } }
+                    });
+                    await tx.transaction.create({
+                        data: {
+                            userId: sponsor.sponsorId,
+                            fromUserId: user.id,
+                            amount: 80,
+                            type: 'CREDIT',
+                            category: 'BONUS',
+                            description: `Team Comm from ${user.mobile}`
+                        }
+                    });
+                }
+            }
+        });
+
+        return successResponse(res, 200, 'Master License Activated Successfully');
     } catch (err) {
         console.error('[SIMULATE_ERROR]', err);
         return errorResponse(res, 500, 'Simulation failed');
@@ -108,7 +154,7 @@ const verifyPayment = async (req, res) => {
         await prisma.transaction.create({
             data: {
                 userId: user.id,
-                amount: 250,
+                amount: 299,
                 type: 'CREDIT',
                 category: 'REGISTRATION_FEE',
                 description: `Payment Received from ${mobile}`

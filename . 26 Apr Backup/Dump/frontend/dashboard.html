@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Therapy Hub | Sinaank V1</title>
+    <link rel="stylesheet" href="css/v1.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        .hub-container {
+            padding: 1.5rem;
+            max-width: 500px;
+            margin: 0 auto;
+            padding-bottom: 5rem;
+        }
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .stat-card {
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--primary);
+            font-family: 'Outfit', sans-serif;
+        }
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 5px;
+        }
+        .goal-section {
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        .progress-container {
+            margin: 1.5rem 0;
+        }
+        .progress-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), #FFB300);
+            box-shadow: 0 0 10px rgba(255, 213, 79, 0.3);
+            transition: width 0.5s ease-out;
+        }
+        .qr-section {
+            padding: 1.5rem;
+            text-align: center;
+        }
+        #qrcode {
+            display: flex;
+            justify-content: center;
+            padding: 15px;
+            background: #fff;
+            border-radius: 12px;
+            width: fit-content;
+            margin: 0.5rem auto;
+        }
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(8, 11, 18, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 1rem;
+            border-top: 1px solid var(--border-glass);
+            display: flex;
+            justify-content: space-around;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body class="scientific-grid">
+    <div class="hub-container">
+        <header style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h1 style="font-size: 1.4rem;">Therapy Hub</h1>
+                <p style="font-size: 0.85rem; color: var(--text-dim);" id="user-mobile">Identity: ...</p>
+            </div>
+            <button onclick="logout()" style="background: none; border: none; color: var(--text-dim); font-size: 0.8rem;">Logout</button>
+        </header>
+
+        <div class="stat-grid">
+            <div class="stat-card glass">
+                <div class="stat-value" id="minutes-balance">3600</div>
+                <div class="stat-label">Min Balance</div>
+            </div>
+            <div class="stat-card glass">
+                <div class="stat-value" id="daily-used">0</div>
+                <div class="stat-label">Used Today</div>
+            </div>
+        </div>
+
+        <div class="goal-section glass">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Current Goal</h3>
+                <span id="goal-status" style="font-size: 0.7rem; color: var(--primary);">ACTIVE</span>
+            </div>
+            <div id="goal-name" style="font-size: 1.5rem; font-weight: 700; margin: 0.5rem 0;">No Goal Active</div>
+            <div style="font-size: 0.8rem; color: var(--text-dim);" id="lock-timer">Lock Duration: Open</div>
+            
+            <div class="progress-container">
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
+                    <span>Daily Limit</span>
+                    <span>15 Min Max</span>
+                </div>
+                <div class="progress-bar">
+                    <div id="usage-fill" class="progress-fill" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <button onclick="window.location.href='therapy.html'" id="start-btn" class="btn-primary" style="width: 100%;">
+                Start Therapy
+            </button>
+        </div>
+
+        <div class="qr-section glass">
+            <h3 style="font-size: 0.9rem; margin-bottom: 0.5rem;">Network QR</h3>
+            <div id="qrcode"></div>
+            <p style="font-size: 0.75rem; color: var(--text-dim); margin-top: 1rem;">
+                ₹100 Direct Income • Scan to Join
+            </p>
+            <button onclick="copyRef()" class="btn-primary" style="margin-top: 1rem; width: 100%; filter: saturate(0.5);">Copy Link</button>
+        </div>
+    </div>
+
+    <script>
+        const sessionToken = localStorage.getItem("session");
+        const API_BASE = "";
+
+        async function init() {
+            if (!sessionToken) return window.location.href = "join.html";
+            await fetchParams();
+        }
+
+        async function fetchParams() {
+            try {
+                const res = await fetch(`${API_BASE}/api/therapy/params`, {
+                    headers: { 'Authorization': `Bearer ${sessionToken}` }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    updateUI(data.data);
+                } else {
+                    logout();
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function updateUI(params) {
+            document.getElementById('user-mobile').innerText = `Identity: ${params.mobile}`;
+            document.getElementById('minutes-balance').innerText = params.v1_minutes_balance;
+            document.getElementById('daily-used').innerText = params.v1_daily_minutes_used;
+            
+            const usagePercent = (params.v1_daily_minutes_used / 15) * 100;
+            document.getElementById('usage-fill').style.width = usagePercent + '%';
+
+            if (params.v1_goal_type) {
+                document.getElementById('goal-name').innerText = params.v1_goal_type;
+                const lockDate = new Date(params.v1_goal_lock_until);
+                document.getElementById('lock-timer').innerText = `Locked until: ${lockDate.toLocaleDateString()}`;
+            }
+
+            generateQR(params.referral_code || params.mobile);
+        }
+
+        function generateQR(code) {
+            const qrEl = document.getElementById("qrcode");
+            qrEl.innerHTML = "";
+            const refLink = `${window.location.origin}/join.html?ref=${localStorage.getItem('mobile')}`;
+            new QRCode(qrEl, {
+                text: refLink,
+                width: 128,
+                height: 128,
+                colorDark: "#080B12",
+                colorLight: "#ffffff"
+            });
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = "index.html";
+        }
+
+        function copyRef() {
+            const refLink = `${window.location.origin}/join.html?ref=${localStorage.getItem('mobile')}`;
+            navigator.clipboard.writeText(refLink);
+            alert("Invite link copied!");
+        }
+
+        init();
+    </script>
+</body>
+</html>

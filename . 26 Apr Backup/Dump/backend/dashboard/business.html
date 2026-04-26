@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sinaank Digital Therapy</title>
+    <script>
+    (function () {
+      const session = localStorage.getItem("ssb_session");
+      const token = localStorage.getItem("token");
+
+      if (!session || !token) {
+        window.location.href = "/join.html";
+        return;
+      }
+
+      try {
+        const user = JSON.parse(session);
+
+        if (!user || (!user.name && user.role !== 'ADMIN')) {
+          window.location.href = "/join.html";
+          return;
+        }
+
+        // Admin redirect logic
+        if (user.role === 'ADMIN' || user.role === 'MASTER') {
+            window.location.href = 'admin.html';
+            return;
+        }
+
+      } catch (e) {
+        localStorage.removeItem("ssb_session");
+        window.location.href = "/join.html";
+      }
+    })();
+    </script>
+    <script src="../assets/js/qrious.min.js"></script>
+    <link rel="stylesheet" href="../assets/css/theme.css">
+    <link rel="stylesheet" href="../assets/support/SupportHub.css">
+    <script src="../assets/js/config.js"></script>
+    <script src="../public/js/i18n.js"></script>
+    <link rel="icon" href="../assets/smt_logo.png">
+    <script src="../js/config.js"></script>
+    <script src="../js/SinaankAssistant.js"></script>
+
+
+
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --primary: #4f46e5;
+            --secondary: #7c3aed;
+            --green: #10b981;
+            --green2: #059669;
+            --amber: #f59e0b;
+            --bg: #f5f3ff;
+            --card: #ffffff;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: rgba(0,0,0,0.07);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            color: var(--text);
+        }
+
+        .auth-locked { opacity: 0 !important; pointer-events: none !important; }
+        .auth-revealed { opacity: 1 !important; pointer-events: auto !important; transition: opacity 0.4s ease !important; }
+
+        /* Demo Badge */
+        .demo-badge {
+            background: #ef4444;
+            color: white;
+            text-align: center;
+            padding: 0.5rem;
+            font-weight: 800;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            position: sticky;
+            top: 0;
+            z-index: 1001;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .header-left { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; }
+        .header-logo { height: 36px; width: auto; object-fit: contain; }
+        .header-right { display: flex; align-items: center; gap: 1rem; }
+        .role-pill {
+            padding: 0.3rem 0.9rem; border-radius: 99px;
+            font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+        .btn-logout {
+            background: transparent; border: 1.5px solid #e2e8f0;
+            color: var(--muted); border-radius: 10px; padding: 0.4rem 1rem;
+            font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-logout:hover { background: #fee2e2; border-color: #fca5a5; color: #dc2626; }
+
+        /* Layout */
+        .main { max-width: 1000px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+        /* Locked Banner (for Basic users) */
+        .locked-banner {
+            display: none; /* shown via JS */
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border: 1px solid #fbbf24;
+            border-radius: 18px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.75rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .locked-banner-icon { font-size: 1.75rem; }
+        .locked-banner-text h3 { font-size: 0.95rem; font-weight: 800; color: #92400e; }
+        .locked-banner-text p { font-size: 0.85rem; color: #78350f; margin-top: 0.25rem; }
+        .upgrade-btn {
+            margin-left: auto;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white; border: none; border-radius: 12px;
+            padding: 0.65rem 1.4rem; font-size: 0.9rem; font-weight: 700;
+            cursor: pointer; text-decoration: none; white-space: nowrap;
+            transition: opacity 0.2s;
+        }
+        .upgrade-btn:hover { opacity: 0.85; }
+
+        /* Stats row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 3px 15px rgba(0,0,0,0.04);
+        }
+        .stat-label {
+            font-size: 0.75rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.08em;
+            color: var(--muted); margin-bottom: 0.5rem;
+        }
+        .stat-value {
+            font-size: 2rem; font-weight: 900;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .stat-sub { font-size: 0.78rem; color: var(--muted); margin-top: 0.25rem; }
+
+        /* Referral Box */
+        .section-card {
+            background: var(--card);
+            border-radius: 22px;
+            padding: 1.75rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 3px 15px rgba(0,0,0,0.04);
+            margin-bottom: 1.25rem;
+        }
+        .section-title {
+            font-size: 1rem; font-weight: 800;
+            margin-bottom: 1.25rem;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+
+        .ref-link-box {
+            background: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            border-radius: 14px;
+            padding: 1rem 1.25rem;
+            display: flex; align-items: center; gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .ref-link-text {
+            font-family: monospace; font-weight: 700;
+            color: var(--primary); font-size: 0.9rem;
+            overflow: hidden; text-overflow: ellipsis;
+            white-space: nowrap; flex: 1; min-width: 0;
+        }
+        .copy-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white; border: none; border-radius: 10px;
+            padding: 0.6rem 1.25rem; font-size: 0.85rem; font-weight: 700;
+            cursor: pointer; transition: opacity 0.2s; white-space: nowrap;
+        }
+        .copy-btn:hover { opacity: 0.85; }
+        
+        /* QR Code Layout */
+        .referral-grid {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 2rem;
+            align-items: center;
+        }
+        @media (max-width: 768px) {
+            .referral-grid { grid-template-columns: 1fr; text-align: center; }
+            .ref-link-box { justify-content: center; }
+            .qr-wrapper { margin: 0 auto; }
+        }
+        
+        .qr-wrapper {
+            background: #fff;
+            padding: 1.5rem;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            width: fit-content;
+        }
+        #qrcode img {
+            border-radius: 8px;
+            width: 160px !important;
+            height: 160px !important;
+        }
+        .btn-download-qr {
+            background: #f1f5f9;
+            color: var(--text);
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-download-qr:hover { background: #e2e8f0; color: var(--primary); }
+
+
+        /* Income table */
+        .income-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+        .income-tile {
+            background: #f8fafc;
+            border-radius: 14px;
+            padding: 1.1rem;
+            text-align: center;
+        }
+        .income-tile .level { font-size: 0.7rem; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+        .income-tile .amount {
+            font-size: 1.4rem; font-weight: 900; margin: 0.4rem 0;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+
+        }
+        .income-tile .count { font-size: 0.78rem; color: var(--muted); }
+
+        /* Team table */
+        .team-tbl { width: 100%; border-collapse: separate; border-spacing: 0 0.5rem; }
+        .team-tbl thead th {
+            font-size: 0.75rem; color: var(--muted); font-weight: 700;
+            text-transform: uppercase; padding: 0 1rem; text-align: left;
+        }
+        .team-tbl tbody tr {
+            background: #f8fafc; border-radius: 12px;
+        }
+        .team-tbl tbody td {
+            padding: 0.85rem 1rem; font-size: 0.88rem;
+        }
+        .team-tbl tbody td:first-child { border-radius: 12px 0 0 12px; }
+        .team-tbl tbody td:last-child { border-radius: 0 12px 12px 0; }
+        .pill {
+            display: inline-block; padding: 0.2rem 0.65rem; border-radius: 99px;
+            font-size: 0.72rem; font-weight: 700;
+        }
+        .pill-active { background: #dcfce7; color: #166534; }
+        .pill-pending { background: #fef9c3; color: #854d0e; }
+        .pill-basic { background: rgba(79,70,229,0.1); color: var(--primary); }
+        .pill-business { background: rgba(124,58,237,0.1); color: var(--secondary); }
+
+        /* Payout */
+        .payout-form-row {
+            display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;
+        }
+        .form-group { flex: 1; min-width: 160px; }
+        .form-group label {
+            display: block; font-size: 0.8rem; font-weight: 700;
+            color: var(--muted); margin-bottom: 0.35rem;
+        }
+        .form-group input {
+            width: 100%; padding: 0.75rem 1rem; border-radius: 12px;
+            border: 1.5px solid #e2e8f0; font-family: inherit; font-size: 0.9rem;
+            outline: none; transition: border-color 0.2s;
+        }
+        .form-group input:focus { border-color: var(--primary); }
+        .btn-payout {
+            background: linear-gradient(135deg, var(--green), var(--green2));
+            color: white; border: none; border-radius: 12px;
+            padding: 0.75rem 1.75rem; font-size: 0.95rem; font-weight: 700;
+            cursor: pointer; transition: opacity 0.2s; white-space: nowrap;
+        }
+        .btn-payout:hover { opacity: 0.85; }
+
+        .empty-msg {
+            text-align: center; padding: 2.5rem; color: var(--muted); font-size: 0.9rem;
+        }
+
+        /* Blur overlay for locked sections */
+        .income-locked {
+            filter: blur(3px);
+            pointer-events: none;
+            user-select: none;
+        }
+
+        /* Business ID Card Modern Style */
+        .id-card-wrapper {
+            margin-bottom: 2rem;
+            perspective: 1000px;
+        }
+        .business-id-card {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-radius: 24px;
+            padding: 2rem;
+            color: white;
+            display: grid;
+            grid-template-columns: 1fr 180px;
+            gap: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        .business-id-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(79,70,229,0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .id-content { z-index: 1; }
+        .id-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem; }
+        .id-logo { height: 28px; filter: brightness(0) invert(1); }
+        .id-title { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; color: rgba(255,255,255,0.5); }
+        
+        .user-info { margin-bottom: 1.5rem; }
+        .user-name {
+            font-size: 1.5rem; font-weight: 900; margin-bottom: 0.25rem;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .user-meta { font-size: 0.8rem; color: rgba(255,255,255,0.6); font-weight: 500; }
+        
+        .barcode-area {
+            background: white;
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .barcode-img { width: 100%; height: auto; object-fit: contain; }
+        .id-number { font-family: monospace; font-size: 0.75rem; font-weight: 700; color: #0f172a; border-top: 1px solid #e2e8f0; padding-top: 0.5rem; width: 100%; text-align: center; }
+
+        /* App Download Section */
+        .app-download-card {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            border-radius: 22px;
+            padding: 2rem;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 2rem;
+            margin-top: 1.25rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .app-text-side { flex: 1; }
+        .app-text-side h2 { font-size: 1.5rem; font-weight: 900; margin-bottom: 0.5rem; }
+        .app-text-side p { font-size: 0.9rem; color: rgba(255,255,255,0.8); line-height: 1.5; }
+        .app-qr-side {
+            background: white;
+            padding: 1rem;
+            border-radius: 18px;
+            width: 140px;
+            height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .app-qr-img { width: 100%; height: 100%; object-fit: contain; }
+    </style>
+
+
+</head>
+<body class="auth-locked">
+
+    <div class="demo-badge">Sinaank Demo Mode — Business Portal Beta</div>
+
+    <!-- Global Nav injected by i18n.js -->
+
+    <main class="main">
+
+        <!-- Upgrade Banner (visible for BASIC users) -->
+        <div class="locked-banner" id="upgrade-banner" style="display:none;">
+            <div class="locked-banner-icon">🔓</div>
+            <div class="locked-banner-text">
+                <h3 data-i18n="business.upgrade_title">Upgrade to Growth Plan for Full Access</h3>
+                <p data-i18n="business.upgrade_desc">Unlock full income tracking, higher payouts (₹450/₹250/₹150), and Business Partner badge.</p>
+            </div>
+            <a href="../public/login.html?amount=2211&mode=upgrade" class="upgrade-btn"><span data-i18n="btn.upgrade_now">Upgrade</span> ₹2211 →</a>
+        </div>
+
+        <!-- Digital Business ID Card -->
+        <div class="id-card-wrapper">
+            <div class="business-id-card">
+                <div class="id-content">
+                    <div class="id-header">
+                        <img src="/assets/logo.png" class="id-logo" onerror="this.src='/assets/smt_logo.png'">
+                        <span class="id-title">Official Business Partner</span>
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name" id="id-card-name">Sinaank Partner</div>
+                        <div class="user-meta" id="id-card-role">Digital Business ID</div>
+                        <div class="user-meta" id="id-card-mobile">+91 0000000000</div>
+                    </div>
+                    <div style="font-size:0.6rem; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:0.1em;">
+                        Auth Code: <span id="id-card-auth">SN-000-000</span>
+                    </div>
+                </div>
+                <div class="barcode-area">
+                    <img src="/assets/images/barcode_demo.png" alt="SINAANK Business Barcode" class="barcode-img">
+                    <div class="id-number" id="id-card-number">SINAANK-BIZ-0000</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-label" data-i18n="business.stat_wallet">💰 Wallet Balance</div>
+                <div class="stat-value" id="stat-balance">₹0</div>
+                <div class="stat-sub" data-i18n="dashboard.business.available_withdraw">Available to withdraw</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label" data-i18n="business.stat_total">📈 Total Earned</div>
+                <div class="stat-value" id="stat-total">₹0</div>
+                <div class="stat-sub" data-i18n="dashboard.business.lifetime_income">Lifetime income</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label" data-i18n="business.stat_team">👥 Team Size</div>
+                <div class="stat-value" id="stat-team">0</div>
+                <div class="stat-sub" data-i18n="dashboard.business.across_levels">Across all 3 levels</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label" data-i18n="business.stat_plan">⭐ Your Plan</div>
+                <div class="stat-value" id="stat-plan" style="font-size:1.4rem;" data-i18n="plans.starter.name">Starter</div>
+                <div class="stat-sub" id="stat-plan-sub">Starter Plan (₹779)</div>
+            </div>
+        </div>
+
+        <!-- Referral Link -->
+        <div class="section-card">
+            <div class="section-title" data-i18n="business.ref_title">🔗 Your Referral Network</div>
+            <div class="referral-grid">
+                <div class="ref-info-side">
+                    <p style="font-size:0.85rem;color:var(--muted);margin-bottom:1.25rem;" data-i18n="business.ref_desc">
+                        Share your unique link or QR code — every person who joins via your invitation becomes your Level 1 partner.
+                    </p>
+                    <p>
+                        <span id="income-per-ref" style="font-weight:700;color:var(--primary); background: rgba(79,70,229,0.05); padding: 0.35rem 0.75rem; border-radius: 8px; display: inline-block; margin-top: 0.5rem;" data-i18n="business.ref_bonus">
+                            Direct Bonus: ₹120 per join
+                        </span>
+                    </p>
+                    <div class="ref-link-box">
+                        <span class="ref-link-text" id="referral-link-text">Generating your referral link...</span>
+                        <button class="copy-btn" id="copy-btn" onclick="copyRefLink()" data-i18n="business.copy_link">📋 Copy Link</button>
+                    </div>
+                    <div style="font-size:0.75rem;color:var(--muted);margin-top:0.75rem; font-weight: 600;" id="referral-code-display"></div>
+                </div>
+                
+                <div class="qr-wrapper">
+                    <canvas id="qr-canvas"></canvas>
+                    <button class="btn-download-qr" onclick="downloadQR()" data-i18n="business.download_qr">
+                        <span>📥</span> Download PNG (512px)
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+
+        <!-- Income Summary -->
+        <div class="section-card">
+            <div class="section-title" data-i18n="business.income_title">📊 Income Per Referral</div>
+            <div class="income-grid" id="income-grid">
+                <div class="income-tile">
+                    <div class="level" data-i18n="business.level1">Level 1 (Direct)</div>
+                    <div class="amount" id="inc-l1">₹120</div>
+                    <div class="count" id="cnt-l1">0 partners</div>
+                </div>
+                <div class="income-tile">
+                    <div class="level" data-i18n="dashboard.business.level2">Level 2</div>
+                    <div class="amount" id="inc-l2">₹80</div>
+                    <div class="count" id="cnt-l2">0 partners</div>
+                </div>
+                <div class="income-tile">
+                    <div class="level" data-i18n="dashboard.business.level3">Level 3</div>
+                    <div class="amount" id="inc-l3">₹50</div>
+                    <div class="count" id="cnt-l3">0 partners</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Team List -->
+        <div class="section-card">
+            <div class="section-title" style="justify-content:space-between;">
+                <span data-i18n="business.my_network">👥 My Network (Level 1)</span>
+                <button onclick="loadTeam()" style="background:none;border:none;color:var(--primary);font-weight:700;cursor:pointer;font-size:0.85rem;" data-i18n="business.refresh">↻ Refresh</button>
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="team-tbl">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Mobile</th>
+                            <th>Plan</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="team-tbody">
+                        <tr><td colspan="4" class="empty-msg">Loading network...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Payout Section -->
+        <div class="section-card">
+            <div class="section-title" data-i18n="business.payout_title">💸 Request Payout</div>
+            <p style="font-size:0.85rem;color:var(--muted);margin-bottom:1.25rem;" data-i18n="business.payout_desc">
+                Minimum withdrawal: <strong>₹100</strong>. Processed within 48–72 hours after admin approval.
+            </p>
+            <div class="payout-form-row">
+                <div class="form-group">
+                    <label data-i18n="business.amount_label">Amount (₹)</label>
+                    <input type="number" id="payout-amount" placeholder="Enter amount" min="100">
+                </div>
+                <div class="form-group">
+                    <label data-i18n="business.upi_label">UPI ID</label>
+                    <input type="text" id="payout-upi" placeholder="yourname@upi" readonly style="background:#f1f5f9;">
+                </div>
+                <button class="btn-payout" onclick="requestPayout()" data-i18n="business.request_btn">Request Payout</button>
+            </div>
+            <div id="payout-status" style="margin-top:0.75rem;font-size:0.85rem;font-weight:600;"></div>
+        </div>
+
+        <!-- App Download Demo -->
+        <div class="app-download-card">
+            <div class="app-text-side">
+                <h2>SINAANK Mobile App</h2>
+                <p>Take your business on the go. Scan the official QR code to download the SINAANK Business Partner App for Android and iOS.</p>
+                <div style="margin-top:1rem; display:flex; gap:1rem;">
+                    <span style="background:rgba(255,255,255,0.2); padding:0.4rem 0.8rem; border-radius:8px; font-size:0.7rem; font-weight:700;">PLAY STORE</span>
+                    <span style="background:rgba(255,255,255,0.2); padding:0.4rem 0.8rem; border-radius:8px; font-size:0.7rem; font-weight:700;">APP STORE</span>
+                </div>
+            </div>
+            <div class="app-qr-side">
+                <img src="/assets/images/app_qr_demo.png" alt="SINAANK App Download QR Code" class="app-qr-img">
+            </div>
+        </div>
+
+
+
+    </main>
+
+    <script>
+        let currentUser = null;
+        const token = localStorage.getItem('token');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.body.classList.add('auth-revealed');
+            initBusiness();
+        });
+
+        async function initBusiness() {
+            const sessionStr = localStorage.getItem('ssb_session');
+            if (!sessionStr) return;
+            currentUser = JSON.parse(sessionStr);
+
+            const role = currentUser.role || 'BASIC';
+            const isBusiness = role === 'BUSINESS' || role === 'SEEDER';
+
+            // Header role pill
+            document.getElementById('role-pill').textContent = role;
+
+            // Show upgrade banner for BASIC users
+            if (!isBusiness) {
+                document.getElementById('upgrade-banner').style.display = 'flex';
+            }
+
+            // Plan stat
+            document.getElementById('stat-plan').textContent = isBusiness ? 'Growth' : 'Starter';
+            document.getElementById('stat-plan-sub').textContent = isBusiness ? 'Growth Plan (₹2990)' : 'Starter Plan (₹779)';
+
+            // Income rates
+            if (isBusiness) {
+                document.getElementById('inc-l1').textContent = '₹450';
+                document.getElementById('inc-l2').textContent = '₹250';
+                document.getElementById('inc-l3').textContent = '₹150';
+                document.getElementById('income-per-ref').textContent = _t('dashboard.business.ref_link_earn');
+            }
+
+            // Sync Digital ID Card Data
+            if (currentUser) {
+                document.getElementById('id-card-name').textContent = currentUser.name || 'Sinaank Partner';
+                document.getElementById('id-card-role').textContent = (currentUser.role || 'BASIC') + ' Partner';
+                document.getElementById('id-card-mobile').textContent = currentUser.mobile ? '+91 ' + currentUser.mobile : '+91 0000000000';
+                
+                const authCode = currentUser.id ? 'SN-' + currentUser.id.substring(0, 8).toUpperCase() : 'SN-DEMO-2026';
+                document.getElementById('id-card-auth').textContent = authCode;
+
+                const bizCode = currentUser.referral_code ? 'SINAANK-BIZ-' + currentUser.referral_code : 'SINAANK-BIZ-8888';
+                document.getElementById('id-card-number').textContent = bizCode;
+            }
+
+            // UPI prefill
+            if (currentUser.upi_id) {
+                document.getElementById('payout-upi').value = currentUser.upi_id;
+            } else if (currentUser.mobile) {
+                document.getElementById('payout-upi').value = currentUser.mobile + '@upi';
+            }
+
+            // Referral link
+            await loadReferralLink();
+
+            // Balance
+            await loadBalance();
+
+            // Team
+            await loadTeam();
+        }
+
+        async function loadReferralLink() {
+            const url = SINAANK_CONFIG.getApiUrl('me');
+            try {
+                const res = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    const user = data.data.user;
+                    currentUser = { ...currentUser, ...user };
+                    localStorage.setItem('ssb_session', JSON.stringify(currentUser));
+
+                    const refCode = user.referral_code || '';
+                    const refLink = refCode
+                        ? `${window.location.origin}/public/join.html?ref=${refCode}&plan=starter`
+                        : 'Referral code not generated yet';
+
+                    document.getElementById('referral-link-text').textContent = refLink;
+                    document.getElementById('referral-code-display').textContent =
+                        `Your Invite Code: ${refCode}`;
+                        
+                    // Generate QR
+                    setTimeout(() => generateQR(refLink), 100);
+                }
+            } catch(e) { }
+        }
+
+        let qrInstance = null;
+        function generateQR(link) {
+            const qrCanvas = document.getElementById('qr-canvas');
+            
+            qrInstance = new QRious({
+                element: qrCanvas,
+                value: link,
+                size: 512,
+                level: 'H',
+                foreground: '#000000',
+                background: '#ffffff'
+            });
+            
+            // Adjust display size via CSS (keep the canvas internal resolution at 512)
+            qrCanvas.style.width = '160px';
+            qrCanvas.style.height = '160px';
+        }
+
+        function downloadQR() {
+            const qrCanvas = document.getElementById('qr-canvas');
+            if (!qrCanvas) return;
+            
+            // Download as 512px PNG (since we generated at 512 size)
+            const link = document.createElement('a');
+            link.download = 'Sinaank_Referral_QR.png';
+            link.href = qrCanvas.toDataURL('image/png');
+            link.click();
+        }
+
+
+
+        async function loadBalance() {
+            const url = SINAANK_CONFIG.getApiUrl('balance');
+            try {
+                const res = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    const bal = data.data.balance || 0;
+                    const total = data.data.totalEarned || 0;
+                    document.getElementById('stat-balance').textContent = '₹' + bal.toLocaleString('en-IN');
+                    document.getElementById('stat-total').textContent = '₹' + total.toLocaleString('en-IN');
+                }
+            } catch(e) {}
+        }
+
+        async function loadTeam() {
+            const url = SINAANK_CONFIG.getApiUrl('team');
+            try {
+                const res = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    document.getElementById('team-tbody').innerHTML =
+                        `<tr><td colspan="4" class="empty-msg">${_t('dashboard.business.no_partners')}</td></tr>`;
+                    return;
+                }
+
+                const l1 = data.data.level1 || [];
+                const l2 = data.data.level2 || [];
+                const l3 = data.data.level3 || [];
+                const total = l1.length + l2.length + l3.length;
+                document.getElementById('stat-team').textContent = total;
+                const partnerLabel = _t('business.partners');
+                document.getElementById('cnt-l1').textContent = l1.length + ' ' + partnerLabel;
+                document.getElementById('cnt-l2').textContent = l2.length + ' ' + partnerLabel;
+                document.getElementById('cnt-l3').textContent = l3.length + ' ' + partnerLabel;
+
+                if (l1.length === 0) {
+                    document.getElementById('team-tbody').innerHTML =
+                        `<tr><td colspan="4" class="empty-msg">${_t('business.no_partners')}</td></tr>`;
+                    return;
+                }
+
+                const rows = l1.map(m => {
+                    const plan = m.role === 'BUSINESS' ? 'business' : 'basic';
+                    const status = m.kit_activated ? 'active' : 'pending';
+                    return `<tr>
+                        <td><strong>${m.name || '—'}</strong></td>
+                        <td>${m.mobile || '—'}</td>
+                        <td><span class="pill pill-${plan}">${m.role || 'BASIC'}</span></td>
+                        <td><span class="pill pill-${status}">${status.toUpperCase()}</span></td>
+                    </tr>`;
+                }).join('');
+                document.getElementById('team-tbody').innerHTML = rows;
+
+            } catch(e) {
+                document.getElementById('team-tbody').innerHTML =
+                    '<tr><td colspan="4" class="empty-msg">Unable to load team.</td></tr>';
+            }
+        }
+
+        function copyRefLink() {
+            const text = document.getElementById('referral-link-text').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.getElementById('copy-btn');
+                btn.textContent = '✅ Copied!';
+                setTimeout(() => { btn.textContent = '📋 Copy Link'; }, 2000);
+            });
+        }
+
+        async function requestPayout() {
+            const amount = parseInt(document.getElementById('payout-amount').value);
+            const upi = document.getElementById('payout-upi').value.trim();
+            const statusEl = document.getElementById('payout-status');
+
+            if (!amount || amount < 100) {
+                statusEl.style.color = '#dc2626';
+                statusEl.textContent = '❌ Minimum withdrawal is ₹100.';
+                return;
+            }
+            if (!upi) {
+                statusEl.style.color = '#dc2626';
+                statusEl.textContent = '❌ Please enter your UPI ID.';
+                return;
+            }
+
+            statusEl.style.color = '#64748b'; // var(--muted) fallback value
+            statusEl.textContent = 'Processing...';
+
+            const url = SINAANK_CONFIG.getApiUrl('payout-request');
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ amount, upi_id: upi })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    statusEl.style.color = '#16a34a';
+                    statusEl.textContent = '✅ Payout request submitted! Admin will process within 48–72 hours.';
+                    document.getElementById('payout-amount').value = '';
+                    loadBalance();
+                } else {
+                    statusEl.style.color = '#dc2626';
+                    statusEl.textContent = '❌ ' + (data.message || 'Request failed. Please try again.');
+                }
+            } catch(e) {
+                statusEl.style.color = '#dc2626';
+                statusEl.textContent = '❌ Network error. Please try again.';
+            }
+        }
+
+
+
+        function handleLogout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('ssb_session');
+            sessionStorage.clear();
+            window.location.href = '/login.html';
+        }
+    </script>
+    <script src="../assets/js/api.js"></script>
+    <script src="../assets/support/SupportHub.js"></script>
+</body>
+
+</html>

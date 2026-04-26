@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sinaank Therapy | Personalized Digital Therapy</title>
+    <link rel="stylesheet" href="css/v1.css">
+    <style>
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+        }
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            letter-spacing: -1px;
+            color: var(--primary);
+        }
+        .tagline {
+            color: var(--text-dim);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin-bottom: 3rem;
+        }
+        .start-card {
+            width: 100%;
+            max-width: 400px;
+            padding: 2.5rem;
+        }
+        .lang-switch {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            justify-content: center;
+        }
+        .lang-btn {
+            background: transparent;
+            border: 1px solid var(--border-glass);
+            color: var(--text-dim);
+            padding: 8px 16px;
+            border-radius: 80px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .lang-btn.active {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(255, 213, 79, 0.05);
+        }
+    </style>
+</head>
+<body class="scientific-grid">
+    <nav style="position: absolute; top: 0; width: 100%; padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; z-index: 10;">
+        <div class="brand" style="font-weight: 700; font-size: 1.2rem; color: var(--text-dim);">SINAANK V1</div>
+        <div style="font-size: 0.8rem; letter-spacing: 2px; color: var(--primary); font-weight: 600;">FREQUENCY ENGINE</div>
+    </nav>
+
+    <div class="hero">
+        <div class="glow-orb" style="top: 20%; left: 30%;"></div>
+        <div class="glow-orb" style="bottom: 10%; right: 20%; animation-delay: 2s;"></div>
+
+        <h1 class="logo">Sinaank Therapy</h1>
+        <p class="tagline">Personalized Digital Therapy powered by your mobile number and frequency logic.</p>
+
+        <div class="start-card glass">
+            <div class="lang-switch">
+                <button class="lang-btn active" onclick="setLang('en')">English</button>
+                <button class="lang-btn" onclick="setLang('hi')">हिन्दी</button>
+            </div>
+            
+            <button onclick="window.location.href='join.html'" class="btn-primary" style="width: 100%;">
+                Login to Begin
+            </button>
+            
+            <div style="margin-top: 1.5rem; font-size: 0.85rem; color: var(--text-dim);">
+                ₹250 Plan • 3600 Minutes • Lifetime Access
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function setLang(l) {
+            localStorage.setItem('sdt_lang', l);
+            document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

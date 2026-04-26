@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SINAANK SDP — Brain Balance Sync</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/focus-mode.css">
+    <script src="js/config.js"></script>
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/theme-engine.js"></script>
+    <script src="js/sdp_engine.js"></script>
+    <script src="js/personal_start_engine.js"></script>
+    <script src="js/focus-ui.js"></script>
+    <script src="js/i18n.js"></script>
+    <style>
+        .btn-start { background: linear-gradient(135deg, #0ea5e9, #2563eb); color: #fff; }
+        #intro-lock {
+            position: fixed; inset: 0; z-index: 9999;
+            background: transparent; display: none;
+            cursor: wait;
+        }
+        /* Demo Badge */
+        .demo-badge {
+            background: #ef4444;
+            color: white;
+            text-align: center;
+            padding: 0.5rem;
+            font-weight: 800;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 10000;
+        }
+        .demo-info {
+            margin: 2rem 0;
+            padding: 2rem;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 24px;
+            border: 2px solid rgba(14, 165, 233, 0.3);
+            text-align: left;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+        }
+        .demo-info-title {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #0ea5e9;
+            margin-bottom: 1.5rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .demo-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.2rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 0.8rem;
+        }
+        .demo-row:last-child { border: none; }
+        
+        .demo-label {
+            font-size: 1rem;
+            color: rgba(255,255,255,0.6);
+            font-weight: 600;
+        }
+        .demo-value {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+        }
+        .demo-value.highlight { color: #fbbf24; }
+        .demo-value.blue { color: #0ea5e9; }
+    </style>
+</head>
+<body class="auth-locked">
+    <div class="demo-badge">Sinaank Demo Mode — Clinical Therapy Beta</div>
+
+    <div id="setup-screen">
+        <div class="setup-inner">
+            <div class="branding-tag">SINAANK</div>
+            <h1 class="module-title" data-i18n="therapy.sdp.title">डिजिटल विराम</h1>
+            <p class="module-subtitle" data-i18n="therapy.sdp.subtitle">A calibrated digital pause based on your SID profile. Disconnect. Rebalance.</p>
+            
+            <div class="demo-info">
+                <div class="demo-info-title">🧬 SINAANK DNA / SID PROFILE</div>
+                
+                <div class="demo-row">
+                    <span class="demo-label">SINAANK ID</span>
+                    <span class="demo-value" id="demo-sid-val">---</span>
+                </div>
+
+                <div class="demo-row">
+                    <span class="demo-label">LEFT EAR (Hz)</span>
+                    <span class="demo-value blue" id="demo-l-freq">---</span>
+                </div>
+
+                <div class="demo-row">
+                    <span class="demo-label">RIGHT EAR (Hz)</span>
+                    <span class="demo-value blue" id="demo-r-freq">---</span>
+                </div>
+
+                <div class="demo-row">
+                    <span class="demo-label">COLOR 1 (Focus)</span>
+                    <span class="demo-value highlight" id="demo-color-1">---</span>
+                </div>
+
+                <div class="demo-row">
+                    <span class="demo-label">COLOR 2 (Relax)</span>
+                    <span class="demo-value highlight" id="demo-color-2">---</span>
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn-start" id="btn-new" data-i18n="therapy.btn.start_new">नई थेरेपी शुरू करें</button>
+                <button class="btn-secondary" id="btn-cont" data-i18n="therapy.btn.continue_prev">पिछली थेरेपी जारी रखें</button>
+            </div>
+            
+            <div class="headphone-note" data-i18n="therapy.headphone_note">🎧 हेडफ़ोन के साथ बेहतर अनुभव</div>
+        </div>
+    </div>
+
+    <!-- Balance error -->
+    <div id="balance-error">
+        <div class="err-icon">💳</div>
+        <h3 data-i18n="therapy.insufficient_mins">Insufficient Minutes</h3>
+        <p data-i18n="therapy.min_req">Minimum 2 minutes are required to start a therapy session.</p>
+        <a href="/dashboard/dashboard.html?topup=1" class="topup-link" data-i18n="therapy.topup">Top-up Now</a>
+    </div>
+
+    <div id="focus-root"></div>
+
+    <script>
+        async function beginSession(isNew) {
+            const btnNew = document.getElementById('btn-new');
+            const btnCont = document.getElementById('btn-cont');
+            
+            // --- MANDATORY CLICK AUDIO FIX ---
+            try {
+                const startSound = new Audio('/assets/audio/common/therapy_start.mp3');
+                startSound.volume = 1.0;
+                
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                if (ctx.state === 'suspended') await ctx.resume();
+                
+                await startSound.play();
+
+            } catch (err) {
+                console.warn("[Audio] Blocked or failed", err);
+            }
+            // ---------------------------------
+
+            if (btnNew) { btnNew.disabled = true; btnNew.textContent = 'तैयार हो रहा है...'; }
+            if (btnCont) { btnCont.disabled = true; }
+
+            await FocusUIController.setup({ module: 'SDP', isNew: isNew });
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Wait a bit for ThemeEngine to apply
+            setTimeout(() => {
+                const config = window.SDP_THEME;
+                if (config) {
+                    document.getElementById('demo-sid-val').textContent = config.sid;
+                    document.getElementById('demo-l-freq').textContent = config.frequencies.left.toFixed(1) + " Hz";
+                    document.getElementById('demo-r-freq').textContent = config.frequencies.right.toFixed(1) + " Hz";
+                    document.getElementById('demo-color-1').textContent = config.color1Name || "GREEN";
+                    document.getElementById('demo-color-2').textContent = config.color2Name || "BLUE";
+                }
+            }, 500);
+
+            document.getElementById('btn-new')?.addEventListener('click', () => beginSession(true));
+            document.getElementById('btn-cont')?.addEventListener('click', () => beginSession(false));
+
+            // EXTRA SAFETY FALLBACK
+            document.body.addEventListener("click", () => {
+                const audio = new Audio('/assets/audio/common/therapy_start.mp3');
+                audio.volume = 0.5;
+                audio.play().catch(()=>{});
+            }, { once: true });
+        });
+    </script>
+</body>
+</html>
+

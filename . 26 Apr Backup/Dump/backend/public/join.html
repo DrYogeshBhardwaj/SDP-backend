@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sinaank Digital Therapy</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="js/i18n.js"></script>
+    <link rel="icon" href="assets/smt_logo.png">
+    <script src="js/config-v2.js"></script>
+    <script src="js/SinaankAssistant.js"></script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #3730a3;
+            --secondary: #0ea5e9;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--background);
+            color: var(--text-main);
+            margin: 0; padding: 0;
+            overflow-x: hidden;
+        }
+
+        .header-slim {
+            background: white;
+            padding: 1rem 5%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            position: sticky; top: 0; z-index: 100;
+        }
+
+        .logo-text { font-weight: 800; font-size: 1.25rem; color: var(--primary); letter-spacing: -0.5px; text-decoration: none; }
+
+        .join-wrapper {
+            max-width: 900px;
+            margin: 3rem auto;
+            padding: 0 1.5rem;
+        }
+
+        /* Plan Card */
+        .plan-hero {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 3rem;
+            border-radius: 32px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(79, 70, 229, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .plan-hero h1 { margin: 0; font-size: 2.5rem; font-weight: 800; }
+        .plan-price { font-size: 4rem; font-weight: 800; margin: 1rem 0; display: block; }
+        
+        .income-pill-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .income-pill {
+            background: rgba(255, 255, 255, 0.1);
+            -webkit-backdrop-filter: blur(5px);
+            backdrop-filter: blur(5px);
+            padding: 1rem;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-pay {
+            width: 100%;
+            padding: 1.5rem;
+            background: white;
+            color: var(--primary);
+            border: none;
+            border-radius: 20px;
+            font-size: 1.25rem;
+            font-weight: 800;
+            cursor: pointer;
+            margin-top: 2.5rem;
+            transition: 0.3s;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .btn-pay:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(0,0,0,0.15); }
+
+        /* Registration Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center; justify-content: center;
+            z-index: 1000;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .modal-card {
+            background: white;
+            width: 100%;
+            max-width: 450px;
+            padding: 2.5rem;
+            border-radius: 32px;
+            text-align: center;
+            animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        .form-group { text-align: left; margin-bottom: 1.2rem; position: relative; }
+        .form-label { display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem; }
+        .form-input {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            font-size: 1rem;
+            font-family: inherit;
+            box-sizing: border-box;
+            transition: 0.2s;
+            pointer-events: auto !important;
+        }
+        .form-input:focus { border-color: var(--primary); outline: none; background: #f8fafc; }
+
+        .pin-toggle {
+            position: absolute;
+            right: 15px;
+            top: 38px;
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 0.8rem;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .btn-register {
+            width: 100%;
+            padding: 1.25rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* OTP Modal */
+        .otp-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.4);
+            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(12px);
+            display: none;
+            align-items: center; justify-content: center;
+            z-index: 2000;
+            padding: 1.5rem;
+        }
+
+        .otp-card {
+            background: white;
+            width: 100%;
+            max-width: 400px;
+            padding: 2.5rem;
+            border-radius: 32px;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .otp-input-group {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin: 1.5rem 0;
+        }
+
+        .otp-digit {
+            width: 45px;
+            height: 55px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .otp-digit:focus { border-color: var(--primary); outline: none; background: #f8fafc; }
+
+        .resend-text { font-size: 0.85rem; color: var(--text-muted); margin-top: 1rem; cursor: pointer; }
+        .resend-text.disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .spinner {
+            width: 20px; height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 10px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .hidden { display: none; }
+        
+        .error-text { color: #ef4444; font-size: 0.85rem; font-weight: 600; margin-top: 0.5rem; display: none; }
+        .nav-logo-h { height: 36px; }
+        .pill-label { font-size: 0.7rem; opacity: 0.7; }
+        .pill-val { font-weight: 800; font-size: 1.2rem; }
+        .hero-sub { text-transform: uppercase; letter-spacing: 2px; font-size: 0.85rem; font-weight: 700; color: var(--accent); margin-bottom: 1rem; opacity: 0.9; }
+        .plan-label { text-transform: uppercase; letter-spacing: 2px; font-size: 0.9rem; opacity: 0.8; }
+        .pay-footer { margin-top: 1.5rem; font-size: 0.8rem; opacity: 0.7; }
+        .otp-title { margin: 0; font-size: 1.6rem; font-weight: 800; color: var(--text-main); }
+        .otp-desc { color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem; }
+        .reg-title { margin: 0; font-size: 1.5rem; font-weight: 800; }
+        .reg-subtitle { color: var(--text-muted); margin-bottom: 2rem; }
+        .pin-input { text-align: center; letter-spacing: 10px; font-weight: 800; font-size: 1.5rem; }
+        .modal-back { margin-top: 1.5rem; color: var(--text-muted); cursor: pointer; font-size: 0.9rem; text-decoration: underline; }
+    </style>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+    <div class="header-slim">
+        <a href="index.html" class="text-none">
+            <img src="/assets/smt_logo.png" alt="Sinaank Digital Therapy Logo" class="nav-logo-h">
+        </a>
+    </div>
+
+    <div class="join-wrapper">
+        <div class="plan-hero">
+            <div style="text-transform: uppercase; letter-spacing: 2px; font-size: 0.85rem; font-weight: 700; color: var(--accent); margin-bottom: 1rem; opacity: 0.9;">Sinaank Digital Therapy</div>
+            <div id="plan-label" style="text-transform: uppercase; letter-spacing: 2px; font-size: 0.9rem; opacity: 0.8;" data-i18n="join.verif_req"></div>
+            <h1 id="plan-name"></h1>
+            <span class="plan-price" id="plan-price"></span>
+            
+            <div class="income-pill-grid">
+                <div class="income-pill">
+                    <div style="font-size: 0.7rem; opacity: 0.7;" data-i18n="income.l1">Direct</div>
+                    <div style="font-weight: 800; font-size: 1.2rem;" id="inc-l1">₹--</div>
+                </div>
+                <div class="income-pill">
+                    <div style="font-size: 0.7rem; opacity: 0.7;" data-i18n="income.l2">Level 2</div>
+                    <div style="font-weight: 800; font-size: 1.2rem;" id="inc-l2">₹--</div>
+                </div>
+                <div class="income-pill">
+                    <div style="font-size: 0.7rem; opacity: 0.7;" data-i18n="income.l3">Level 3</div>
+                    <div style="font-weight: 800; font-size: 1.2rem;" id="inc-l3">₹--</div>
+                </div>
+            </div>
+
+            <button class="btn-pay" id="payBtn" data-i18n="btn.join">Join Sinaank Digital Therapy</button>
+            <div style="margin-top: 1.5rem; font-size: 0.8rem; opacity: 0.7;" data-i18n="join.secure_pay">Secure Payment via Razorpay</div>
+            <div style="margin-top: 0.5rem; font-size: 0.8rem; opacity: 0.7;" data-i18n="join.req_mobile">Verified Mobile & Profile Required</div>
+        </div>
+    </div>
+
+    <!-- OTP Verification Modal -->
+    <div class="otp-overlay" id="otpModal">
+        <div class="otp-card">
+            <h2 style="margin: 0; font-size: 1.6rem; font-weight: 800; color: var(--text-main);" data-i18n="join.otp.title">Verify Mobile</h2>
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem;" data-i18n="join.otp.desc">Enter your 10-digit mobile number</p>
+            <div id="otp-message" class="error-text" style="display: none; margin-bottom: 1rem; color: #ef4444; background: #fee2e2; padding: 0.75rem; border-radius: 12px; font-size: 0.9rem;"></div>
+            
+            <div id="mobile-step" style="display: block;">
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" id="otp-name" class="form-input" placeholder="Enter your full name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Mobile Number</label>
+                    <input type="tel" id="otp-mobile" class="form-input" placeholder="Enter 10-digit mobile" maxlength="10">
+                </div>
+                <button class="btn-register" id="send-otp-btn" style="width: 100%; font-weight: 700;">Send OTP <span id="send-spinner" class="spinner hidden"></span></button>
+            </div>
+
+            <div id="otp-step" style="display: none;">
+                <h2 class="otp-title">📱 Verification</h2>
+                <p class="otp-desc">हमने आपके मोबाइल पर कोड भेजा है</p>
+                <p style="text-align: center; font-size: 0.8rem; color: var(--text-muted); margin-top: -10px; margin-bottom: 1rem;">OTP SMS या voice call के माध्यम से आ सकता है</p>
+                <div class="form-group">
+                    <input type="tel" id="otpInput" class="form-input" placeholder="Enter 6-digit OTP" maxlength="6" style="text-align: center; letter-spacing: 5px; font-size: 1.2rem;">
+                </div>
+                <button class="btn-register" id="verify-otp-btn" style="width: 100%; font-weight: 700;">सत्यापित करें और आगे बढ़ें <span id="verify-spinner" class="spinner hidden"></span></button>
+                <div id="resend-container" class="resend-text disabled" style="margin-top: 1rem; font-size: 0.9rem;">
+                    Resend OTP in <span id="timer">30</span>s
+                </div>
+            </div>
+            
+            <div id="cancel-otp-btn" style="margin-top: 1.5rem; color: var(--text-muted); cursor: pointer; font-weight: 600; font-size: 0.9rem; text-decoration: underline;">Cancel</div>
+        </div>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        let rawPlanId = params.get('plan') || 'growth';
+        if (rawPlanId === 'basic') rawPlanId = 'starter';
+        if (rawPlanId === 'business') rawPlanId = 'growth';
+        const planId = rawPlanId;
+        const sponsorId = params.get('ref') || '';
+
+        const PLANS = {
+            starter: { name: 'Starter Plan', price: 779, l1: 120, l2: 80, l3: 50, key: 'plans.starter.name' },
+            growth: { name: 'Growth Plan', price: 2990, l1: 450, l2: 250, l3: 150, key: 'plans.growth.name' }
+        };
+
+        const currentPlan = PLANS[planId] || PLANS.growth;
+
+        function showMessage(msg, isError = true) {
+            const el = document.getElementById('otp-message');
+            el.textContent = msg;
+            el.style.display = 'block';
+            el.style.color = isError ? '#ef4444' : '#10b981';
+            el.style.background = isError ? '#fee2e2' : '#ecfdf5';
+        }
+
+        function initApp() {
+            document.getElementById('plan-name').textContent = currentPlan.name;
+            document.getElementById('plan-price').textContent = `₹${currentPlan.price}`;
+            document.getElementById('inc-l1').textContent = `₹${currentPlan.l1}`;
+            document.getElementById('inc-l2').textContent = `₹${currentPlan.l2}`;
+            document.getElementById('inc-l3').textContent = `₹${currentPlan.l3}`;
+            
+            document.getElementById('payBtn').addEventListener('click', openOtp);
+            document.getElementById('send-otp-btn').addEventListener('click', sendOtp);
+            document.getElementById('verify-otp-btn').addEventListener('click', verifyOtp);
+            document.getElementById('cancel-otp-btn').addEventListener('click', closeOtp);
+            
+            // Production ready: removed all console logs
+        }
+
+        initApp();
+
+        let verifiedMobile = null;
+        let currentSessionId = null;
+
+        function openOtp() { document.getElementById('otpModal').style.display = 'flex'; }
+        function closeOtp() { document.getElementById('otpModal').style.display = 'none'; }
+
+        async function sendOtp() {
+            const name = document.getElementById('otp-name').value.trim();
+            const mobile = document.getElementById('otp-mobile').value;
+            
+            if (!name || name.length < 2) { showMessage("कृपया अपना पूरा नाम दर्ज करें"); return; }
+            if (!/^\d{10}$/.test(mobile)) { showMessage("अमान्य मोबाइल नंबर (10 अंक आवश्यक)"); return; }
+
+            const btn = document.getElementById('send-otp-btn');
+            btn.disabled = true; 
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `Sending OTP... <span id="send-spinner" class="spinner"></span>`;
+            document.getElementById('otp-message').style.display = 'none';
+
+            const url = "https://sdp-backend-production-c758.up.railway.app/api/auth/send-otp";
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mobile: mobile })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    currentSessionId = data.data.sessionId;
+                    document.getElementById("mobile-step").style.display = "none";
+                    document.getElementById("otp-step").style.display = "block";
+                    verifiedMobile = mobile;
+                    startResendTimer();
+                } else { showMessage(data.message || "OTP भेजने में समस्या हुई, कृपया पुनः प्रयास करें"); }
+            } catch (err) { showMessage("Network issue. Please check connection"); } finally { btn.disabled = false; btn.innerHTML = originalText; }
+        }
+
+        function startResendTimer() {
+            let resendTimer = 30;
+            const container = document.getElementById('resend-container');
+            const timerSpan = document.getElementById('timer');
+            
+            container.innerHTML = `Resend OTP in <span id="timer">${resendTimer}</span>s`;
+            container.classList.add('disabled');
+            container.onclick = null;
+
+            const interval = setInterval(() => {
+                resendTimer--;
+                const ts = document.getElementById('timer');
+                if (ts) ts.textContent = resendTimer;
+
+                if (resendTimer <= 0) {
+                    clearInterval(interval);
+                    container.classList.remove('disabled');
+                    container.innerHTML = `<span style="color: #4f46e5; font-weight: 700; text-decoration: underline; cursor: pointer;">Resend OTP</span>`;
+                    container.onclick = sendOtp;
+                }
+            }, 1000);
+        }
+
+        async function verifyOtp() {
+            const otp = document.getElementById("otpInput").value;
+            if (otp.length < 4) { showMessage("कृपया सही OTP दर्ज करें"); return; }
+
+            const btn = document.getElementById('verify-otp-btn');
+            btn.disabled = true; 
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `Verifying... <span id="verify-spinner" class="spinner"></span>`;
+            document.getElementById('otp-message').style.display = 'none';
+
+            const url = "https://sdp-backend-production-c758.up.railway.app/api/auth/verify-otp";
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mobile: verifiedMobile, otp, sessionId: currentSessionId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showMessage("सत्यापन सफल! आगे बढ़ रहे हैं...", false);
+                    
+                    // Store mobile for session persistence
+                    localStorage.setItem("mobile", verifiedMobile);
+                    
+                    if (data.userExists) {
+                        // EXISTING USER -> Dashboard
+                        localStorage.setItem("token", data.token);
+                        localStorage.setItem("ssb_session", JSON.stringify({
+                            role: data.user.role,
+                            kit_activated: data.user.kit_activated,
+                            name: data.user.name
+                        }));
+                        setTimeout(() => {
+                            window.location.href = "/dashboard/dashboard.html";
+                        }, 1000);
+                    } else {
+                        // NEW USER -> Payment/Registration
+                        const name = document.getElementById('otp-name').value.trim();
+                        sessionStorage.setItem("sinaank_reg_name", name);
+                        
+                        setTimeout(() => {
+                            window.location.href = `payment-v2.html?mobile=${verifiedMobile}&plan=${planId}&session=${currentSessionId}${sponsorId ? '&ref=' + sponsorId : ''}`;
+                        }, 1500);
+                    }
+                } else { 
+                    showMessage(data.message || "गलत कोड दर्ज हुआ है। कृपया पुनः प्रयास करें।"); 
+                }
+            } catch (err) { showMessage("Verification issue. Please check connection"); } finally { btn.disabled = false; btn.innerHTML = originalText; }
+        }
+    </script>
+</body>
+</html>

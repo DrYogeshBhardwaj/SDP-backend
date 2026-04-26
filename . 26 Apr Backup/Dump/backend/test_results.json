@@ -1,0 +1,117 @@
+[
+  {
+    "msg": "Starting Payout Engine Test...",
+    "data": null
+  },
+  {
+    "msg": "Admin Reg:",
+    "data": {
+      "success": true,
+      "message": "Registration processed successfully"
+    }
+  },
+  {
+    "msg": "Created Admin:",
+    "data": "e9c8842c-5aa6-4976-9a90-a31f1be2fbc0"
+  },
+  {
+    "msg": "Created Seeder:",
+    "data": "d83541d6-6803-42fd-9a80-fcb57f497843 with ₹500 balance"
+  },
+  {
+    "msg": "\n[Test 1] Requesting Payout of ₹500 for SEEDER...",
+    "data": null
+  },
+  {
+    "msg": "Payout Response:",
+    "data": {
+      "success": true,
+      "message": "Payout requested successfully",
+      "data": {
+        "payout_id": "080c3f9c-1977-4f22-b273-88ec88d9f1c9",
+        "requested_amount": 500,
+        "status": "PENDING"
+      }
+    }
+  },
+  {
+    "msg": "Expected Wallet Balance (Not Deducted Yet): ₹500, Actual: ₹0",
+    "data": null
+  },
+  {
+    "msg": "\n[Test 2] Attempting second payout request while PENDING...",
+    "data": null
+  },
+  {
+    "msg": "Double Request Response:",
+    "data": {
+      "success": false,
+      "message": "Insufficient balance to request payout"
+    }
+  },
+  {
+    "msg": "\n[Test 3] Admin fetching pending payouts...",
+    "data": null
+  },
+  {
+    "msg": "Found pending payouts:",
+    "data": 1
+  },
+  {
+    "msg": "\n[Test 4] Admin Rejecting Payout ID: 080c3f9c-1977-4f22-b273-88ec88d9f1c9",
+    "data": null
+  },
+  {
+    "msg": "Reject Response:",
+    "data": {
+      "success": true,
+      "message": "Payout rejected successfully",
+      "data": {
+        "status": "REJECTED",
+        "remarks": "Test Rejection"
+      }
+    }
+  },
+  {
+    "msg": "Expected Wallet Balance (Still Not Deducted): ₹500, Actual: ₹500",
+    "data": null
+  },
+  {
+    "msg": "\n[Test 5] SEEDER requesting payout again after previous rejection...",
+    "data": null
+  },
+  {
+    "msg": "New Payout Created ID: 6d094808-bbe8-4336-98d9-a495d474947d",
+    "data": null
+  },
+  {
+    "msg": "\n[Test 6] Admin Approving Payout ID: 6d094808-bbe8-4336-98d9-a495d474947d",
+    "data": null
+  },
+  {
+    "msg": "Approve Response:",
+    "data": {
+      "success": true,
+      "message": "Payout approved successfully"
+    }
+  },
+  {
+    "msg": "Expected Wallet Balance (Deducted): ₹0, Actual: ₹0",
+    "data": null
+  },
+  {
+    "msg": "Created PAYOUT transactions: 1",
+    "data": null
+  },
+  {
+    "msg": "\n[Test 7] Admin attempting to approve an already approved payout...",
+    "data": null
+  },
+  {
+    "msg": "Double Approve Response:",
+    "data": {
+      "success": false,
+      "message": "Cannot approve payout because it is already APPROVED"
+    }
+  }
+]

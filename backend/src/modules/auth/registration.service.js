@@ -43,52 +43,20 @@ const registerUser = async ({ mobile, sponsorCode, name, upiId }) => {
                 role: 'PARTNER',
                 referralCode,
                 sponsorId,
-                minutesBalance: 3600,
+                minutesBalance: 20,
+                isBusinessUnlocked: false,
                 goalLockUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days lock default
             }
         });
 
         // 4. Initialize Wallets
         await tx.wallet.create({ data: { userId: user.id, type: 'CASH', balance: 0 } });
-        await tx.wallet.create({ data: { userId: user.id, type: 'MINUTE', balance: 3600 } });
+        await tx.wallet.create({ data: { userId: user.id, type: 'MINUTE', balance: 20 } });
 
-        // 5. MLM Commission Distribution (₹100 / ₹80)
-        if (sponsorId) {
-            // Level 1: ₹100
-            await tx.wallet.updateMany({
-                where: { userId: sponsorId, type: 'CASH' },
-                data: { balance: { increment: 100 } }
-            });
-            await tx.transaction.create({
-                data: {
-                    userId: sponsorId,
-                    fromUserId: user.id,
-                    amount: 100,
-                    type: 'CREDIT',
-                    category: 'BONUS',
-                    description: `Direct Comm from ${mobile}`
-                }
-            });
-
-            // Level 2 (Sponsor's Sponsor): ₹80
-            const sponsorObj = await tx.user.findUnique({ where: { id: sponsorId } });
-            if (sponsorObj && sponsorObj.sponsorId) {
-                await tx.wallet.updateMany({
-                    where: { userId: sponsorObj.sponsorId, type: 'CASH' },
-                    data: { balance: { increment: 80 } }
-                });
-                await tx.transaction.create({
-                    data: {
-                        userId: sponsorObj.sponsorId,
-                        fromUserId: user.id,
-                        amount: 80,
-                        type: 'CREDIT',
-                        category: 'BONUS',
-                        description: `Team Comm from ${mobile}`
-                    }
-                });
-            }
-        }
+        // NOTE: MLM Commission is now handled in the Payment Upgrade flow (₹299)
+        // Experience First -> Earn After Upgrade
+        
+        return user;
 
         return user;
     });

@@ -216,7 +216,7 @@
         <header class="header-top">
             <div style="display: flex; align-items: center; gap: 10px;">
                 <img src="Logo.png" alt="Logo" style="width: 30px; height: 30px; border-radius: 5px;">
-                <div id="header-name" style="font-weight: 700; color: var(--primary);">Sinaank Therapy</div>
+                <div id="header-name" style="font-weight: 700; color: var(--primary);">अनुभव सत्र | Sinaank Therapy</div>
             </div>
 
             <div id="header-mobile" style="font-family: monospace; opacity: 0.7; font-size: 0.8rem;">+91 ----------</div>
@@ -315,13 +315,13 @@
 
                 <div class="card-title" style="font-size: 0.6rem;">SESSION DURATION</div>
                 <div class="time-selector" style="margin: 1rem 0;">
-                    <button class="time-btn" onclick="setTime(2, this)">2 MIN</button>
-                    <button class="time-btn" onclick="setTime(5, this)">5 MIN <small style="display:block; font-size:0.5rem; opacity:0.5;">LOCK</small></button>
-                    <button class="time-btn active" onclick="setTime(10, this)">10 MIN <small style="display:block; font-size:0.5rem; opacity:0.5;">LOCK</small></button>
+                    <button id="btn-time-2" class="time-btn" onclick="setTime(2, this)">2 MIN</button>
+                    <button id="btn-time-5" class="time-btn" onclick="setTime(5, this)">5 MIN 🔒</button>
+                    <button id="btn-time-10" class="time-btn" onclick="setTime(10, this)">10 MIN 🔒</button>
                 </div>
 
 
-                <button onclick="startTherapy()" id="global-sync-btn" class="btn-primary glow-start btn-pulse" style="width: 100%; padding: 25px; margin-top: 1rem;">START SINAANK THERAPY</button>
+                <button onclick="startTherapy()" id="global-sync-btn" class="btn-primary glow-start btn-pulse" style="width: 100%; padding: 25px; margin-top: 1rem;">अनुभव शुरू करें (START)</button>
             </div>
         </div>
 
@@ -423,9 +423,16 @@
                 document.getElementById('header-mobile').innerText = `+91 ${userData.mobile}`;
                 
                 if (userData.plan === 'FREE') {
-                    // Just show locks, don't force switch to 2 if default is 10
+                    selectedTime = 2;
+                    document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+                    document.getElementById('btn-time-2').classList.add('active');
+                    document.getElementById('timer').innerText = "02:00";
+                } else {
+                    selectedTime = 10;
+                    document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+                    document.getElementById('btn-time-10').classList.add('active');
+                    document.getElementById('timer').innerText = "10:00";
                 }
-
 
                 calculateAuto();
             }

@@ -1,0 +1,91 @@
+[
+  {
+    "msg": "Starting Master Admin & Rank Milestone Test...",
+    "data": null
+  },
+  {
+    "msg": "Database cleaned.",
+    "data": null
+  },
+  {
+    "msg": "Master Admin Ready:",
+    "data": null
+  },
+  {
+    "msg": "Top Level Seeder Ready with Ref Code: SDP-72NHVV",
+    "data": null
+  },
+  {
+    "msg": "System Stats Response:",
+    "data": {
+      "success": true,
+      "message": "System stats retrieved",
+      "data": {
+        "total_users": 3,
+        "total_seeders": 1,
+        "total_wallet_balance": 0,
+        "total_pending_payout": 0,
+        "pending_payout_count": 0,
+        "unread_messages_count": 0,
+        "total_cash_distributed": 0,
+        "total_minutes_balance": 7300,
+        "total_minutes_used": 0
+      }
+    }
+  },
+  {
+    "msg": "Initial Users List Retrieved",
+    "data": null
+  },
+  {
+    "msg": "\nSimulating 10 direct referrals to hit 'Builder' Rank (Requires 10 Directs, ₹300 Bonus)...",
+    "data": null
+  },
+  {
+    "msg": "\n11 Referrals Registered and Purchased.",
+    "data": null
+  },
+  {
+    "msg": "\nFinal Validation for Seeder cff19453-a28b-4aff-86c6-30085be43a38:",
+    "data": null
+  },
+  {
+    "msg": "Expected Wallet Cash: ₹2720. Actual: ₹2420",
+    "data": null
+  },
+  {
+    "msg": "Ranks Achieved: ",
+    "data": null
+  },
+  {
+    "msg": "ERROR: Builder Rank was NOT awarded.",
+    "data": null
+  },
+  {
+    "msg": "ERROR: BonusLedger anomaly:",
+    "data": []
+  },
+  {
+    "msg": "ERROR: SystemLog anomaly.",
+    "data": null
+  },
+  {
+    "msg": "\nTesting Admin Block/Unblock Target user...",
+    "data": null
+  },
+  {
+    "msg": "Status after Block:",
+    "data": "BLOCKED"
+  },
+  {
+    "msg": "Status after Unblock:",
+    "data": "ACTIVE"
+  },
+  {
+    "msg": "System Logs generated for Block/Unblock:",
+    "data": [
+      "UNBLOCK_USER",
+      "BLOCK_USER"
+    ]
+  }
+]

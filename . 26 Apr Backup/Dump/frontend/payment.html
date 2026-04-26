@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Secure Payment | SDT</title>
+    
+    <!-- Google Fonts: Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Razorpay SDK -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>SINAANK DIGITAL THERAPY</h1>
+            <span class="hindi-title">सिनांक डिजिटल थेरेपी</span>
+        </header>
+
+        <!-- Payment Card -->
+        <main>
+            <div class="card">
+                <h2>Complete Payment</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 2rem;">Unlock your full digital therapy</p>
+                
+                <div style="background: #f9fafb; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; border: 1px dashed #e5e7eb;">
+                    <span style="font-size: 0.875rem; color: var(--text-secondary);">Subscription Total</span>
+                    <div style="font-size: 2rem; font-weight: 700; color: var(--primary-color);">₹250.00</div>
+                </div>
+
+                <!-- Registration Information -->
+                <div style="margin-bottom: 1.5rem;">
+                    <div style="margin-bottom: 1rem;">
+                        <span style="font-size: 0.8rem; color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">Full Name (नाम)</span>
+                        <input id="name" type="text" placeholder="Enter full name" style="width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 8px;">
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <span style="font-size: 0.8rem; color: var(--text-secondary); display: block; margin-bottom: 0.5rem;">Create 4-digit PIN (पिन)</span>
+                        <input id="pin" type="tel" placeholder="XXXX" maxlength="4" style="width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 8px; text-align: center; letter-spacing: 0.5rem; font-weight: 700;">
+                    </div>
+                </div>
+
+                <button id="payBtn" class="btn btn-primary" style="margin-bottom: 1rem;">Pay Securely Now</button>
+                <button id="bypassBtn" class="btn" style="background: #f3f4f6; color: var(--text-secondary); width: 100%; border: 1px solid #e5e7eb; padding: 0.75rem; border-radius: 10px; font-weight: 600; cursor: pointer;">Bypass Payment (Testing)</button>
+
+                <div id="msg" class="msg"></div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer>
+            <p class="small-text">Secure transaction powered by Razorpay</p>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        const API_BASE = "http://localhost:5000"; // Fixed for local testing bypass
+        const sessionToken = localStorage.getItem("session");
+
+        async function startPayment() {
+            const btn = document.getElementById("payBtn");
+            const msg = document.getElementById("msg");
+
+            if (!sessionToken) {
+                msg.innerText = "Access expired. Please re-verify mobile.";
+                msg.className = "msg msg-error";
+                setTimeout(() => window.location.href = "join.html", 2000);
+                return;
+            }
+
+            btn.disabled = true;
+            msg.innerText = "Initializing payment...";
+            msg.className = "msg";
+
+            try {
+                // Step 1: Create Order
+                const res = await fetch(`${API_BASE}/api/payment/create-order`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${sessionToken}`
+                    },
+                    body: JSON.stringify({ planId: "STARTER" }) // Single plan for V1
+                });
+
+                const data = await res.json();
+
+                if (!data.success) {
+                    msg.innerText = data.error || "Order creation failed.";
+                    msg.className = "msg msg-error";
+                    btn.disabled = false;
+                    return;
+                }
+
+                // Step 2: Open Razorpay
+                const options = {
+                    key: data.key_id, // Dynamically use key from backend
+                    amount: data.amount,
+                    currency: data.currency || "INR",
+                    order_id: data.order_id,
+                    name: "Sinaank Digital Therapy",
+                    description: "Therapy Subscription",
+                    handler: async function (response) {
+                        msg.innerText = "Verifying payment...";
+                        msg.className = "msg msg-success";
+                        
+                        const name = document.getElementById("name").value.trim();
+                        const pin = document.getElementById("pin").value.trim();
+                        const mobile = localStorage.getItem("mobile");
+                        const refCode = localStorage.getItem("refCode");
+
+                        try {
+                            const verifyRes = await fetch(`${API_BASE}/api/payment/verify`, {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Authorization": `Bearer ${sessionToken}`
+                                },
+                                body: JSON.stringify({
+                                    ...response,
+                                    name,
+                                    pin,
+                                    mobile,
+                                    refCode,
+                                    plan_type: "STARTER",
+                                    amount: 250
+                                })
+                            });
+
+                            const verifyData = await verifyRes.json();
+
+                            if (verifyData.success) {
+                                msg.innerText = "Payment Successful! Redirecting...";
+                                setTimeout(() => {
+                                    window.location.href = "dashboard.html";
+                                }, 1500);
+                            } else {
+                                msg.innerText = "Payment verification failed.";
+                                msg.className = "msg msg-error";
+                                btn.disabled = false;
+                            }
+                        } catch (err) {
+                            msg.innerText = "Network error during verification.";
+                            msg.className = "msg msg-error";
+                            btn.disabled = false;
+                        }
+                    },
+                    prefill: {
+                        contact: "" // Can be prefilled if stored
+                    },
+                    theme: {
+                        color: "#0052cc"
+                    }
+                };
+
+                const rzp = new Razorpay(options);
+                rzp.open();
+
+            } catch (err) {
+                msg.innerText = "Network issue. Please try again.";
+                msg.className = "msg msg-error";
+                btn.disabled = false;
+            }
+        }
+
+
+        async function bypassPayment() {
+            const btn = document.getElementById("bypassBtn");
+            const msg = document.getElementById("msg");
+            const name = document.getElementById("name").value.trim();
+            const pin = document.getElementById("pin").value.trim();
+            const mobile = localStorage.getItem("mobile");
+            const refCode = localStorage.getItem("refCode");
+
+            if (!name || !pin || pin.length !== 4) {
+                msg.innerText = "Please enter Name and a 4-digit PIN";
+                msg.className = "msg msg-error";
+                return;
+            }
+
+            btn.disabled = true;
+            msg.innerText = "Bypassing payment...";
+            msg.className = "msg";
+
+            try {
+                // Point to the dedicated bypass endpoint
+                const res = await fetch(`${API_BASE}/api/payment/bypass`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${sessionToken}`
+                    },
+                    // We still send the registration data so the backend can "verify" it in dummy mode
+                    body: JSON.stringify({
+                        isDemo: true,
+                        name,
+                        pin,
+                        mobile,
+                        refCode,
+                        plan_type: "STARTER",
+                        amount: 250
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    msg.innerText = "Bypass Successful! Redirecting...";
+                    msg.className = "msg msg-success";
+                    setTimeout(() => window.location.href = "dashboard.html", 1000);
+                } else {
+                    msg.innerText = data.error || "Bypass failed.";
+                    msg.className = "msg msg-error";
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                msg.innerText = "Network error during bypass.";
+                msg.className = "msg msg-error";
+                btn.disabled = false;
+            }
+        }
+
+        // Attach Event Listeners
+        document.getElementById("payBtn").addEventListener("click", startPayment);
+        document.getElementById("bypassBtn").addEventListener("click", bypassPayment);
+    </script>
+</body>
+</html>

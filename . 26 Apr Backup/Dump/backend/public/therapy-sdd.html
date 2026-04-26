@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SINAANK SDD — Gut & Digestion Therapy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/focus-mode.css">
+    <script src="../assets/js/config.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script src="../assets/js/theme-engine.js"></script>
+    <script src="js/sdd_engine.js"></script>
+    <script src="js/personal_start_engine.js"></script>
+    <script src="js/i18n.js"></script>
+<style>
+    /* Demo Badge */
+    .demo-badge {
+        background: #ef4444;
+        color: white;
+        text-align: center;
+        padding: 0.5rem;
+        font-weight: 800;
+        font-size: 0.8rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 10000;
+    }
+</style>
+    <style>
+        .btn-start { background: linear-gradient(135deg, #ff6b9d, #c0265c); color: #fff; }
+        .focus-orb {
+            border-color: rgba(255,107,157,0.15);
+            background: radial-gradient(circle, rgba(255,107,157,0.10) 0%, rgba(255,107,157,0.02) 50%, transparent 70%);
+            box-shadow: 0 0 60px rgba(255,107,157,0.06), inset 0 0 40px rgba(255,107,157,0.03);
+            animation: orbPulseR 4.5s ease-in-out infinite;
+        }
+        @keyframes orbPulseR {
+            0%,100% { transform: scale(0.95); }
+            50%      { transform: scale(1.05); box-shadow: 0 0 80px rgba(255,107,157,0.12); }
+        }
+        .warning-note {
+            font-size: 0.8rem; color: rgba(255,159,67,0.75);
+            background: rgba(255,159,67,0.06); border: 1px solid rgba(255,159,67,0.15);
+            border-radius: 10px; padding: 0.75rem 1rem;
+            margin-bottom: 1.5rem; line-height: 1.5;
+        }
+    </style>
+</head>
+<body class="auth-locked">
+    <div class="demo-badge">Sinaank Demo Mode — Clinical Therapy Beta</div>
+
+    <div id="setup-screen">
+        <div class="setup-inner">
+            <div class="branding-tag">SINAANK · SDD</div>
+            <h1 class="module-title" data-i18n="therapy.sdd.title">पाचन थेरेपी (Digestion)</h1>
+            <p class="module-subtitle" data-i18n="therapy.sdd.subtitle">Optimize metabolic rhythm with calibrated frequencies. Rest or sit still for 10 minutes post-meal.</p>
+
+            <div class="mode-grid">
+                <div class="mode-btn active" id="mode-sitting">
+                    <h3>Sitting Still</h3>
+                    <p>Post-meal digestive focus. 10 minutes.</p>
+                </div>
+                <div class="mode-btn" id="mode-walking">
+                    <h3>Gentle Pacing</h3>
+                    <p>Very slow mindful walk. Natural flow.</p>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn-start" id="btn-new">नई थेरेपी शुरू करें</button>
+                <button class="btn-secondary" id="btn-cont">पिछली थेरेपी जारी रखें</button>
+            </div>
+            
+            <div class="headphone-note" data-i18n="therapy.headphone_note">🎧 Optional earphones · Calm environment</div>
+        </div>
+    </div>
+
+    <div id="balance-error">
+        <div class="err-icon">💳</div>
+        <h3>Insufficient Minutes</h3>
+        <p>Minimum 2 minutes are required to start a therapy session.</p>
+        <a href="/dashboard/dashboard.html?topup=1" class="topup-link">Top-up Now</a>
+    </div>
+
+    <div id="focus-root"></div>
+
+    <script>
+        if (!sessionStorage.getItem('sinaank_intro')) {
+            window.location.href = '/dashboard/therapy.html';
+        }
+
+        let selectedMode = 'sitting';
+        function selectMode(m) {
+            selectedMode = m;
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('mode-' + m).classList.add('active');
+        }
+
+        async function beginSession(isNew) {
+            const btnNew = document.getElementById('btn-new');
+            const btnCont = document.getElementById('btn-cont');
+            
+            // --- MANDATORY CLICK AUDIO FIX ---
+            try {
+                const startSound = new Audio('/assets/audio/common/therapy_start.mp3');
+                startSound.volume = 1.0;
+                
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                if (ctx.state === 'suspended') await ctx.resume();
+                
+                await startSound.play();
+
+            } catch (err) {
+                console.warn("[Audio] Blocked or failed", err);
+            }
+            // ---------------------------------
+
+            if (btnNew) { btnNew.disabled = true; btnNew.textContent = 'तैयार हो रहा है...'; }
+            if (btnCont) { btnCont.disabled = true; }
+
+            await FocusUIController.setup({ module: 'SDD', mode: selectedMode, isNew: isNew });
+        }
+
+        // Add event listeners for CSP compliance
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('mode-sitting')?.addEventListener('click', () => selectMode('sitting'));
+            document.getElementById('mode-walking')?.addEventListener('click', () => selectMode('walking'));
+            document.getElementById('btn-new')?.addEventListener('click', () => beginSession(true));
+            document.getElementById('btn-cont')?.addEventListener('click', () => beginSession(false));
+
+            // EXTRA SAFETY FALLBACK
+            document.body.addEventListener("click", () => {
+                const audio = new Audio('/assets/audio/common/therapy_start.mp3');
+                audio.volume = 0.5;
+                audio.play().catch(()=>{});
+            }, { once: true });
+        });
+    </script>
+</body>
+</html>
+

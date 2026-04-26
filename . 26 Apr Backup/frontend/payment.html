@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment | Sinaank Therapy</title>
+    <link rel="stylesheet" href="css/v1.css">
+    <script src="js/config.js"></script>
+    <style>
+        .payment-card {
+            width: 450px;
+            padding: 3.5rem;
+            margin: 10vh auto;
+            text-align: center;
+        }
+        .price-tag {
+            font-size: 3rem;
+            font-weight: 900;
+            margin: 1rem 0;
+            color: var(--primary);
+        }
+        .benefit-list {
+            text-align: left;
+            margin: 2rem 0;
+            font-size: 0.95rem;
+        }
+        .benefit-item {
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+        }
+    </style>
+</head>
+<body class="scientific-grid">
+    <div class="payment-card glass" style="position: relative;">
+        <button onclick="activateByPassword()" style="position: absolute; top: 0.5rem; right: 0.5rem; padding: 1rem; background: none; border: none; opacity: 0.4; cursor: pointer; font-size: 1.2rem; z-index: 9999; filter: drop-shadow(0 0 5px var(--primary-glow));" title="System Activation">⚙️</button>
+        
+        <img src="Logo.png" alt="Sinaank Logo" style="width: 120px; height: auto; margin-bottom: 1.5rem; filter: drop-shadow(0 0 10px var(--primary-glow)); pointer-events: none;">
+
+        
+        <div class="card-title">Sinaank Therapy</div>
+
+
+
+        <h2>Now Heal your Aura digitally</h2>
+        
+        <div class="price-tag">₹299</div>
+        
+        <div class="benefit-list">
+            <div class="benefit-item">✓ 3600 Minutes Initial Balance</div>
+            <div class="benefit-item">✓ Lifetime Identity Access</div>
+            <div class="benefit-item">✓ All 9 Planetary Master Frequencies</div>
+            <div class="benefit-item">✓ Premium Support Activated</div>
+        </div>
+
+        <div style="margin-bottom: 2rem; text-align: left;">
+            <label style="font-size: 0.7rem; color: var(--primary); font-weight: 700; letter-spacing: 1px;">FULL PARTNER NAME</label>
+            <input type="text" id="partner-name" placeholder="Enter Legal Name" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); border-radius: 8px; color: #fff; margin-top: 5px; font-size: 1rem; margin-bottom: 1rem;">
+            
+            <label style="font-size: 0.7rem; color: var(--primary); font-weight: 700; letter-spacing: 1px;">PAYOUT UPI ID</label>
+            <input type="text" id="upi-id" placeholder="example@upi" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); border-radius: 8px; color: #fff; margin-top: 5px; font-size: 1rem;">
+        </div>
+
+        <button onclick="processPayment()" id="pay-btn" class="btn-primary" style="width: 100%;">Finalize Activation</button>
+        <p id="msg" style="margin-top: 1.5rem; font-size: 0.9rem;"></p>
+
+
+    </div>
+
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const mobile = urlParams.get('mobile') || 
+                       sessionStorage.getItem('temp_mobile') || 
+                       localStorage.getItem('temp_mobile');
+                       
+        if (!mobile) {
+            console.error("Mobile number missing");
+            window.location.href = "join.html";
+        } else {
+            // Keep it synced
+            sessionStorage.setItem('temp_mobile', mobile);
+            localStorage.setItem('temp_mobile', mobile);
+        }
+
+        async function processPayment() {
+            const btn = document.getElementById('pay-btn');
+            const name = document.getElementById('partner-name').value;
+            const upi = document.getElementById('upi-id').value;
+
+            if (!name || !upi) {
+                alert("Please enter Name and UPI ID first.");
+                return;
+            }
+
+            btn.innerText = "Processing...";
+            btn.disabled = true;
+
+            try {
+                // 1. Create Order
+                const res = await fetch(CONFIG.API_BASE_URL + '/api/payment/create-order', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ mobile, amount: 299 })
+                });
+                
+                if (!res.ok) {
+                    const errData = await res.json();
+                    throw new Error(errData.message || "Order creation failed");
+                }
+                
+                const orderData = await res.json();
+
+                if (!orderData.success) throw new Error("Order creation failed");
+
+
+                // 2. REAL Razorpay Integration
+                const options = {
+                    "key": orderData.data.key_id || "rzp_test_Se82i5RaLrL0wY",
+                    "amount": orderData.data.amount,
+                    "currency": "INR",
+                    "name": "Sinaank Digital Therapy",
+                    "description": "V1 Master License Activation",
+                    "order_id": orderData.data.order_id,
+                    "handler": async function (response){
+                        await finalizeRegistration(response.razorpay_order_id);
+                    },
+                    "prefill": {
+                        "contact": mobile
+                    },
+                    "theme": {
+                        "color": "#00D8FF"
+                    }
+                };
+                const rzp = new Razorpay(options);
+                rzp.open();
+                
+                rzp.on('payment.failed', function (response){
+                    alert("Payment Failed: " + response.error.description);
+                    btn.innerText = "Try Again";
+                    btn.disabled = false;
+                });
+
+            } catch (e) {
+                document.getElementById('msg').innerText = "Payment Error: " + e.message;
+                btn.innerText = "Try Again";
+                btn.disabled = false;
+            }
+        }
+
+        async function finalizeRegistration(order_id) {
+            const sponsorCode = localStorage.getItem('refCode') || '';
+            const name = document.getElementById('partner-name').value;
+            const upiId = document.getElementById('upi-id').value;
+            
+            const res = await fetch(CONFIG.API_BASE_URL + '/api/payment/verify-payment', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ 
+                    order_id, 
+                    mobile,
+                    sponsorCode,
+                    name,
+                    upiId
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                handleSuccess(data.data);
+            } else {
+                const errorMsg = data.message || "Activation failed";
+                document.getElementById('msg').innerText = "Error: " + errorMsg;
+                alert("Server Error: " + errorMsg);
+                throw new Error(errorMsg);
+            }
+        }
+
+        async function activateByPassword() {
+            const password = prompt("Enter Activation Password:");
+            if (!password) return;
+
+            const name = document.getElementById('partner-name').value;
+            const upiId = document.getElementById('upi-id').value;
+            if (!name || !upiId) {
+                alert("Please enter Name and UPI ID first to complete activation.");
+                return;
+            }
+
+            const sponsorCode = localStorage.getItem('refCode') || '';
+            const msg = document.getElementById('msg');
+            msg.innerText = "Verifying Credentials...";
+
+            try {
+                const res = await fetch(CONFIG.API_BASE_URL + '/api/payment/verify-password', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ 
+                        mobile, 
+                        sponsorCode, 
+                        password,
+                        name,
+                        upiId
+                    })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    handleSuccess(data.data);
+                } else {
+                    msg.innerText = "Error: " + (data.message || "Invalid Password");
+                }
+            } catch (e) {
+                msg.innerText = "Activation Error: " + e.message;
+            }
+        }
+
+        function handleSuccess(data) {
+            console.log("Success Data:", data);
+            localStorage.setItem('session', data.token);
+            localStorage.setItem('mobile', mobile);
+            
+            // Small delay to ensure DB sync before dashboard hits /api/me
+            document.getElementById('msg').innerText = "Identity Activated! Synchronizing...";
+            setTimeout(() => {
+                window.location.href = "dashboard.html";
+            }, 1500);
+        }
+    </script>
+    <footer class="main-footer">
+        <div class="footer-links">
+            <a href="index.html">Home</a>
+            <a href="terms.html">Terms & Conditions</a>
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="dashboard.html">Member Hub</a>
+        </div>
+        <div class="copyright">
+            Copyright © 2026 Sinaank Therapy. All Rights Reserved.
+        </div>
+    </footer>
+</body>
+</html>

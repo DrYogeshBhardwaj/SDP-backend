@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sinaank Digital Therapy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="../assets/js/config.js"></script>
+    <script src="../assets/js/api.js"></script>
+    <script src="../public/js/i18n.js"></script>
+    <link rel="stylesheet" href="../public/css/SinaankAssistant.css">
+    <script src="../public/js/SinaankAssistant.js"></script>
+    <style>
+        :root {
+            --bg:        #020818;
+            --surface:   #060f20;
+            --card:      #0a1628;
+            --card2:     #0d1f3c;
+            --border:    rgba(0,209,255,0.10);
+            --cyan:      #00d1ff;
+            --cyan-dim:  rgba(0,209,255,0.15);
+            --cyan-glow: rgba(0,209,255,0.08);
+            --text:      #c8d6e5;
+            --muted:     #4a6080;
+            --muted2:    #2a3a50;
+            --purple:    #7c6bff;
+            --green:     #00e988;
+            --orange:    #ff9f43;
+            --rose:      #ff6b9d;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── Animated background ── */
+        body::before {
+            content: '';
+            position: fixed; inset: 0; z-index: 0;
+            background:
+                radial-gradient(ellipse 80% 50% at 10% 10%, rgba(0,209,255,0.04) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 90% 80%, rgba(124,107,255,0.04) 0%, transparent 60%),
+                radial-gradient(ellipse 40% 30% at 50% 50%, rgba(0,233,136,0.02) 0%, transparent 70%);
+            animation: bgShift 20s ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+        @keyframes bgShift {
+            0%   { opacity: 0.7; }
+            100% { opacity: 1.2; }
+        }
+
+        /* ── Header ── */
+        .header {
+            position: sticky; top: 0; z-index: 100;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1rem 1.5rem;
+            background: rgba(2,8,24,0.85);
+            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+        }
+        .header-left { display: flex; align-items: center; gap: 0.75rem; }
+        .back-btn {
+            width: 38px; height: 38px; border-radius: 12px; border: 1px solid var(--border);
+            background: var(--card); cursor: pointer; color: var(--muted);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; transition: all 0.2s; text-decoration: none;
+        }
+        .back-btn:hover { border-color: var(--cyan-dim); color: var(--cyan); }
+        .admin-logo { height: 36px; width: auto; object-fit: contain; }
+
+        .balance-pill {
+            display: flex; align-items: center; gap: 0.6rem;
+            background: var(--cyan-glow);
+            border: 1px solid var(--border);
+            border-radius: 99px; padding: 0.4rem 1rem;
+        }
+        .balance-pill .dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--cyan);
+            box-shadow: 0 0 8px var(--cyan);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .balance-pill .val { font-size: 0.85rem; font-weight: 600; color: var(--cyan); }
+        .balance-pill .label { font-size: 0.75rem; color: var(--muted); }
+
+        /* ── Content wrapper ── */
+        .content { position: relative; z-index: 1; max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem 5rem; }
+
+        /* ── Hero ── */
+        .hero { text-align: center; padding: 2.5rem 0 2rem; }
+        .hero-tag {
+            display: inline-block; font-size: 0.72rem; font-weight: 700;
+            letter-spacing: 0.2em; text-transform: uppercase; color: var(--cyan);
+            background: var(--cyan-glow); border: 1px solid var(--border);
+            border-radius: 99px; padding: 0.3rem 1rem; margin-bottom: 1.25rem;
+        }
+        .hero h1 { font-size: clamp(1.8rem,4vw,2.6rem); font-weight: 800; line-height: 1.2; margin-bottom: 0.75rem; }
+        .hero h1 span { color: var(--cyan); }
+        .hero p { font-size: 0.95rem; color: var(--muted); max-width: 480px; margin: 0 auto; line-height: 1.7; }
+
+        /* ── Section label ── */
+        .section-label {
+            font-size: 0.7rem; font-weight: 700; letter-spacing: 0.18em;
+            text-transform: uppercase; color: var(--muted);
+            margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem;
+        }
+        .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+        /* ── Body ratio pills ── */
+        .ratio-strip {
+            display: flex; justify-content: center; gap: 0.8rem; flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+        .ratio-pill {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 0.8rem 1rem;
+            text-align: center; min-width: 110px;
+        }
+        .ratio-pill .val { font-size: 1.25rem; font-weight: 800; color: var(--cyan); display: block; }
+        .ratio-pill .lbl { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+
+        /* ── Module grid ── */
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem; margin-bottom: 2.5rem;
+        }
+
+        .module-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px; padding: 1.6rem;
+            text-decoration: none; color: inherit;
+            display: flex; flex-direction: column; gap: 0.75rem;
+            transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+            position: relative; overflow: hidden; cursor: pointer;
+        }
+        .module-card::before {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(circle at 80% 20%, var(--card-glow, transparent) 0%, transparent 70%);
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .module-card:hover { transform: translateY(-4px); }
+        .module-card:hover::before { opacity: 1; }
+
+        /* Per-module glow colors */
+        .m-sdp  { --card-glow: rgba(0,209,255,0.08); }
+        .m-sdp:hover  { border-color: rgba(0,209,255,0.3);  box-shadow: 0 8px 30px rgba(0,209,255,0.08); }
+        .m-sdb  { --card-glow: rgba(124,107,255,0.08); }
+        .m-sdb:hover  { border-color: rgba(124,107,255,0.3); box-shadow: 0 8px 30px rgba(124,107,255,0.08); }
+        .m-sde  { --card-glow: rgba(124,107,255,0.08); }
+        .m-sde:hover  { border-color: rgba(124,107,255,0.3); box-shadow: 0 8px 30px rgba(124,107,255,0.08); }
+        .m-sdm  { --card-glow: rgba(0,233,136,0.08); }
+        .m-sdm:hover  { border-color: rgba(0,233,136,0.3);  box-shadow: 0 8px 30px rgba(0,233,136,0.08); }
+        .m-sds  { --card-glow: rgba(255,159,67,0.08); }
+        .m-sds:hover  { border-color: rgba(255,159,67,0.3);  box-shadow: 0 8px 30px rgba(255,159,67,0.08); }
+        .m-sdd  { --card-glow: rgba(255,107,157,0.08); }
+        .m-sdd:hover  { border-color: rgba(255,107,157,0.3); box-shadow: 0 8px 30px rgba(255,107,157,0.08); }
+
+        .module-icon {
+            width: 52px; height: 52px; border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.6rem; border: 1px solid var(--border);
+            background: var(--card2);
+        }
+        .module-code {
+            font-size: 0.68rem; font-weight: 700; letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+        .module-name { font-size: 1rem; font-weight: 700; }
+        .module-desc { font-size: 0.83rem; color: var(--muted); line-height: 1.6; flex-grow: 1; }
+
+        .module-action {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            font-size: 0.8rem; font-weight: 600; padding: 0.5rem 1rem;
+            border-radius: 8px; border: none; cursor: pointer;
+            width: fit-content; transition: opacity 0.2s, transform 0.2s;
+            text-decoration: none;
+        }
+        .module-action:hover { opacity: 0.85; transform: translateX(2px); }
+
+        /* Color tokens */
+        .m-sdp .module-code { color: var(--cyan); }
+        .m-sdp .module-action { background: linear-gradient(135deg, #00d1ff, #0084a8); color: #000; }
+
+        .m-sdb .module-code { color: var(--purple); }
+        .m-sdb .module-action { background: linear-gradient(135deg, #7c6bff, #4a3dc4); color: #fff; }
+
+        .m-sde .module-code { color: #b57bff; }
+        .m-sde .module-action { background: linear-gradient(135deg, #a855f7, #7e22ce); color: #fff; }
+
+        .m-sdm .module-code { color: var(--green); }
+        .m-sdm .module-action { background: linear-gradient(135deg, #00e988, #00a85e); color: #000; }
+
+        .m-sds .module-code { color: var(--orange); }
+        .m-sds .module-action { background: linear-gradient(135deg, #ff9f43, #c47520); color: #000; }
+
+        .m-sdd .module-code { color: var(--rose); }
+        .m-sdd .module-action { background: linear-gradient(135deg, #ff6b9d, #c0265c); color: #fff; }
+
+        /* ── Time Rules Card ── */
+        .rules-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 20px; padding: 1.5rem 1.75rem;
+            display: flex; gap: 1.5rem; align-items: flex-start;
+        }
+        .rules-icon { font-size: 1.8rem; flex-shrink: 0; margin-top: 0.1rem; }
+        .rules-body h3 { font-size: 0.9rem; font-weight: 700; color: var(--cyan); margin-bottom: 0.75rem; }
+        .rules-body ul {
+            list-style: none; display: flex; flex-direction: column; gap: 0.4rem;
+        }
+        .rules-body li { font-size: 0.83rem; color: var(--muted); display: flex; align-items: center; gap: 0.5rem; }
+        .rules-body li::before { content: '—'; color: var(--border); }
+
+        /* ── No minutes banner ── */
+        .topup-banner {
+            display: none; align-items: center; justify-content: space-between;
+            background: rgba(255,107,157,0.06); border: 1px solid rgba(255,107,157,0.2);
+            border-radius: 14px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; gap: 1rem;
+        }
+        .topup-banner.visible { display: flex; }
+        .topup-banner p { font-size: 0.88rem; color: #ff6b9d; }
+        .topup-btn {
+            background: linear-gradient(135deg, #ff6b9d, #c0265c); color: #fff;
+            border: none; border-radius: 8px; padding: 0.5rem 1rem;
+            font-size: 0.83rem; font-weight: 700; cursor: pointer;
+            text-decoration: none; white-space: nowrap;
+        }
+
+        /* ── Locked state ── */
+        .module-card.locked { opacity: 0.45; pointer-events: none; }
+
+        /* ── Toast ── */
+        .toast-msg {
+            position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
+            background: rgba(10,22,40,0.95); border: 1px solid var(--border);
+            color: var(--text); padding: 0.75rem 1.5rem; border-radius: 99px;
+            font-size: 0.87rem; z-index: 9999; pointer-events: none;
+            animation: fadeInUp 0.3s ease;
+        }
+        @keyframes fadeInUp { from { opacity:0; transform: translate(-50%, 10px); } to { opacity:1; transform: translate(-50%, 0); } }
+    </style>
+</head>
+<body>
+    <!-- Global Nav injected by i18n.js -->
+
+<main class="content">
+    <div class="hero">
+        <div class="hero-tag" data-i18n="therapy.intro.chip">Digital Wellness by Sinaank Digital Therapy</div>
+        <h1 data-i18n="therapy.intro.title">Your <span>SID-Calibrated</span><br>Therapy Session</h1>
+        <p data-i18n="therapy.intro.desc">Each session is personalised to your unique Sinaank ID. Science-backed modules designed to bring calm, focus, and balance.</p>
+
+        <div class="ratio-strip" style="margin-top: 1.5rem;">
+            <div class="ratio-pill"><span class="val">6</span><span class="lbl" data-i18n="therapy.intro.modules_count">Modules</span></div>
+            <div class="ratio-pill"><span class="val">2min</span><span class="lbl" data-i18n="therapy.intro.min_time">Minimum</span></div>
+            <div class="ratio-pill"><span class="val">60min</span><span class="lbl" data-i18n="therapy.intro.max_time">Max Per Session</span></div>
+            <div class="ratio-pill"><span class="val">AI</span><span class="lbl" data-i18n="therapy.intro.sid_powered">SID Powered</span></div>
+        </div>
+    </div>
+
+    <!-- Low balance banner -->
+    <div class="topup-banner" id="topupBanner">
+        <p data-i18n="therapy.insufficient_mins_p">⚠️ अपर्याप्त मिनट — कृपया सत्र शुरू करने के लिए टॉप-अप करें।</p>
+        <a href="/dashboard/dashboard.html?topup=1" class="topup-btn" data-i18n="therapy.topup">अभी टॉप-अप करें</a>
+    </div>
+
+    <div class="section-label" data-i18n="therapy.core_modules">मुख्य थेरेपी मॉड्यूल (Core Modules)</div>
+
+    <div class="modules-grid" id="moduleGrid">
+
+        <!-- SDP -->
+        <a href="/public/therapy-sdp.html" class="module-card m-sdp">
+            <div class="module-icon">🧠</div>
+            <div class="module-code">Sinaank Digital Therapy</div>
+            <div class="module-name" data-i18n="therapy.sdp.title">Sinaank Digital Therapy</div>
+            <p class="module-desc" data-i18n="therapy.sdp.subtitle">अपनी डिजिटल आदतों को पहचानें और अपने मोबाइल उपयोग डीएनए के अनुसार एक थेरेपी प्रोफ़ाइल बनाएं।</p>
+            <span class="module-action" data-i18n="therapy.btn.start">थेरेपी शुरू करें (Begin) →</span>
+        </a>
+
+        <!-- SDB -->
+        <a href="/public/therapy-sdb.html" class="module-card m-sdb">
+            <div class="module-icon">🎵</div>
+            <div class="module-code">SDB · Binaural</div>
+            <div class="module-name" data-i18n="therapy.sdb.title">सिनांक श्वसन थेरेपी</div>
+            <p class="module-desc" data-i18n="therapy.sdb.subtitle">वैज्ञानिक रूप से कैलिब्रेटेड बाइन्यूरल बीट्स आपके मस्तिष्क को शांति और एकाग्रता के लिए सिंक्रनाइज़ करते हैं।</p>
+            <span class="module-action" data-i18n="therapy.btn.start">थेरेपी शुरू करें (Begin) →</span>
+        </a>
+
+        <!-- SDE -->
+        <a href="/public/therapy-sde.html" class="module-card m-sde">
+            <div class="module-icon">👁️</div>
+            <div class="module-code">SDE · Eye Relax</div>
+            <div class="module-name" data-i18n="therapy.sde.title">सिनांक दृष्टि थेरेपी</div>
+            <p class="module-desc" data-i18n="therapy.sde.subtitle">डिजिटल आंखों के तनाव को कम करने और दृष्टि संतुलन को बहाल करने के लिए सुखदायक नेत्र व्यायाम।</p>
+            <span class="module-action" data-i18n="therapy.btn.start">थेरेपी शुरू करें (Begin) →</span>
+        </a>
+
+        <!-- SDM -->
+        <a href="/public/therapy-sdm.html" class="module-card m-sdm">
+            <div class="module-icon">🏃</div>
+            <div class="module-code">SDM · Movement</div>
+            <div class="module-name" data-i18n="therapy.sdm.title">सिनांक गतिज थेरेपी</div>
+            <p class="module-desc" data-i18n="therapy.sdm.subtitle">मुद्रा, ऊर्जा और कल्याण में सुधार के लिए डिजिटल फीडबैक के साथ कैलिब्रेटेड गाइडेड मूवमेंट।</p>
+            <span class="module-action" data-i18n="therapy.btn.start">थेरेपी शुरू करें (Begin) →</span>
+        </a>
+
+
+        <!-- SDD -->
+        <a href="/public/therapy-sdd.html" class="module-card m-sdd">
+            <div class="module-icon">🌿</div>
+            <div class="module-code">SDD · Digestion</div>
+            <div class="module-name" data-i18n="therapy.sdd.title">सिनांक पाचन थेरेपी</div>
+            <p class="module-desc" data-i18n="therapy.sdd.subtitle">गट-ब्रेन एक्सिस को सक्रिय करने और पाचन स्वास्थ्य में सुधार के लिए डिज़ाइन किए गए माइंडफुलनेस प्रोटोकॉल।</p>
+            <span class="module-action" data-i18n="therapy.btn.start">थेरेपी शुरू करें (Begin) →</span>
+        </a>
+    </div>
+
+    <!-- Time Rules -->
+    <div class="section-label" data-i18n="therapy.billing_title">मिनट बिलिंग नियम (Billing Rules)</div>
+    <div class="rules-card">
+        <div class="rules-icon">⏱️</div>
+        <div class="rules-body">
+            <h3 data-i18n="therapy.billing_title">समय गणना के नियम (Count Rules)</h3>
+            <ul>
+                <li data-i18n="therapy.billing.r1">सत्रों को पूरे मिनटों में मापा जाता है — सेकंड में नहीं</li>
+                <li data-i18n="therapy.billing.r2">शुरू करते ही 2 मिनट रिज़र्व कर लिए जाते हैं</li>
+                <li data-i18n="therapy.billing.r3">5 मिनट 59 सेकंड को 5 मिनट गिना जाता है</li>
+                <li data-i18n="therapy.billing.r4">2 मिनट से कम का समय भी 2 मिनट ही गिना जाता है</li>
+                <li data-i18n="therapy.billing.r5">मॉड्यूल बदलने पर वही सत्र रहता है — कोई अतिरिक्त शुल्क नहीं</li>
+                <li data-i18n="therapy.billing.r6">60 मिनट की अधिकतम सीमा — सत्र स्वतः बंद हो जाता है</li>
+            </ul>
+        </div>
+    </div>
+</main>
+
+<script>
+    // Mandatory Session Guard
+    const _sess_str = localStorage.getItem('ssb_session');
+    const _tok = localStorage.getItem('token');
+    if (!_sess_str || !_tok) {
+        window.location.href = '/join.html';
+    }
+    const _sess = JSON.parse(_sess_str || '{}');
+
+
+    // Removed Intro guard
+
+    // Load and render balance
+    async function initHub() {
+        // Set Header Data
+        const userName = document.getElementById('header-user-name');
+        if (userName) userName.textContent = _sess.name || _t('dashboard.partner');
+        const userID = document.getElementById('header-user-id');
+        if (userID) userID.textContent = 'SINAANK ID ' + (_sess.referral_code || '—');
+
+        try {
+            const res = await ApiClient.get('/minutes/balance');
+            if (res && res.success) {
+                const bal = res.data.minutes_balance ?? 0;
+                document.getElementById('balVal').textContent = bal;
+
+                if (bal < 2) {
+                    document.getElementById('topupBanner').classList.add('visible');
+                    // Lock all cards
+                    document.querySelectorAll('.module-card').forEach(card => {
+                        card.classList.add('locked');
+                        card.style.opacity = '0.5';
+                        card.style.cursor = 'not-allowed';
+                        // Intercept click
+                        card.onclick = (e) => {
+                            e.preventDefault();
+                            if (window.FocusUIController) {
+                                FocusUIController.showNoMinutesModal();
+                            }
+                        };
+                    });
+                }
+            }
+        } catch (e) {
+            console.warn('Balance fetch failed:', e.message);
+            document.getElementById('balVal').textContent = '?';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', initHub);
+</script>
+<script src="../public/js/focus-ui.js"></script>
+</body>
+</html>

@@ -19,10 +19,11 @@ model User {
   referralCode          String?         @unique
   sponsorId             String?
   plan                  Plan            @default(FREE)
+  isBusinessUnlocked    Boolean         @default(false)
 
   
   // V1 Therapy Stats
-  minutesBalance        Int             @default(3600)
+  minutesBalance        Int             @default(20)
   dailyMinutesUsed      Int             @default(0)
   totalMinutesConsumed  Int             @default(0)
   lastSessionAt         DateTime?

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Master Admin | SDT Control</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        :root {
+            --admin-bg: #f8fafc;
+            --sidebar-width: 240px;
+        }
+        body { background: var(--admin-bg); overflow: auto; height: auto; min-height: 100vh; font-family: 'Poppins', sans-serif; }
+        .admin-layout { display: flex; min-height: 100vh; }
+        
+        .sidebar { width: var(--sidebar-width); background: #0f172a; color: white; padding: 1.5rem; position: fixed; height: 100vh; z-index: 100; }
+        .sidebar h2 { font-size: 0.9rem; margin-bottom: 2rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; border-bottom: 1px solid #1e293b; padding-bottom: 1rem; }
+        .nav-item { padding: 0.85rem 1rem; border-radius: 8px; cursor: pointer; margin-bottom: 0.4rem; transition: all 0.2s; font-size: 0.9rem; color: #94a3b8; display: flex; align-items: center; gap: 10px; }
+        .nav-item:hover { background: #1e293b; color: white; }
+        .nav-item.active { background: var(--primary-color); color: white; font-weight: 600; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
+        
+        .main-content { margin-left: var(--sidebar-width); flex: 1; padding: 2.5rem; max-width: 1200px; }
+        .section { display: none; }
+        .section.active { display: block; animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        
+        .card { background: white; border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }
+        
+        .stat-card { padding: 1.5rem; transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-3px); }
+        .stat-label { font-size: 0.8rem; font-weight: 600; color: #64748b; margin-bottom: 0.5rem; text-transform: uppercase; }
+        .stat-value { font-size: 1.85rem; font-weight: 800; color: #1e293b; }
+        
+        table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.85rem; }
+        th { text-align: left; padding: 1rem; background: #f8fafc; color: #64748b; font-weight: 600; border-bottom: 1px solid #e2e8f0; }
+        td { padding: 1rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: #334155; }
+        tr:last-child td { border-bottom: none; }
+        
+        .badge { padding: 5px 12px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; }
+        .badge-pending { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+        .badge-approved { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+        .badge-paid { background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; }
+        .badge-rejected { background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
+        
+        .action-btn { font-size: 0.75rem; padding: 6px 14px; border-radius: 8px; cursor: pointer; border: none; font-weight: 600; transition: all 0.2s; }
+        .btn-approve { background: #166534; color: white; }
+        .btn-approve:hover { background: #15803d; transform: scale(1.05); }
+        .btn-reject { background: #991b1b; color: white; }
+        .btn-reject:hover { background: #be123c; transform: scale(1.05); }
+        
+        .alert-item { background: #fff1f2; border-left: 4px solid #e11d48; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: flex; align-items: center; gap: 15px; }
+        .alert-icon { font-size: 1.2rem; }
+        .alert-text { font-size: 0.85rem; font-weight: 500; color: #9f1239; }
+
+        .toggle-container { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 0; border-bottom: 1px solid #f1f5f9; }
+        .toggle-container:last-child { border-bottom: none; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Loading Shimmer */
+        .shimmer { background: #f1f5f9; height: 1rem; border-radius: 4px; position: relative; overflow: hidden; }
+        .shimmer::after { content: ""; position: absolute; inset: 0; transform: translateX(-100%); background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent); animation: shimmer 1.5s infinite; }
+        @keyframes shimmer { 100% { transform: translateX(100%); } }
+    </style>
+</head>
+<body>
+    <div id="login-overlay" style="position: fixed; inset: 0; background: #0f172a; z-index: 1000; display: flex; align-items: center; justify-content: center; background-image: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%);">
+        <div class="card" style="max-width: 380px; width: 90%; border: none; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <h1 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: #1e293b;">Master Access</h1>
+                <p style="font-size: 0.85rem; color: #64748b;">Unlock SDT Production Control</p>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: #64748b; margin-bottom: 0.4rem; display: block;">MOBILE</label>
+                    <input type="tel" id="admin-mobile" placeholder="Registered Master Number" maxlength="10" style="width: 100%; box-sizing: border-box;">
+                </div>
+                <div>
+                    <label style="font-size: 0.75rem; font-weight: 600; color: #64748b; margin-bottom: 0.4rem; display: block;">PIN</label>
+                    <input type="password" id="admin-pin" placeholder="••••" maxlength="6" style="width: 100%; box-sizing: border-box; text-align: center; letter-spacing: 0.5em;">
+                </div>
+                <button id="login-btn" class="btn btn-primary" style="margin-top: 1rem; height: 48px; font-weight: 700;">Unlock System</button>
+                <div id="login-error" class="msg msg-error hidden" style="text-align: center; font-size: 0.8rem; padding: 0.75rem;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-container" class="admin-layout hidden">
+        <aside class="sidebar">
+            <div style="font-weight: 800; font-size: 1.25rem; margin-bottom: 0.5rem; color: #6366f1;">SDT Master</div>
+            <div style="font-size: 0.65rem; color: #475569; margin-bottom: 2rem; letter-spacing: 0.1em; font-weight: 700;">PRODUCTION V1.0</div>
+            <nav>
+                <div class="nav-item active" onclick="showSection('stats')"><span>📊</span> Overview</div>
+                <div class="nav-item" onclick="showSection('payouts')"><span>💰</span> Payout Control</div>
+                <div class="nav-item" onclick="showSection('users')"><span>👥</span> User Management</div>
+                <div class="nav-item" onclick="showSection('risks')"><span>🛡️</span> Risk Monitoring</div>
+                <div class="nav-item" onclick="showSection('settings')"><span>⚙️</span> Safety Toggles</div>
+            </nav>
+            <div style="position: absolute; bottom: 2rem; left: 1.5rem; right: 1.5rem;">
+                <button id="logout-btn" style="width: 100%; border: 1px solid #1e293b; background: transparent; color: #94a3b8; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 0.8rem; font-weight: 600;">Secure Logout</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <!-- Stats -->
+            <section id="stats-section" class="section active">
+                <h1 style="margin-bottom: 2rem; font-weight: 800; color: #0f172a;">Overview</h1>
+                <div class="stat-grid">
+                    <div class="card stat-card">
+                        <div class="stat-label">System Liquidity</div>
+                        <div id="stat-wallet" class="stat-value">₹0</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-label">Liability (Pending)</div>
+                        <div id="stat-pending" class="stat-value" style="color: #e11d48;">₹0</div>
+                    </div>
+                    <div class="card stat-card">
+                        <div class="stat-label">Total Onboarded</div>
+                        <div id="stat-users" class="stat-value">0</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 style="margin-bottom: 1rem; font-size: 1rem;">System Health</h3>
+                    <div id="health-check" style="color: #22c55e; font-weight: 600; font-size: 0.85rem;">✅ All Backend Modules Active</div>
+                </div>
+            </section>
+
+            <!-- Payouts -->
+            <section id="payouts-section" class="section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h1 style="margin: 0; font-weight: 800;">Payout Control</h1>
+                    <button class="btn btn-primary" style="padding: 10px 20px;" onclick="fetchPayouts()">Refresh Queue</button>
+                </div>
+                <div class="card" style="padding: 0; overflow: hidden;">
+                    <table id="payout-table">
+                        <thead>
+                            <tr>
+                                <th>Partner</th>
+                                <th>UPI Address</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Operations</th>
+                            </tr>
+                        </thead>
+                        <tbody id="payout-list">
+                            <tr><td colspan="5" style="text-align: center; padding: 3rem; color: #64748b;">Syncing with ledger...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Users -->
+            <section id="users-section" class="section">
+                <h1 style="margin-bottom: 2rem; font-weight: 800;">User Management</h1>
+                <div class="card" style="display: flex; gap: 15px; align-items: center;">
+                    <input type="tel" id="user-search" placeholder="Mobile Search (10 digits)" style="margin: 0; flex: 1;">
+                    <button class="btn btn-primary" style="width: 140px; height: 48px;" onclick="searchUser()">Find User</button>
+                </div>
+                <div id="user-result" class="hidden">
+                    <div class="card" style="border: 2px solid #e2e8f0;">
+                        <div id="user-info"></div>
+                        <div style="margin-top: 2rem; display: flex; gap: 12px; border-top: 1px solid #f1f5f9; padding-top: 1.5rem;">
+                            <button id="btn-block" class="action-btn btn-reject" style="height: 48px; flex: 1; border-radius: 12px; font-size: 0.9rem;">BLOCK ACCOUNT</button>
+                            <button id="btn-unblock" class="action-btn btn-approve" style="height: 48px; flex: 1; border-radius: 12px; font-size: 0.9rem;">RESTORE ACCESS</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Risks -->
+            <section id="risks-section" class="section">
+                <h1 style="margin-bottom: 2rem; font-weight: 800;">Risk Monitoring</h1>
+                <div id="risk-alerts" class="stat-grid" style="grid-template-columns: 1fr;">
+                    <div style="text-align: center; padding: 4rem; color: #94a3b8;">Scanning for suspicious patterns...</div>
+                </div>
+            </section>
+
+            <!-- Settings -->
+            <section id="settings-section" class="section">
+                <h1 style="margin-bottom: 2rem; font-weight: 800;">Global Safety Toggles</h1>
+                <div class="card">
+                    <div class="toggle-container">
+                        <div>
+                            <div style="font-weight: 700; color: #1e293b;">Withdrawal Circuit Breaker</div>
+                            <div style="font-size: 0.8rem; color: #64748b; margin-top: 2px;">Disable all payout requests instantly</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-payouts" onchange="toggleSetting('PAYOUTS_ENABLED', this.checked)">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="toggle-container">
+                        <div>
+                            <div style="font-weight: 700; color: #1e293b;">Registration Lock</div>
+                            <div style="font-size: 0.8rem; color: #64748b; margin-top: 2px;">Pause new user onboarding immediately</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-joins" onchange="toggleSetting('JOINS_ENABLED', this.checked)">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="card" style="background: #eff6ff; border: 1px solid #bfdbfe;">
+                    <p style="margin: 0; font-size: 0.8rem; color: #1d4ed8; font-weight: 500;">💡 These toggles act as emergency stop buttons. Use them if you detect system-wide exploitation.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const API_BASE = "";
+        let adminToken = null;
+        let selectedUserId = null;
+        let isProcessing = false;
+
+        document.getElementById('login-btn').onclick = loginAdmin;
+        document.getElementById('logout-btn').onclick = () => location.reload();
+
+        async function loginAdmin() {
+            const mobile = document.getElementById('admin-mobile').value;
+            const pin = document.getElementById('admin-pin').value;
+            const error = document.getElementById('login-error');
+
+            if (mobile.length !== 10) { alert("Enter valid mobile"); return; }
+
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mobile, pin })
+                });
+                const response = await res.json();
+                if (response.success && response.data.user.role === 'ADMIN') {
+                    adminToken = response.data.token;
+                    document.getElementById('login-overlay').style.display = 'none';
+                    document.getElementById('admin-container').classList.remove('hidden');
+                    fetchStats();
+                    setInterval(fetchStats, 30000); // Auto-refresh stats every 30s
+                } else {
+                    error.innerText = response.message || "Access Denied";
+                    error.classList.remove('hidden');
+                }
+            } catch (err) { error.innerText = "Connection Failed"; error.classList.remove('hidden'); }
+        }
+
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.getElementById(sectionId + '-section').classList.add('active');
+            event.currentTarget.classList.add('active');
+            
+            if (sectionId === 'stats') fetchStats();
+            if (sectionId === 'payouts') fetchPayouts();
+            if (sectionId === 'risks') fetchRisks();
+            if (sectionId === 'settings') fetchSettings();
+        }
+
+        async function fetchStats() {
+            try {
+                const res = await fetch('/api/admin/dashboard/stats', { headers: { 'Authorization': `Bearer ${adminToken}` } });
+                const data = await res.json();
+                if (data.success) {
+                    const stats = data.data;
+                    document.getElementById('stat-wallet').innerText = '₹' + Math.floor(stats.systemWallet || 0).toLocaleString();
+                    document.getElementById('stat-pending').innerText = '₹' + (stats.pendingPayoutAmount || 0).toLocaleString();
+                    document.getElementById('stat-users').innerText = (stats.totalUsers || 0).toLocaleString();
+                }
+            } catch(e) {}
+        }
+
+        async function fetchPayouts() {
+            const list = document.getElementById('payout-list');
+            try {
+                const res = await fetch('/api/admin/payouts', { headers: { 'Authorization': `Bearer ${adminToken}` } });
+                const data = await res.json();
+                if (data.success) {
+                    list.innerHTML = data.data.map(p => {
+                        const amount = p.amount || 0;
+                        return `
+                        <tr>
+                            <td><div style="font-weight:700">${p.user.name || 'Anonymous'}</div><div style="font-size:0.75rem; color:#64748b">${p.user.mobile}</div></td>
+                            <td><code>${p.user.upi_id || 'NOT_FOUND'}</code></td>
+                            <td style="font-weight:700">₹${amount.toLocaleString()}</td>
+                            <td><span class="badge badge-${p.payoutStatus.toLowerCase()}">${p.payoutStatus}</span></td>
+                            <td>
+                                ${p.payoutStatus === 'PENDING' ? `
+                                    <button class="action-btn btn-approve" onclick="updatePayout('${p.id}', 'APPROVED')">Approve</button>
+                                    <button class="action-btn btn-reject" onclick="updatePayout('${p.id}', 'REJECTED')">Reject</button>
+                                ` : p.payoutStatus === 'APPROVED' ? `
+                                    <button class="action-btn btn-approve" style="background:#4f46e5" onclick="updatePayout('${p.id}', 'PAID')">Dispatch Cash</button>
+                                ` : '<span style="color:#94a3b8">Ready</span>'}
+                            </td>
+                        </tr>
+                    `}).join('');
+                    if (data.data.length === 0) list.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:3rem; color:#64748b">No pending requests</td></tr>`;
+                }
+            } catch(e) { list.innerHTML = "<tr><td colspan='5' style='text-align:center'>Failed to sync queue</td></tr>"; }
+        }
+
+        async function updatePayout(id, status) {
+            if (isProcessing) return;
+            
+            let remarks = "Processed";
+            if (status === 'REJECTED') {
+                remarks = prompt("MANDATORY: Enter reason for rejection (min 5 characters):");
+                if (!remarks || remarks.length < 5) { alert("Rejection requires a valid reason."); return; }
+            } else {
+                if (!confirm(`Commit to ${status} for ₹ payout?`)) return;
+            }
+
+            try {
+                isProcessing = true;
+                const res = await fetch(`/api/admin/payouts/${id}/status`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+                    body: JSON.stringify({ status, remarks })
+                });
+                const data = await res.json();
+                if (data.success) { fetchPayouts(); fetchStats(); } else { alert(data.message); }
+            } catch(e) { alert("Operation failed"); } finally { isProcessing = false; }
+        }
+
+        async function searchUser() {
+            const mobile = document.getElementById('user-search').value;
+            if (mobile.length !== 10) return;
+            
+            const res = await fetch(`/api/admin/users`, { headers: { 'Authorization': `Bearer ${adminToken}` } });
+            const data = await res.json();
+            const user = (data.data || []).find(u => u.mobile === mobile);
+            
+            if (user) {
+                selectedUserId = user.id;
+                document.getElementById('user-result').classList.remove('hidden');
+                document.getElementById('user-info').innerHTML = `
+                    <div style="font-size:1.25rem; font-weight:800; color:#0f172a; margin-bottom:1rem;">${user.name}</div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; font-size:0.85rem;">
+                        <div class="card" style="padding:10px; background:#f8fafc">
+                            <div style="color:#64748b; font-size:0.7rem;">ROLE</div>
+                            <div style="font-weight:700;">${user.role}</div>
+                        </div>
+                        <div class="card" style="padding:10px; background:#f8fafc">
+                            <div style="color:#64748b; font-size:0.7rem;">STATUS</div>
+                            <div style="font-weight:700;"><span class="badge ${user.status==='ACTIVE'?'badge-approved':'badge-rejected'}">${user.status}</span></div>
+                        </div>
+                        <div class="card" style="padding:10px; background:#f8fafc">
+                            <div style="color:#64748b; font-size:0.7rem;">TEAM SIZE</div>
+                            <div style="font-weight:700;">${user.teamCount || 0}</div>
+                        </div>
+                        <div class="card" style="padding:10px; background:#f8fafc">
+                            <div style="color:#64748b; font-size:0.7rem;">SINAANK ID</div>
+                            <div style="font-weight:700;">${user.referral_code || '-'}</div>
+                        </div>
+                    </div>
+                `;
+            } else { alert("Target mobile not found in database"); }
+        }
+
+        document.getElementById('btn-block').onclick = () => toggleUser('block');
+        document.getElementById('btn-unblock').onclick = () => toggleUser('unblock');
+
+        async function toggleUser(action) {
+            if (!confirm(`Confirm ${action} for this account?`)) return;
+            const res = await fetch(`/api/admin/users/${selectedUserId}/${action}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${adminToken}` }
+            });
+            const data = await res.json();
+            if (data.success) { alert(`Account ${action}ed`); searchUser(); }
+        }
+
+        async function fetchRisks() {
+            const res = await fetch('/api/admin/risks/alerts', { headers: { 'Authorization': `Bearer ${adminToken}` } });
+            const data = await res.json();
+            const container = document.getElementById('risk-alerts');
+            if (data.success) {
+                let html = "";
+                if (data.data.duplicateUPIs.length > 0) {
+                    data.data.duplicateUPIs.forEach(item => {
+                        html += `
+                            <div class="alert-item">
+                                <div class="alert-icon">🕵️</div>
+                                <div class="alert-text">Duplicate UPI Detected: <strong>${item.upi_id}</strong> used by ${item._count.mobile} accounts. Multi-account fraud risk.</div>
+                            </div>
+                        `;
+                    });
+                }
+                if (data.data.highIntensity.length > 0) {
+                    data.data.highIntensity.forEach(item => {
+                        html += `
+                            <div class="alert-item" style="background:#fff7ed; border-color:#f97316; color:#9a3412">
+                                <div class="alert-icon">⚡</div>
+                                <div class="alert-text">High Activity Spike: Sponsor ID <strong>${item.sponsor_id}</strong> added ${item._count.id} users in 24h. Check for synthetic chains.</div>
+                            </div>
+                        `;
+                    });
+                }
+                container.innerHTML = html || `<div class="card" style="text-align:center; padding:4rem;"><div style="font-size:2rem; margin-bottom:1rem;">🏢</div><div style="font-weight:700; color:#1e293b;">Environment Secure</div><div style="color:#64748b; font-size:0.85rem;">No anomaly patterns detected by the SINAANK monitor today.</div></div>`;
+            }
+        }
+
+        async function fetchSettings() {
+            const res = await fetch('/api/admin/settings', { headers: { 'Authorization': `Bearer ${adminToken}` } });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('toggle-payouts').checked = data.data.PAYOUTS_ENABLED !== 'false';
+                document.getElementById('toggle-joins').checked = data.data.JOINS_ENABLED !== 'false';
+            }
+        }
+
+        async function toggleSetting(key, value) {
+            await fetch('/api/admin/settings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` },
+                body: JSON.stringify({ key, value: String(value) })
+            });
+            fetchSettings();
+        }
+    </script>
+</body>
+</html>
