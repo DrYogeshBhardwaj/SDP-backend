@@ -107,15 +107,32 @@
                     if (data.data.exists) {
                         return performLogin(urlMobile);
                     } else {
-                        // NEW USER -> GO TO PAYMENT PAGE
-                        localStorage.setItem('temp_mobile', urlMobile);
-                        sessionStorage.setItem('temp_mobile', urlMobile);
-                        window.location.href = `payment.html?mobile=${urlMobile}`;
+                        // NEW USER -> REGISTER AS FREE AND GO TO DASHBOARD
+                        return performQuickRegister(urlMobile);
                     }
                 } else {
                     showMsg('Invalid OTP', 'error');
                 }
             } catch (e) { showMsg('Verification failed', 'error'); }
+        }
+
+        async function performQuickRegister(mobile) {
+            showMsg('Creating Account...');
+            try {
+                const res = await fetch(CONFIG.API_BASE_URL + '/api/power-register', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ mobile, name: 'Sinaank User' })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    localStorage.setItem('session', data.data.token);
+                    localStorage.setItem('mobile', mobile);
+                    window.location.href = "dashboard.html";
+                } else {
+                    showMsg(data.message || "Registration failed", "error");
+                }
+            } catch (e) { showMsg("Network Error", "error"); }
         }
 
         async function performLogin(mobile) {

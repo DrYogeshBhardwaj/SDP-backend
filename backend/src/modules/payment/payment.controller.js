@@ -183,10 +183,32 @@ const verifyPasswordPayment = async (req, res) => {
             return errorResponse(res, 401, 'Invalid Activation Password');
         }
 
-        // 2. Atomic Register + Commission
-        console.log(`[PASSWORD_PAYMENT_REGISTERING] Starting registration for ${mobile}...`);
-        const user = await registerUser({ mobile, sponsorCode, name, upiId });
-        console.log(`[PASSWORD_PAYMENT_SUCCESS] User created with ID: ${user.id}`);
+        // 2. Atomic Register or UPGRADE
+        console.log(`[PASSWORD_PAYMENT_PROCESSING] Processing ${mobile}...`);
+        
+        let user = await prisma.user.findUnique({ where: { mobile } });
+        
+        if (user) {
+            console.log(`[PASSWORD_PAYMENT_UPGRADING] Upgrading existing user ${user.id}...`);
+            user = await prisma.user.update({
+                where: { mobile },
+                data: {
+                    name: name || user.name,
+                    upiId: upiId || user.upiId,
+                    plan: 'PREMIUM',
+                    isBusinessUnlocked: true
+                }
+            });
+        } else {
+            console.log(`[PASSWORD_PAYMENT_REGISTERING] Registering new user ${mobile}...`);
+            user = await registerUser({ mobile, sponsorCode, name, upiId });
+            // By default registerUser sets PREMIUM if it was the old flow, 
+            // but we ensure it's unlocked here.
+            user = await prisma.user.update({
+                where: { id: user.id },
+                data: { plan: 'PREMIUM', isBusinessUnlocked: true }
+            });
+        }
         
         const token = generateToken({ userId: user.id });
 
@@ -194,21 +216,19 @@ const verifyPasswordPayment = async (req, res) => {
         await prisma.transaction.create({
             data: {
                 userId: user.id,
-                amount: 250,
+                amount: 299,
                 type: 'CREDIT',
-                category: 'REGISTRATION_FEE',
-                description: `Manual Activation via Password for ${mobile}`
+                category: 'PLAN_UPGRADE',
+                description: `Manual Activation via Password (₹299)`
             }
         });
-        console.log(`[PASSWORD_PAYMENT_LOGGED] Revenue transaction recorded for ${mobile}`);
 
-        return successResponse(res, 200, 'Manual Activation Successful', {
+        return successResponse(res, 200, 'Activation Successful', {
             token,
             user: { id: user.id, mobile: user.mobile }
         });
     } catch (err) {
         console.error('[PASSWORD_ACTIVATE_ERROR]', err);
-        if (err.message === 'ALREADY_EXISTS') return errorResponse(res, 400, 'Already registered');
         return errorResponse(res, 500, `Manual Activation failed: ${err.message}`);
     }
 };
