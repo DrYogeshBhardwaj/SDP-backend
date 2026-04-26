@@ -695,16 +695,43 @@
         }
 
         async function processPayout(id, status) {
+            console.log(`[PAYOUT_PROCESS] Attempting to mark ${id} as ${status}`);
             let transactionId = null;
             if (status === 'PAID') {
-                transactionId = prompt("Enter Transaction ID / UTR Number:");
-                if (!transactionId) return;
+                transactionId = prompt("Enter Transaction ID / UTR Number (from your UPI App):");
+                if (!transactionId) {
+                    console.warn("[PAYOUT_PROCESS] Transaction ID cancelled by user.");
+                    return;
+                }
             } else {
-                if(!confirm('Move payout to ' + status + '?')) return;
+                if(!confirm('Are you sure you want to move this payout to ' + status + '?')) return;
             }
 
-            const data = await api('/payout/' + id, 'PUT', { status, transactionId });
-            if (data.success) loadPayouts();
+            // Show loading on the button
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.innerText = "WAIT...";
+            btn.disabled = true;
+
+            try {
+                const data = await api('/payout/' + id, 'PUT', { status, transactionId });
+                console.log("[PAYOUT_API_RESPONSE]", data);
+                
+                if (data.success) {
+                    alert(`Payout successfully marked as ${status}!`);
+                    loadStats();
+                    loadPayouts();
+                } else {
+                    alert("Error: " + (data.message || "Failed to update payout status"));
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }
+            } catch (e) {
+                console.error("[PAYOUT_FATAL_ERROR]", e);
+                alert("Network Error: Could not connect to the server.");
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
         }
 
         let allUsers = [];
