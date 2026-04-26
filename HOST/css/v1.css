@@ -16,6 +16,15 @@ body {
     font-family: var(--font-main);
     overflow-x: hidden;
     min-height: 100vh;
+    line-height: 1.5; /* Increased for Hindi matras */
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Fix for Devanagari (Hindi) character connection */
+h1, h2, h3, .tagline, .btn-start, .pill, .btn-primary {
+    letter-spacing: normal !important; 
+    text-rendering: optimizeLegibility;
+    overflow: visible !important;
 }
 
 .scientific-grid {
