@@ -608,6 +608,7 @@
             if (input.files && input.files[0]) {
                 const file = input.files[0];
                 choiceFiles[type] = file;
+                
                 if (type === 'image') {
                     const reader = new FileReader();
                     reader.onload = (e) => {
@@ -617,14 +618,20 @@
                     };
                     reader.readAsDataURL(file);
                 }
+
+                // Update Status Text
                 const label = input.parentElement;
                 label.style.borderColor = 'var(--primary)';
+                label.style.background = 'rgba(0, 216, 255, 0.1)';
+                
                 const statusId = type === 'audio' ? 'audio-status' : 'image-status';
                 const statusDiv = document.getElementById(statusId);
                 if (statusDiv) {
-                    statusDiv.innerText = `✓ ${type.toUpperCase()} SELECTED`;
+                    statusDiv.innerText = `✓ ${type.toUpperCase()} READY`;
                     statusDiv.style.color = 'var(--primary)';
                 }
+                
+                console.log(`[FILE_SELECTED] ${type} is ready.`);
                 validateGlobalBtn();
             }
         }
