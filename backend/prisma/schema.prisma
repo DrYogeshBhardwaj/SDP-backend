@@ -123,6 +123,7 @@ enum Role {
   PARTNER
   ADMIN
   SUPPORT
+  CASHIER
 }
 
 enum Status {

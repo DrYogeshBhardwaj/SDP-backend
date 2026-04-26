@@ -3,6 +3,7 @@ const router = express.Router();
 const adminController = require('../modules/admin/admin.controller');
 const { authMiddleware } = require('../middlewares/authMiddleware');
 const adminMiddleware = require('../middlewares/admin.middleware');
+const staffMiddleware = require('../middlewares/staff.middleware');
 
 // Public Master Verification (Password Only)
 router.post('/verify-master', adminController.verifyMasterPass);
@@ -11,16 +12,21 @@ router.post('/verify-mfa', adminController.verifyAdminMFA);
 
 // Protect all routes
 router.use(authMiddleware);
+
+// -- STAFF ROUTES (Admin + Cashier) --
+router.get('/payouts', staffMiddleware, adminController.getPayouts);
+router.put('/payout/:id', staffMiddleware, adminController.processPayout);
+router.get('/pending-balances', staffMiddleware, adminController.getPendingBalances);
+router.get('/stats', staffMiddleware, adminController.getStats);
+
+
+// -- MASTER ADMIN ONLY ROUTES --
 router.use(adminMiddleware);
 
-router.get('/stats', adminController.getStats);
 router.get('/users', adminController.getAllUsers);
 router.get('/network-tree', adminController.getNetworkTree);
 router.get('/cash-logs', adminController.getCashLogs);
-router.get('/payouts', adminController.getPayouts);
-router.get('/pending-balances', adminController.getPendingBalances);
 router.post('/sweep-payouts', adminController.sweepToPayouts);
-router.put('/payout/:id', adminController.processPayout);
 router.get('/queries', adminController.getQueries);
 router.put('/query/:id', adminController.updateQuery);
 router.put('/user/:id', adminController.updateUser);
