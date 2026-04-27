@@ -68,7 +68,7 @@ const getMe = async (req, res) => {
             id: user.id,
             mobile: user.mobile,
             name: user.name,
-            photo: user.photo,
+            avatar: user.avatar,
             minutesBalance: user.minutesBalance,
             cashBalance: cashBalance,
             directCount,
@@ -77,6 +77,8 @@ const getMe = async (req, res) => {
             dailyMinutesUsed: user.dailyMinutesUsed,
             referralCode: user.referralCode,
             upiId: user.upiId,
+            isBusinessUnlocked: user.isBusinessUnlocked,
+            plan: user.plan,
             goalType: user.goalType,
             goalPlanets: user.goalPlanets,
             goalLockUntil: user.goalLockUntil
