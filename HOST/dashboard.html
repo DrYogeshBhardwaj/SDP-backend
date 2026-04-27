@@ -8,6 +8,7 @@
     <link rel="icon" type="image/png" href="Logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Hind:wght@400;700&display=swap" rel="stylesheet">
     <script src="js/config.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
         .dashboard-grid {
@@ -216,7 +217,7 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
     <script>
         let currentLink = "";
 
@@ -407,13 +408,21 @@
                     }
                     
                     // Referral
-                    currentLink = `http://${window.location.host}/join.html?ref=${u.referralCode}`;
-                    document.getElementById('qrcode').innerHTML = '';
-                    new QRCode(document.getElementById("qrcode"), {
-                        text: currentLink,
-                        width: 140,
-                        height: 140
-                    });
+                    if (u.referralCode) {
+                        currentLink = `${window.location.origin}/join.html?ref=${u.referralCode}`;
+                        const qrcodeEl = document.getElementById('qrcode');
+                        if (qrcodeEl) {
+                            qrcodeEl.innerHTML = '';
+                            new QRCode(qrcodeEl, {
+                                text: currentLink,
+                                width: 140,
+                                height: 140,
+                                colorDark : "#000000",
+                                colorLight : "#ffffff",
+                                correctLevel : QRCode.CorrectLevel.H
+                            });
+                        }
+                    }
                 } else {
                     logout();
                 }
