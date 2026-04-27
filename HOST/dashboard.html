@@ -457,20 +457,35 @@
                     }
                     
                     // Referral
+                    console.log("[DEBUG] User Referral Code:", u.referralCode);
                     if (u.referralCode) {
                         currentLink = `${window.location.origin}/join.html?ref=${u.referralCode}`;
+                        console.log("[DEBUG] Generated Link:", currentLink);
+                        
                         const qrcodeEl = document.getElementById('qrcode');
                         if (qrcodeEl) {
-                            qrcodeEl.innerHTML = '';
-                            new QRCode(qrcodeEl, {
-                                text: currentLink,
-                                width: 140,
-                                height: 140,
-                                colorDark : "#000000",
-                                colorLight : "#ffffff",
-                                correctLevel : QRCode.CorrectLevel.H
-                            });
+                            try {
+                                qrcodeEl.innerHTML = '';
+                                if (typeof QRCode === 'undefined') {
+                                    console.error("QRCode library not loaded!");
+                                    qrcodeEl.innerHTML = '<div style="color:red;font-size:10px;">Library Error</div>';
+                                    return;
+                                }
+                                new QRCode(qrcodeEl, {
+                                    text: currentLink,
+                                    width: 140,
+                                    height: 140,
+                                    colorDark : "#000000",
+                                    colorLight : "#ffffff",
+                                    correctLevel : QRCode.CorrectLevel.H
+                                });
+                                console.log("[DEBUG] QR Code generated successfully");
+                            } catch (e) {
+                                console.error("QR Generation Failed:", e);
+                            }
                         }
+                    } else {
+                        console.warn("[DEBUG] Referral Code is MISSING in profile response");
                     }
                 } else {
                     logout();
@@ -486,8 +501,36 @@
         }
 
         function copyToClipboard() {
-            navigator.clipboard.writeText(currentLink);
-            alert("Sinaank Referral Link Copied!");
+            if (!currentLink) {
+                alert("Referral link not ready yet. Please refresh.");
+                return;
+            }
+            
+            // Standard method
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(currentLink).then(() => {
+                    alert("Sinaank Referral Link Copied! 🚀");
+                }).catch(err => {
+                    fallbackCopy(currentLink);
+                });
+            } else {
+                fallbackCopy(currentLink);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                alert("Sinaank Referral Link Copied! 🚀");
+            } catch (err) {
+                console.error('Fallback copy failed', err);
+                alert("Could not copy. Link: " + text);
+            }
+            document.body.removeChild(textArea);
         }
 
         async function editName() {
