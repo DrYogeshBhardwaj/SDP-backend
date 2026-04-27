@@ -150,7 +150,7 @@ const verifyPayment = async (req, res) => {
 
         // Atomic Register + Commission
         const user = await registerUser({ mobile, sponsorCode, name, upiId });
-        const token = generateToken({ userId: user.id });
+        const token = generateToken({ userId: user.id }, true);
 
         // LOG REVENUE TRANSACTION
         await prisma.transaction.create({
@@ -213,7 +213,7 @@ const verifyPasswordPayment = async (req, res) => {
             });
         }
         
-        const token = generateToken({ userId: user.id });
+        const token = generateToken({ userId: user.id }, true);
 
         // 3. LOG REVENUE TRANSACTION (Manual Audit Entry)
         await prisma.transaction.create({

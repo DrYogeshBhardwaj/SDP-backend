@@ -13,7 +13,7 @@ const login = async (req, res) => {
         
         if (!user) return errorResponse(res, 404, 'User not found');
         
-        const token = generateToken({ userId: user.id });
+        const token = generateToken({ userId: user.id }, user.isBusinessUnlocked);
         return successResponse(res, 200, 'Login Success', { token, user: { id: user.id, mobile: user.mobile } });
     } catch (err) {
         return errorResponse(res, 500, 'Login failed');
