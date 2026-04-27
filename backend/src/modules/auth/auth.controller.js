@@ -31,6 +31,17 @@ const getMe = async (req, res) => {
 
         if (!user) return errorResponse(res, 404, 'User no longer exists');
 
+        // Self-healing: If unlocked but no referral code, generate one
+        if (user.isBusinessUnlocked && !user.referralCode) {
+            const { generateReferralCode } = require('../../utils/referral');
+            const newCode = generateReferralCode();
+            await prisma.user.update({
+                where: { id: userId },
+                data: { referralCode: newCode }
+            });
+            user.referralCode = newCode; // Update local object for response
+        }
+
         let transactions = [];
         try {
             // Try fetching with fromUser details

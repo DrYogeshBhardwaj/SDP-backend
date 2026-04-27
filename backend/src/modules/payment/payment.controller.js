@@ -3,6 +3,7 @@ const prisma = new PrismaClient();
 const { successResponse, errorResponse } = require('../../utils/response');
 const { registerUser } = require('../auth/registration.service');
 const { generateToken } = require('../../utils/jwt');
+const { generateReferralCode } = require('../../utils/referral');
 const Razorpay = require('razorpay');
 
 const razorpay = new Razorpay({
@@ -74,7 +75,8 @@ const simulateSuccess = async (req, res) => {
                 where: { id: userId },
                 data: { 
                     plan: 'PREMIUM',
-                    isBusinessUnlocked: true 
+                    isBusinessUnlocked: true,
+                    referralCode: user.referralCode || generateReferralCode()
                 }
             });
 
@@ -196,7 +198,8 @@ const verifyPasswordPayment = async (req, res) => {
                     name: name || user.name,
                     upiId: upiId || user.upiId,
                     plan: 'PREMIUM',
-                    isBusinessUnlocked: true
+                    isBusinessUnlocked: true,
+                    referralCode: user.referralCode || generateReferralCode()
                 }
             });
         } else {
