@@ -90,6 +90,8 @@ const getMe = async (req, res) => {
             upiId: user.upiId,
             isBusinessUnlocked: user.isBusinessUnlocked,
             plan: user.plan,
+            therapySound: user.therapySound,
+            therapyImage: user.therapyImage,
             goalType: user.goalType,
             goalPlanets: user.goalPlanets,
             goalLockUntil: user.goalLockUntil

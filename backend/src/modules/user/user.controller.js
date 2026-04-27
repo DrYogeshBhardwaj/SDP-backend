@@ -126,11 +126,11 @@ const getMyQueries = async (req, res) => {
 const updateProfile = async (req, res) => {
     try {
         const userId = req.user.userId;
-        const { name, avatar } = req.body;
+        const { name, avatar, goalType, therapySound, therapyImage } = req.body;
         
         const updated = await prisma.user.update({
             where: { id: userId },
-            data: { name, avatar }
+            data: { name, avatar, goalType, therapySound, therapyImage }
         });
         
         return successResponse(res, 200, 'Profile updated', updated);

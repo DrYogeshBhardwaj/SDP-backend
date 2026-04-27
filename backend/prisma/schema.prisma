@@ -33,6 +33,8 @@ model User {
   goalType              String?         // MAN, TAN, DHAN, STABILITY, CUSTOM
   goalPlanets           String?         // Comma separated Planet IDs
   goalLockUntil         DateTime?
+  therapySound          String?         // Base64 or URL for persistent sound
+  therapyImage          String?         // Base64 or URL for persistent image
 
   // Relations
   wallets               Wallet[]

@@ -416,6 +416,27 @@
                 updateTimeUI(10);
 
                 calculateAuto();
+
+                // Restore persistent preferences
+                if (userData.therapyImage) {
+                    const img = document.getElementById('personal-image-preview');
+                    img.src = userData.therapyImage;
+                    img.style.opacity = 0.5;
+                    choiceFiles.image = 'saved'; // Mark as ready
+                    const statusDiv = document.getElementById('image-status');
+                    if (statusDiv) {
+                        statusDiv.innerText = `✓ VISUAL READY`;
+                        statusDiv.style.color = 'var(--primary)';
+                    }
+                }
+                if (userData.therapySound) {
+                    choiceFiles.audio = 'saved'; // Mark as ready
+                    const statusDiv = document.getElementById('audio-status');
+                    if (statusDiv) {
+                        statusDiv.innerText = `✓ SOUND READY`;
+                        statusDiv.style.color = 'var(--primary)';
+                    }
+                }
             }
             renderPlanetGrid();
         }
@@ -571,35 +592,54 @@
         let choiceFiles = { audio: null, image: null };
         let purposePlanets = [];
 
-        function handleFile(input, type) {
+        async function handleFile(input, type) {
             if (input.files && input.files[0]) {
                 const file = input.files[0];
-                choiceFiles[type] = file;
                 
-                if (type === 'image') {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        const img = document.getElementById('personal-image-preview');
-                        img.src = e.target.result;
-                        img.style.opacity = 0.5;
-                    };
-                    reader.readAsDataURL(file);
+                // Limit size for persistence (e.g., 2MB for images, 5MB for sounds)
+                const maxSize = type === 'image' ? 2 * 1024 * 1024 : 5 * 1024 * 1024;
+                if (file.size > maxSize) {
+                    alert(`File too large. Max ${type === 'image' ? '2MB' : '5MB'} for saving.`);
+                    return;
                 }
 
-                // Update Status Text
-                const label = input.parentElement;
-                label.style.borderColor = 'var(--primary)';
-                label.style.background = 'rgba(0, 216, 255, 0.1)';
-                
-                const statusId = type === 'audio' ? 'audio-status' : 'image-status';
-                const statusDiv = document.getElementById(statusId);
-                if (statusDiv) {
-                    statusDiv.innerText = `✓ ${type.toUpperCase()} READY`;
-                    statusDiv.style.color = 'var(--primary)';
-                }
-                
-                console.log(`[FILE_SELECTED] ${type} is ready.`);
-                validateGlobalBtn();
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const base64 = e.target.result;
+                    
+                    if (type === 'image') {
+                        const img = document.getElementById('personal-image-preview');
+                        img.src = base64;
+                        img.style.opacity = 0.5;
+                        choiceFiles.image = base64;
+                    } else {
+                        choiceFiles.audio = base64;
+                    }
+
+                    // Save to server
+                    const token = localStorage.getItem('session');
+                    const field = type === 'image' ? 'therapyImage' : 'therapySound';
+                    await fetch(CONFIG.API_BASE_URL + '/api/user/update-profile', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ [field]: base64 })
+                    });
+
+                    // Update Status Text
+                    const label = input.parentElement;
+                    label.style.borderColor = 'var(--primary)';
+                    label.style.background = 'rgba(0, 216, 255, 0.1)';
+                    
+                    const statusId = type === 'audio' ? 'audio-status' : 'image-status';
+                    const statusDiv = document.getElementById(statusId);
+                    if (statusDiv) {
+                        statusDiv.innerText = `✓ ${type.toUpperCase()} SAVED`;
+                        statusDiv.style.color = 'var(--primary)';
+                    }
+                    
+                    validateGlobalBtn();
+                };
+                reader.readAsDataURL(file);
             }
         }
 
@@ -638,7 +678,11 @@
             document.getElementById('active-mode-label').innerText = `${mode} Frequency Active`;
 
             if (mode === 'CHOICE' && choiceFiles.audio) {
-                playPersonalAudio(sessionPlanets);
+                if (choiceFiles.audio === 'saved') {
+                    playPersistentAudio(userData.therapySound, sessionPlanets);
+                } else {
+                    playPersonalAudio(sessionPlanets);
+                }
             } else {
                 initBinaural(sessionPlanets);
             }
@@ -699,13 +743,23 @@
         }
 
         function playPersonalAudio(p) {
-            personalAudio = new Audio(URL.createObjectURL(choiceFiles.audio));
+            personalAudio = new Audio(choiceFiles.audio); // Now using Base64 directly
             personalAudio.loop = true;
             personalAudio.play();
             document.getElementById('orb-1').style.backgroundColor = p[0].color;
             document.getElementById('orb-2').style.backgroundColor = p[0].color;
             document.getElementById('glow-l').style.background = `linear-gradient(to right, ${p[0].color}, transparent)`;
             document.getElementById('bottom-signal-details').innerHTML = `Personal Choice Playing • 432Hz Center`;
+        }
+
+        function playPersistentAudio(base64, p) {
+            personalAudio = new Audio(base64);
+            personalAudio.loop = true;
+            personalAudio.play();
+            document.getElementById('orb-1').style.backgroundColor = p[0].color;
+            document.getElementById('orb-2').style.backgroundColor = p[0].color;
+            document.getElementById('glow-l').style.background = `linear-gradient(to right, ${p[0].color}, transparent)`;
+            document.getElementById('bottom-signal-details').innerHTML = `Persistent Sound Playing • 432Hz Center`;
         }
 
         function startTimer() {
