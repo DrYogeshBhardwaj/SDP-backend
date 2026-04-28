@@ -351,7 +351,7 @@
                     </div>
                 </div>
                 
-                <div style="margin-top: 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div style="margin-top: 2rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
                     <div class="stat-card glass" style="padding: 1.5rem;">
                         <div class="card-title">Top Pages</div>
                         <table id="analytics-pages-table" style="margin-top: 1rem;">
@@ -366,7 +366,15 @@
                             <tbody id="analytics-referrers-body"></tbody>
                         </table>
                     </div>
+                    <div class="stat-card glass" style="padding: 1.5rem;">
+                        <div class="card-title">Top Locations</div>
+                        <table id="analytics-locations-table" style="margin-top: 1rem;">
+                            <thead><tr><th>Location</th><th>Visits</th></tr></thead>
+                            <tbody id="analytics-locations-body"></tbody>
+                        </table>
+                    </div>
                 </div>
+
             </div>
         </div>
     </div>
@@ -676,6 +684,13 @@
                     <tr>
                         <td>${r.referrer}</td>
                         <td style="font-weight: 800; color: var(--primary);">${r.count}</td>
+                    </tr>
+                `).join('');
+
+                document.getElementById('analytics-locations-body').innerHTML = data.data.topLocations.map(l => `
+                    <tr>
+                        <td>${l.location}</td>
+                        <td style="font-weight: 800; color: var(--primary);">${l.count}</td>
                     </tr>
                 `).join('');
             }

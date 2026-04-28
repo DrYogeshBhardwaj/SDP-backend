@@ -166,6 +166,8 @@ model SiteVisit {
   page      String
   referrer  String?
   userAgent String?
+  country   String?
+  city      String?
   createdAt DateTime @default(now())
 }
 

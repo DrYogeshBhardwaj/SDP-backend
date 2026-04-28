@@ -528,11 +528,24 @@ const getAnalytics = async (req, res) => {
             take: 10
         });
 
+        // Group by Location (City/Country)
+        // Since we can't easily groupBy multiple fields and format, let's group by Country first
+        const countries = await prisma.siteVisit.groupBy({
+            by: ['country', 'city'],
+            _count: { _all: true },
+            orderBy: { _count: { country: 'desc' } },
+            take: 10
+        });
+
         return successResponse(res, 200, 'Analytics Data', {
             totalVisits,
             todayVisits,
             topReferrers: referrers.map(r => ({ referrer: r.referrer, count: r._count.referrer })),
-            topPages: pages.map(p => ({ page: p.page, count: p._count.page }))
+            topPages: pages.map(p => ({ page: p.page, count: p._count.page })),
+            topLocations: countries.map(c => ({ 
+                location: `${c.city !== 'Unknown' && c.city ? c.city + ', ' : ''}${c.country || 'Unknown'}`, 
+                count: c._count._all 
+            }))
         });
     } catch (err) {
         console.error('[ADMIN_ANALYTICS_ERROR]', err);

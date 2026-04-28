@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const geoip = require('geoip-lite');
 
 // POST /api/analytics/track
 // Public endpoint to track site visits
@@ -13,12 +14,19 @@ router.post('/track', async (req, res) => {
         const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
         const userAgent = req.headers['user-agent'] || '';
 
+        // Lookup location
+        const geo = geoip.lookup(ip);
+        const country = geo ? geo.country : 'Unknown';
+        const city = geo ? geo.city : 'Unknown';
+
         await prisma.siteVisit.create({
             data: {
                 ip: ip,
                 page: page || 'Unknown',
                 referrer: referrer || 'Direct',
-                userAgent: userAgent
+                userAgent: userAgent,
+                country: country,
+                city: city
             }
         });
 
