@@ -501,6 +501,44 @@ const getSecurityLogs = async (req, res) => {
 };
 
 
+const getAnalytics = async (req, res) => {
+    try {
+        const totalVisits = await prisma.siteVisit.count();
+        
+        // Today's visits
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayVisits = await prisma.siteVisit.count({
+            where: { createdAt: { gte: today } }
+        });
+
+        // Group by Referrer
+        const referrers = await prisma.siteVisit.groupBy({
+            by: ['referrer'],
+            _count: { referrer: true },
+            orderBy: { _count: { referrer: 'desc' } },
+            take: 10
+        });
+
+        // Group by Page
+        const pages = await prisma.siteVisit.groupBy({
+            by: ['page'],
+            _count: { page: true },
+            orderBy: { _count: { page: 'desc' } },
+            take: 10
+        });
+
+        return successResponse(res, 200, 'Analytics Data', {
+            totalVisits,
+            todayVisits,
+            topReferrers: referrers.map(r => ({ referrer: r.referrer, count: r._count.referrer })),
+            topPages: pages.map(p => ({ page: p.page, count: p._count.page }))
+        });
+    } catch (err) {
+        console.error('[ADMIN_ANALYTICS_ERROR]', err);
+        return errorResponse(res, 500, 'Failed to fetch analytics');
+    }
+};
 
 module.exports = { 
     getStats, 
@@ -519,5 +557,6 @@ module.exports = {
     verifyMasterPass,
     getSecurityLogs,
     verifyAdminMFA,
-    createManualPayout
+    createManualPayout,
+    getAnalytics
 };

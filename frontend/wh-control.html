@@ -164,6 +164,7 @@
                 <div class="nav-item" onclick="showView('tree', this)">5. Network Tree</div>
                 <div class="nav-item" onclick="showView('security', this)">6. Security Audit</div>
                 <div class="nav-item" onclick="showView('settings', this)">7. System Settings</div>
+                <div class="nav-item" onclick="showView('analytics', this)">8. Traffic Analytics</div>
 
                 <div style="margin-top: 3rem; padding: 20px; border-top: 1px solid var(--border-glass);">
                     <button onclick="runDiagnostics()" class="btn-primary" style="width: 100%; font-size: 0.7rem; background: rgba(255,255,255,0.05);">🔍 RUN DIAGNOSTICS</button>
@@ -332,6 +333,38 @@
                         <p style="font-size: 0.7rem; color: var(--text-dim); margin-bottom: 0.5rem;">This key is required to unlock the Admin Portal.</p>
                         <input type="text" id="setting-master-pass" placeholder="Enter New Password" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); border-radius: 8px; color: #fff; margin-bottom: 1.5rem;">
                         <button onclick="saveMasterPassword()" class="btn-primary" style="width: 100%;">UPDATE SECURITY KEY</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics View -->
+            <div id="view-analytics" class="view">
+                <h2>Traffic Analytics</h2>
+                <div class="dashboard-grid" style="margin-top: 2rem; grid-template-columns: repeat(2, 1fr);">
+                    <div class="stat-card glass" style="padding: 2.5rem;">
+                        <div class="card-title">Total Visits</div>
+                        <div class="stat-value" id="stats-total-visits" style="font-size: 4rem; color: var(--primary);">0</div>
+                    </div>
+                    <div class="stat-card glass" style="padding: 2.5rem;">
+                        <div class="card-title">Visits Today</div>
+                        <div class="stat-value" id="stats-today-visits" style="font-size: 4rem; color: #00c853;">0</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="stat-card glass" style="padding: 1.5rem;">
+                        <div class="card-title">Top Pages</div>
+                        <table id="analytics-pages-table" style="margin-top: 1rem;">
+                            <thead><tr><th>Page</th><th>Visits</th></tr></thead>
+                            <tbody id="analytics-pages-body"></tbody>
+                        </table>
+                    </div>
+                    <div class="stat-card glass" style="padding: 1.5rem;">
+                        <div class="card-title">Top Referrers</div>
+                        <table id="analytics-referrers-table" style="margin-top: 1rem;">
+                            <thead><tr><th>Source</th><th>Visits</th></tr></thead>
+                            <tbody id="analytics-referrers-body"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -560,6 +593,7 @@
             if (v === 'tree') loadNetworkTree();
             if (v === 'security') loadSecurityLogs();
             if (v === 'settings') loadSettings();
+            if (v === 'analytics') loadAnalytics();
         }
 
 
@@ -621,6 +655,28 @@
                         <span style="font-size: 1.2rem;">${a.type === 'CRITICAL' ? '🚫' : '⚠️'}</span>
                         <div>${a.message}</div>
                     </div>
+                `).join('');
+            }
+        }
+
+        async function loadAnalytics() {
+            const data = await api('/analytics');
+            if (data.success) {
+                document.getElementById('stats-total-visits').innerText = data.data.totalVisits;
+                document.getElementById('stats-today-visits').innerText = data.data.todayVisits;
+                
+                document.getElementById('analytics-pages-body').innerHTML = data.data.topPages.map(p => `
+                    <tr>
+                        <td>${p.page}</td>
+                        <td style="font-weight: 800; color: var(--primary);">${p.count}</td>
+                    </tr>
+                `).join('');
+
+                document.getElementById('analytics-referrers-body').innerHTML = data.data.topReferrers.map(r => `
+                    <tr>
+                        <td>${r.referrer}</td>
+                        <td style="font-weight: 800; color: var(--primary);">${r.count}</td>
+                    </tr>
                 `).join('');
             }
         }
@@ -976,5 +1032,6 @@
             if (e.key === 'Enter') verifyMasterLock();
         });
     </script>
+<script src="js/analytics.js"></script>
 </body>
 </html>

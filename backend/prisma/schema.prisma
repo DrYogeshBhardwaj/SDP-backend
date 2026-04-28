@@ -160,5 +160,13 @@ enum Plan {
   PREMIUM
 }
 
+model SiteVisit {
+  id        String   @id @default(uuid())
+  ip        String?
+  page      String
+  referrer  String?
+  userAgent String?
+  createdAt DateTime @default(now())
+}
 
 

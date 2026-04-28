@@ -32,6 +32,7 @@ app.use('/api/payment', require('./routes/payment.routes'));
 app.use('/api/therapy', require('./routes/therapy.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
 app.use('/api/user', require('./routes/user.routes'));
+app.use('/api/analytics', require('./routes/analytics.routes'));
 
 // Serve Frontend
 app.use(express.static(path.join(__dirname, '../../frontend')));
