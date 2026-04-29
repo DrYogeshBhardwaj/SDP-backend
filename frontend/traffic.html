@@ -101,9 +101,11 @@
 
     <script>
         async function loadAnalytics() {
+            const btn = document.querySelector('.refresh-btn');
+            if(btn) btn.innerText = "🔄 REFRESHING...";
             try {
-                // Fetch from the public endpoint
-                const res = await fetch(CONFIG.API_BASE_URL + '/api/analytics/stats');
+                // Fetch from the public endpoint with cache-busting
+                const res = await fetch(CONFIG.API_BASE_URL + '/api/analytics/stats?t=' + Date.now(), { cache: 'no-store' });
                 const data = await res.json();
                 
                 if (data.success) {
@@ -132,6 +134,9 @@
                 }
             } catch(e) {
                 console.error(e);
+            }
+            if(btn) {
+                setTimeout(() => { btn.innerText = "🔄 REFRESH NOW"; }, 500);
             }
         }
 
