@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traffic Analytics | Sinaank</title>
+    <link rel="stylesheet" href="css/v1.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Hind:wght@400;700&display=swap" rel="stylesheet">
+    <script src="js/config.js"></script>
+    <style>
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        .stat-box {
+            background: rgba(0, 216, 255, 0.05);
+            border: 1px solid rgba(0, 216, 255, 0.2);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--primary);
+            text-shadow: 0 0 10px var(--primary-glow);
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .data-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            text-align: left;
+        }
+        .data-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.9rem;
+        }
+        .refresh-btn {
+            background: var(--primary);
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+    </style>
+</head>
+<body class="scientific-grid">
+    <div style="text-align: center; padding: 2rem;">
+        <h1 style="color: #fff; font-size: 2rem; margin-bottom: 0.5rem;">Sinaank Live Traffic</h1>
+        <p style="color: var(--text-dim);">Real-time site analytics</p>
+        <button onclick="loadAnalytics()" class="refresh-btn" style="margin-top: 1rem;">🔄 REFRESH NOW</button>
+    </div>
+
+    <div class="analytics-grid">
+        <div class="stat-box">
+            <div class="stat-label">Total Visits</div>
+            <div class="stat-value" id="val-total">--</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">Visits Today</div>
+            <div class="stat-value" id="val-today">--</div>
+        </div>
+    </div>
+
+    <div class="analytics-grid">
+        <div class="stat-box">
+            <h3 style="color: var(--primary); margin-bottom: 1rem; border-bottom: 1px solid rgba(0,216,255,0.2); padding-bottom: 10px;">Top Locations</h3>
+            <ul class="data-list" id="list-locations">
+                <li>Loading...</li>
+            </ul>
+        </div>
+        <div class="stat-box">
+            <h3 style="color: var(--primary); margin-bottom: 1rem; border-bottom: 1px solid rgba(0,216,255,0.2); padding-bottom: 10px;">Top Referrers</h3>
+            <ul class="data-list" id="list-referrers">
+                <li>Loading...</li>
+            </ul>
+        </div>
+        <div class="stat-box">
+            <h3 style="color: var(--primary); margin-bottom: 1rem; border-bottom: 1px solid rgba(0,216,255,0.2); padding-bottom: 10px;">Top Pages</h3>
+            <ul class="data-list" id="list-pages">
+                <li>Loading...</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        async function loadAnalytics() {
+            try {
+                // Fetch from the public endpoint
+                const res = await fetch(CONFIG.API_BASE_URL + '/api/analytics/stats');
+                const data = await res.json();
+                
+                if (data.success) {
+                    document.getElementById('val-total').innerText = data.data.totalVisits;
+                    document.getElementById('val-today').innerText = data.data.todayVisits;
+
+                    const renderList = (id, items, labelKey, countKey) => {
+                        const el = document.getElementById(id);
+                        if (!items || items.length === 0) {
+                            el.innerHTML = '<li style="color: #666; justify-content: center;">No data yet</li>';
+                            return;
+                        }
+                        el.innerHTML = items.map(i => `
+                            <li>
+                                <span style="color: #fff;">${i[labelKey]}</span>
+                                <span style="font-weight: 800; color: var(--primary);">${i[countKey]}</span>
+                            </li>
+                        `).join('');
+                    };
+
+                    renderList('list-locations', data.data.topLocations, 'location', 'count');
+                    renderList('list-referrers', data.data.topReferrers, 'referrer', 'count');
+                    renderList('list-pages', data.data.topPages, 'page', 'count');
+                } else {
+                    console.error("Failed to load analytics");
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        // Load on start and refresh every 30 seconds
+        loadAnalytics();
+        setInterval(loadAnalytics, 30000);
+    </script>
+</body>
+</html>

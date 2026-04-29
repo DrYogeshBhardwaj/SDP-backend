@@ -50,5 +50,60 @@ router.post('/track', async (req, res) => {
         res.status(500).json({ success: false });
     }
 });
+// GET /api/analytics/stats
+// Public endpoint to view traffic stats
+router.get('/stats', async (req, res) => {
+    try {
+        const totalVisits = await prisma.siteVisit.count();
+        
+        // Today's visits
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayVisits = await prisma.siteVisit.count({
+            where: { createdAt: { gte: today } }
+        });
+
+        // Group by Referrer
+        const referrers = await prisma.siteVisit.groupBy({
+            by: ['referrer'],
+            _count: { referrer: true },
+            orderBy: { _count: { referrer: 'desc' } },
+            take: 10
+        });
+
+        // Group by Page
+        const pages = await prisma.siteVisit.groupBy({
+            by: ['page'],
+            _count: { page: true },
+            orderBy: { _count: { page: 'desc' } },
+            take: 10
+        });
+
+        // Group by Location (City/Country)
+        const countries = await prisma.siteVisit.groupBy({
+            by: ['country', 'city'],
+            _count: { _all: true },
+            orderBy: { _count: { country: 'desc' } },
+            take: 10
+        });
+
+        res.status(200).json({
+            success: true,
+            data: {
+                totalVisits,
+                todayVisits,
+                topReferrers: referrers.map(r => ({ referrer: r.referrer, count: r._count.referrer })),
+                topPages: pages.map(p => ({ page: p.page, count: p._count.page })),
+                topLocations: countries.map(c => ({ 
+                    location: `${c.city !== 'Unknown' && c.city ? c.city + ', ' : ''}${c.country || 'Unknown'}`, 
+                    count: c._count._all 
+                }))
+            }
+        });
+    } catch (err) {
+        console.error('[ANALYTICS_STATS_ERROR]', err);
+        res.status(500).json({ success: false, message: 'Failed to fetch stats' });
+    }
+});
 
 module.exports = router;
