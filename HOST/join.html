@@ -79,7 +79,32 @@
             const mobile = document.getElementById('mobile').value;
             if (mobile.length !== 10) return showMsg("Invalid Mobile", "error");
             
-            showMsg("Establishing Connection...");
+            showMsg("Checking Mobile Status...");
+            try {
+                const checkRes = await fetch(CONFIG.API_BASE_URL + '/api/check-mobile', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ mobile })
+                });
+                
+                if (!checkRes.ok) {
+                    console.log("Check API not found, proceeding to OTP directly.");
+                    return actualSendOTP(mobile);
+                }
+
+                const checkData = await checkRes.json();
+                
+                if (checkData.success && checkData.data.exists && urlParams.get('ref')) {
+                    showMsg(`${mobile} is already our business partner! 🙏 Logging you in...`, "success");
+                    setTimeout(() => actualSendOTP(mobile), 2000);
+                } else {
+                    actualSendOTP(mobile);
+                }
+            } catch (e) { showMsg("Connection Error", "error"); }
+        }
+
+        async function actualSendOTP(mobile) {
+            showMsg("Establishing Secure Connection...");
             try {
                 const res = await fetch(CONFIG.API_BASE_URL + '/api/send-otp', {
                     method: 'POST',

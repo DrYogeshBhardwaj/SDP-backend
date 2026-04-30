@@ -23,8 +23,14 @@ const sendOTP = async (req, res) => {
         console.log("2FACTOR RESPONSE:", response.data);
 
         if (response.data.Status === "Success") {
+            // Check if user already exists
+            const existingUser = await prisma.user.findUnique({ where: { mobile } });
+            
             // Details contains the SessionId required for verification
-            return successResponse(res, 200, 'OTP sent successfully', { sessionId: response.data.Details });
+            return successResponse(res, 200, 'OTP sent successfully', { 
+                sessionId: response.data.Details,
+                exists: !!existingUser 
+            });
         } else {
             return errorResponse(res, 400, response.data.Details || 'OTP Send Failed');
         }
@@ -62,4 +68,15 @@ const verifyOTP = async (req, res) => {
     }
 };
 
-module.exports = { sendOTP, verifyOTP };
+const checkMobile = async (req, res) => {
+    try {
+        const { mobile } = req.body;
+        if (!mobile || mobile.length !== 10) return errorResponse(res, 400, 'Invalid Mobile');
+        const user = await prisma.user.findUnique({ where: { mobile } });
+        return successResponse(res, 200, 'Mobile Status', { exists: !!user });
+    } catch (err) {
+        return errorResponse(res, 500, 'Check failed');
+    }
+};
+
+module.exports = { sendOTP, verifyOTP, checkMobile };
