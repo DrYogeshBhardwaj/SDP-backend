@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sinaank Master Control | V1 Security Proof</title>
     <link rel="stylesheet" href="css/v1.css">
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/6024/6024190.png">
     <script src="js/config.js"></script>
     <style>
         .admin-layout {
@@ -262,7 +263,7 @@
                                 <th>Mobile</th>
                                 <th>Name</th>
                                 <th>Role</th>
-                                <th>Status</th>
+                                <th>Copy Link</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -819,11 +820,20 @@
                         <td>${u.mobile}</td>
                         <td>${u.name || '-'}</td>
                         <td>${u.role}</td>
-                        <td><span class="badge badge-${u.status.toLowerCase()}">${u.status}</span></td>
+                        <td>
+                            <button onclick="copyReferralLink('${u.mobile}')" class="btn-primary" style="padding: 4px 8px; font-size: 0.6rem; background: rgba(0,216,255,0.1); color: var(--primary);">COPY LINK</button>
+                        </td>
                         <td><button onclick="editUser('${u.id}')" class="btn-primary" style="padding: 4px 12px; font-size: 0.7rem;">EDIT</button></td>
                     </tr>
                 `).join('');
             }
+        }
+
+        function copyReferralLink(mobile) {
+            const link = `https://sinaank.com/join.html?ref=${mobile}`;
+            navigator.clipboard.writeText(link).then(() => {
+                alert("Referral Link Copied: " + link);
+            });
         }
 
         function editUser(id) {

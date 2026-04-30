@@ -58,7 +58,7 @@
             <h2>Enter OTP</h2>
             <input type="number" id="otp" placeholder="XXXXXX">
             <button onclick="verifyOTP()" class="btn-primary" style="width: 100%;">Authorize</button>
-            <p style="margin-top: 1rem; cursor: pointer; text-decoration: underline; font-size: 0.8rem;" onclick="location.href='join.html'">Change Mobile</p>
+            <p style="margin-top: 1rem; cursor: pointer; text-decoration: underline; font-size: 0.8rem;" onclick="goBackToMobile()">Change Mobile</p>
         </div>
         
         <p id="msg" style="margin-top: 1.5rem; font-size: 0.9rem;"></p>
@@ -207,8 +207,22 @@
             el.style.color = type === 'error' ? '#ff5252' : '#00c853';
         }
 
+        function goBackToMobile() {
+            const ref = localStorage.getItem('refCode');
+            window.location.href = ref ? `join.html?ref=${ref}` : 'join.html';
+        }
+
         // Handle referral in URL
-        if (urlParams.get('ref')) localStorage.setItem('refCode', urlParams.get('ref'));
+        const refCode = urlParams.get('ref');
+        if (refCode) {
+            localStorage.setItem('refCode', refCode);
+            // UI adjustment for referral mode
+            document.querySelectorAll('.card-title').forEach(el => el.innerText = "Join Sinaank Team");
+            const h2 = document.querySelector('#step-mobile h2');
+            if (h2) h2.innerText = "Registration";
+            const btn = document.getElementById('otp-btn');
+            if (btn) btn.innerText = "Join Now";
+        }
     </script>
     <footer class="main-footer">
         <div class="footer-links">
