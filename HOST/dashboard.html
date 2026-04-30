@@ -433,7 +433,19 @@
                     setVal('user-streak', u.streak || 0);
                     
                     const planBadge = document.getElementById('user-plan-badge');
-                    if (planBadge) planBadge.innerText = u.isBusinessUnlocked ? `MASTER LICENSE` : `FREE TRIAL`;
+                    if (planBadge) {
+                        if (u.plan === 'PREMIUM' || u.isBusinessUnlocked) {
+                            planBadge.innerText = "MASTER LICENSE (PAID)";
+                            planBadge.style.background = "linear-gradient(45deg, #FFD700, #FFA500)";
+                            planBadge.style.color = "#000";
+                            planBadge.style.border = "1px solid #FFD700";
+                        } else {
+                            planBadge.innerText = "FREE MEMBER";
+                            planBadge.style.background = "rgba(255,255,255,0.05)";
+                            planBadge.style.color = "var(--text-dim)";
+                            planBadge.style.border = "1px solid rgba(255,255,255,0.1)";
+                        }
+                    }
                     
                     // Business Unlock UI
                     if (u.isBusinessUnlocked) {
