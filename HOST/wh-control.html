@@ -427,7 +427,10 @@
                 <input type="number" id="edit-minutes" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); border-radius: 4px; color: #fff; margin-bottom: 1rem;">
 
                 <label style="font-size: 0.7rem; color: var(--primary);">UPI ID (ADMIN OVERRIDE)</label>
-                <input type="text" id="edit-upi" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); border-radius: 4px; color: #fff; margin-bottom: 1.5rem;">
+                <input type="text" id="edit-upi" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); border-radius: 4px; color: #fff; margin-bottom: 1rem;">
+
+                <label style="font-size: 0.7rem; color: #ffab00;">SPONSOR MOBILE (Move to New Upline)</label>
+                <input type="tel" id="edit-sponsor" placeholder="Enter New Sponsor Mobile" style="width: 100%; padding: 10px; background: rgba(255,171,0,0.05); border: 1px solid #ffab00; border-radius: 4px; color: #fff; margin-bottom: 1.5rem;">
             </div>
             <div style="display: flex; gap: 10px;">
                 <button onclick="saveUserChanges()" class="btn-primary" style="flex: 1;">SAVE CHANGES</button>
@@ -846,6 +849,7 @@
             document.getElementById('edit-role').value = user.role;
             document.getElementById('edit-minutes').value = user.minutesBalance;
             document.getElementById('edit-upi').value = user.upiId || '';
+            document.getElementById('edit-sponsor').value = user.sponsor?.mobile || '';
             
             document.getElementById('edit-modal').style.display = 'flex';
         }
@@ -861,7 +865,8 @@
                 status: document.getElementById('edit-status').value,
                 role: document.getElementById('edit-role').value,
                 minutesBalance: document.getElementById('edit-minutes').value,
-                upiId: document.getElementById('edit-upi').value
+                upiId: document.getElementById('edit-upi').value,
+                sponsorMobile: document.getElementById('edit-sponsor').value
             };
 
             const data = await api('/user/' + id, 'PUT', payload);

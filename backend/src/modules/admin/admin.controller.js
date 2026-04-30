@@ -105,7 +105,10 @@ const getPendingBalances = async (req, res) => {
 const getAllUsers = async (req, res) => {
     try {
         const users = await prisma.user.findMany({
-            include: { wallets: true },
+            include: { 
+                wallets: true,
+                sponsor: { select: { mobile: true } }
+            },
             orderBy: { createdAt: 'desc' }
         });
         return successResponse(res, 200, 'User List', users);
@@ -204,9 +207,16 @@ const getCashLogs = async (req, res) => {
 const updateUser = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status, name, minutesBalance, role, upiId } = req.body;
+        const { status, name, minutesBalance, role, upiId, sponsorMobile } = req.body;
 
-        console.log(`[ADMIN_UPDATE] Updating user ${id}:`, { name, status, role, minutesBalance, upiId });
+        console.log(`[ADMIN_UPDATE] Updating user ${id}:`, { name, status, role, minutesBalance, upiId, sponsorMobile });
+
+        let sponsorId = undefined;
+        if (sponsorMobile) {
+            const sponsor = await prisma.user.findUnique({ where: { mobile: sponsorMobile } });
+            if (!sponsor) return errorResponse(res, 404, 'New Sponsor not found');
+            sponsorId = sponsor.id;
+        }
 
         const updated = await prisma.user.update({
             where: { id },
@@ -215,7 +225,8 @@ const updateUser = async (req, res) => {
                 name, 
                 minutesBalance: parseInt(minutesBalance) || 0, 
                 role,
-                upiId
+                upiId,
+                sponsorId
             }
         });
 
