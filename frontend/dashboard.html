@@ -181,14 +181,18 @@
 
             <div style="opacity: 0.3;">
                 <div class="stat-title-new">Your Network & Earnings</div>
-                <div style="display: flex; gap: 2rem; margin-top: 1rem;">
+                <div style="display: flex; gap: 2rem; margin-top: 1rem; flex-wrap: wrap;">
                     <div>
                         <div style="font-size: 0.7rem; color: var(--text-dim);">WALLET</div>
-                        <div style="font-size: 1.5rem; font-weight: 800;">₹0.00</div>
+                        <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">₹<span id="user-cash-balance">0.00</span></div>
                     </div>
                     <div>
-                        <div style="font-size: 0.7rem; color: var(--text-dim);">REFERRALS</div>
-                        <div style="font-size: 1.5rem; font-weight: 800;">0</div>
+                        <div style="font-size: 0.7rem; color: var(--text-dim);">DIRECT</div>
+                        <div style="font-size: 1.5rem; font-weight: 800;"><span id="user-direct-referrals">0</span></div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.7rem; color: var(--text-dim);">TEAM (L2)</div>
+                        <div style="font-size: 1.5rem; font-weight: 800;"><span id="user-team-referrals">0</span></div>
                     </div>
                 </div>
             </div>
@@ -360,6 +364,9 @@
                     const setVal = (id, val) => { const el = document.getElementById(id); if(el) el.innerText = val; };
                     setVal('min-balance', u.minutesBalance);
                     setVal('user-streak', u.streak || 0);
+                    setVal('user-cash-balance', (u.cashBalance || 0).toFixed(2));
+                    setVal('user-direct-referrals', u.directCount || 0);
+                    setVal('user-team-referrals', u.teamCount || 0);
                     
                     const planBadge = document.getElementById('user-plan-badge');
                     if (planBadge) {
