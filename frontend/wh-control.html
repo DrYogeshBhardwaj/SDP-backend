@@ -263,6 +263,7 @@
                                 <th>Mobile</th>
                                 <th>Name</th>
                                 <th>Role</th>
+                                <th>Plan</th>
                                 <th>Copy Link</th>
                                 <th>Action</th>
                             </tr>
@@ -823,6 +824,11 @@
                         <td>${u.mobile}</td>
                         <td>${u.name || '-'}</td>
                         <td>${u.role}</td>
+                        <td>
+                            <span class="badge" style="background: ${u.plan === 'PREMIUM' || u.isBusinessUnlocked ? 'linear-gradient(45deg, #FFD700, #FFA500)' : 'rgba(255,255,255,0.05)'}; color: ${u.plan === 'PREMIUM' || u.isBusinessUnlocked ? '#000' : 'var(--text-dim)'}; border: 1px solid ${u.plan === 'PREMIUM' || u.isBusinessUnlocked ? '#FFD700' : 'rgba(255,255,255,0.1)'};">
+                                ${u.plan === 'PREMIUM' || u.isBusinessUnlocked ? 'PAID / MASTER' : 'FREE'}
+                            </span>
+                        </td>
                         <td>
                             <button onclick="copyReferralLink('${u.mobile}')" class="btn-primary" style="padding: 4px 8px; font-size: 0.6rem; background: rgba(0,216,255,0.1); color: var(--primary);">COPY LINK</button>
                         </td>
