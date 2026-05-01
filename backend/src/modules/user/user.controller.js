@@ -123,6 +123,18 @@ const getMyQueries = async (req, res) => {
     }
 };
 
+const clearMyQueries = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        await prisma.supportQuery.deleteMany({
+            where: { userId }
+        });
+        return successResponse(res, 200, 'Query history cleared');
+    } catch (err) {
+        return errorResponse(res, 500, 'Failed to clear history');
+    }
+};
+
 const updateProfile = async (req, res) => {
     try {
         const userId = req.user.userId;
@@ -139,4 +151,4 @@ const updateProfile = async (req, res) => {
     }
 };
 
-module.exports = { requestPayout, submitQuery, getMyQueries, saveUpiId, updateProfile };
+module.exports = { requestPayout, submitQuery, getMyQueries, clearMyQueries, saveUpiId, updateProfile };

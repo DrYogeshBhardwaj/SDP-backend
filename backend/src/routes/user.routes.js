@@ -8,6 +8,7 @@ router.use(authMiddleware);
 router.post('/payout-request', userController.requestPayout);
 router.post('/query', userController.submitQuery);
 router.get('/queries', userController.getMyQueries);
+router.delete('/queries/clear', userController.clearMyQueries);
 router.post('/upi', userController.saveUpiId);
 router.put('/update-profile', userController.updateProfile);
 

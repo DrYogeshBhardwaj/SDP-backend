@@ -267,13 +267,16 @@
         <div id="ai-panel" class="stat-card glass" style="grid-column: 1 / -1; display: none; background: radial-gradient(circle at bottom right, rgba(0,216,255,0.1), transparent);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <div class="stat-title-new">AI Support & Queries</div>
-                <div style="font-size: 0.6rem; color: var(--primary); border: 1px solid var(--primary); padding: 2px 8px; border-radius: 10px;">PAID EXCLUSIVE</div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button onclick="clearChat()" style="background: none; border: 1px solid rgba(255,82,82,0.3); color: #ff5252; font-size: 0.6rem; padding: 2px 8px; border-radius: 10px; cursor: pointer;">CLEAR CHAT</button>
+                    <div style="font-size: 0.6rem; color: var(--primary); border: 1px solid var(--primary); padding: 2px 8px; border-radius: 10px;">PAID EXCLUSIVE</div>
+                </div>
             </div>
             <div id="support-chat" style="height: 250px; overflow-y: auto; background: rgba(0,0,0,0.3); border-radius: 15px; padding: 1.5rem; margin: 1rem 0; text-align: left; border: 1px solid rgba(255,255,255,0.05); scroll-behavior: smooth;">
                 <div style="color: var(--text-dim); text-align: center; margin-top: 5rem;">Loading conversations...</div>
             </div>
             <div style="display: flex; gap: 12px; background: rgba(255,255,255,0.03); padding: 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                <input type="text" id="query-input" placeholder="Type your query here..." style="flex: 1; padding: 12px 15px; background: none; border: none; color: #fff; font-size: 0.9rem; outline: none;">
+                <input type="text" id="query-input" placeholder="Type your query here..." onkeydown="if(event.key==='Enter') submitQuery()" style="flex: 1; padding: 12px 15px; background: none; border: none; color: #fff; font-size: 0.9rem; outline: none;">
                 <button onclick="submitQuery()" class="btn-primary" style="padding: 10px 25px; font-size: 0.8rem; border-radius: 10px;">SEND</button>
             </div>
         </div>
@@ -379,6 +382,25 @@
             
             input.value = '';
             loadMyQueries(); // Refresh chat
+        }
+
+        async function clearChat() {
+            if (!confirm("Are you sure you want to clear your query history?")) return;
+            const token = localStorage.getItem('session');
+            try {
+                // We'll need a backend endpoint for this or just clear local view if backend not ready
+                // For now, let's assume we want to clear from backend
+                const res = await fetch(CONFIG.API_BASE_URL + '/api/user/queries/clear', {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    loadMyQueries();
+                } else {
+                    alert(data.message || "Failed to clear chat");
+                }
+            } catch (e) { alert("Action Failed"); }
         }
 
         async function loadMyQueries() {
