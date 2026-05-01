@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-SM76B4W3PN"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-SM76B4W3PN');
+</script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sinaank Therapy | Access Hub</title>
@@ -174,6 +183,13 @@
                 });
                 const data = await res.json();
                 if (data.success) {
+                    // Track Signup Event
+                    if (typeof gtag === 'function') {
+                        gtag('event', 'signup');
+                        if (localStorage.getItem('refCode')) {
+                            gtag('event', 'referral_join');
+                        }
+                    }
                     localStorage.setItem('session', data.data.token);
                     localStorage.setItem('mobile', mobile);
                     window.location.href = "dashboard.html";
