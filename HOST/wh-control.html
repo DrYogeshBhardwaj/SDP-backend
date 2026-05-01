@@ -167,8 +167,8 @@
             </div>
 
             <div class="sidebar-nav">
-                <div class="nav-item active" onclick="showView('wholesale', this)">1. Wholesale</div>
-                <div class="nav-item" onclick="showView('cash', this)">2. Cash Management</div>
+                <div class="nav-item active" onclick="showView('cash', this)">1. Cash Management</div>
+                <div class="nav-item" onclick="showView('wholesale', this)">2. Wholesale</div>
                 <div class="nav-item" onclick="showView('edit', this)">3. Edit Users</div>
                 <div class="nav-item" onclick="showView('queries', this)">4. General Queries</div>
                 <div class="nav-item" onclick="showView('tree', this)">5. Network Tree</div>
@@ -183,7 +183,7 @@
         </div>
 
         <div class="admin-content">
-            <div id="view-wholesale" class="view active">
+            <div id="view-wholesale" class="view">
                 <h2 style="font-size: 2.5rem; letter-spacing: -1px; margin-bottom: 2rem;">Wholesale Overview</h2>
                 
                 <!-- Alerts Section -->
@@ -214,7 +214,7 @@
             </div>
 
             <!-- Cash View -->
-            <div id="view-cash" class="view">
+            <div id="view-cash" class="view active">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <h2>Cash Management</h2>
                     <div style="display: flex; gap: 10px;">
@@ -521,7 +521,7 @@
                     document.getElementById('lock-screen').style.display = 'none';
                     document.getElementById('main-layout').style.display = 'grid';
                     sessionStorage.setItem('master_unlocked', 'true');
-                    loadStats();
+                    loadPendingBalances();
                 } else {
                     msg.innerText = data.message || "INVALID OTP";
                 }
@@ -540,6 +540,7 @@
         if (sessionStorage.getItem('master_unlocked') === 'true') {
             document.getElementById('lock-screen').style.display = 'none';
             document.getElementById('main-layout').style.display = 'grid';
+            loadPendingBalances();
         }
 
         async function loadSettings() {
