@@ -45,6 +45,24 @@
             max-width: 1200px;
             margin: 0 auto;
         }
+        .lite-mode {
+            filter: grayscale(1) opacity(0.3);
+            pointer-events: none;
+            user-select: none;
+            transition: 0.5s;
+        }
+        .promo-banner {
+            background: linear-gradient(90deg, rgba(0, 216, 255, 0.1), rgba(0, 149, 255, 0.1));
+            border: 1px solid var(--primary);
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            text-align: left;
+        }
     </style>
 </head>
 <body class="scientific-grid">
@@ -207,17 +225,45 @@
             </div>
         </div>
 
-        <!-- 3. REFERRAL LINK -->
+        <!-- 3. REFERRAL LINK & AI PANEL -->
+        <div id="ai-panel" class="stat-card glass" style="grid-column: 1 / -1; display: none; background: radial-gradient(circle at bottom right, rgba(0,216,255,0.1), transparent);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div class="stat-title-new">AI Support & Queries</div>
+                <div style="font-size: 0.6rem; color: var(--primary); border: 1px solid var(--primary); padding: 2px 8px; border-radius: 10px;">PAID EXCLUSIVE</div>
+            </div>
+            <div id="support-chat" style="height: 250px; overflow-y: auto; background: rgba(0,0,0,0.3); border-radius: 15px; padding: 1.5rem; margin: 1rem 0; text-align: left; border: 1px solid rgba(255,255,255,0.05); scroll-behavior: smooth;">
+                <div style="color: var(--text-dim); text-align: center; margin-top: 5rem;">Loading conversations...</div>
+            </div>
+            <div style="display: flex; gap: 12px; background: rgba(255,255,255,0.03); padding: 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                <input type="text" id="query-input" placeholder="Type your query here..." style="flex: 1; padding: 12px 15px; background: none; border: none; color: #fff; font-size: 0.9rem; outline: none;">
+                <button onclick="submitQuery()" class="btn-primary" style="padding: 10px 25px; font-size: 0.8rem; border-radius: 10px;">SEND</button>
+            </div>
+        </div>
+
         <div id="referral-card" class="stat-card glass" style="grid-column: 1 / -1; display: block;">
-            <div class="stat-title-new">Your Master Link</div>
-            <div style="display: flex; align-items: center; gap: 20px; margin-top: 1rem; flex-wrap: wrap;">
-                <div id="qrcode" style="background: #fff; padding: 10px; border-radius: 8px; min-width: 160px; min-height: 160px; display: flex; align-items: center; justify-content: center;"></div>
-                <div style="flex: 1; min-width: 250px; text-align: left;">
-                    <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 1rem;">Share this link and earn ₹100 direct + ₹80 from team!</p>
-                    <input type="text" id="visible-referral-link" readonly style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--primary); border-radius: 8px; color: #fff; margin-bottom: 1rem; font-size: 0.8rem;" placeholder="Generating link...">
-                    <div style="display: flex; gap: 10px;">
-                        <button onclick="copyToClipboard()" class="btn-primary" style="font-size: 0.7rem; flex: 1;">COPY LINK</button>
-                        <button onclick="shareWhatsApp()" class="btn-primary" style="font-size: 0.7rem; flex: 1; background: #25D366; border: none; box-shadow: none;">WHATSAPP</button>
+            <!-- Promo for Free Users -->
+            <div id="referral-promo" class="promo-banner" style="display: none;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div style="font-size: 2rem;">🚀</div>
+                    <div>
+                        <div style="font-weight: 800; color: var(--primary); font-size: 1.1rem;">Ram Ram Ji! 🙏 Business Partner Banein</div>
+                        <div style="font-size: 0.85rem; color: #fff; margin-top: 4px;">₹299 Pay karke apna business shuru karein aur har referral par <b>₹100 + ₹80</b> kamayein!</div>
+                    </div>
+                </div>
+                <button onclick="showPlans()" class="btn-primary" style="padding: 10px 20px; font-size: 0.8rem; white-space: nowrap;">ACTIVATE NOW</button>
+            </div>
+
+            <div id="referral-content-wrapper">
+                <div class="stat-title-new">Your Master Link</div>
+                <div style="display: flex; align-items: center; gap: 20px; margin-top: 1rem; flex-wrap: wrap;">
+                    <div id="qrcode" style="background: #fff; padding: 10px; border-radius: 8px; min-width: 160px; min-height: 160px; display: flex; align-items: center; justify-content: center;"></div>
+                    <div style="flex: 1; min-width: 250px; text-align: left;">
+                        <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 1rem;">Share this link and earn ₹100 direct + ₹80 from team!</p>
+                        <input type="text" id="visible-referral-link" readonly style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--primary); border-radius: 8px; color: #fff; margin-bottom: 1rem; font-size: 0.8rem;" placeholder="Generating link...">
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="copyToClipboard()" class="btn-primary" style="font-size: 0.7rem; flex: 1;">COPY LINK</button>
+                            <button onclick="shareWhatsApp()" class="btn-primary" style="font-size: 0.7rem; flex: 1; background: #25D366; border: none; box-shadow: none;">WHATSAPP</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -460,10 +506,20 @@
                         document.getElementById('business-section').querySelector('div:last-child').style.opacity = '1';
                         if(document.getElementById('upgrade-btn-top')) document.getElementById('upgrade-btn-top').style.display = 'none';
                         if(document.getElementById('upgrade-cta-main')) document.getElementById('upgrade-cta-main').style.display = 'none';
+                        
+                        // Show AI Panel and normal referral for PAID
+                        if(document.getElementById('ai-panel')) document.getElementById('ai-panel').style.display = 'block';
+                        if(document.getElementById('referral-promo')) document.getElementById('referral-promo').style.display = 'none';
+                        if(document.getElementById('referral-content-wrapper')) document.getElementById('referral-content-wrapper').classList.remove('lite-mode');
                     } else {
                         console.log("[DEBUG] User on FREE TRIAL, showing upgrade buttons");
                         if(document.getElementById('upgrade-btn-top')) document.getElementById('upgrade-btn-top').style.display = 'flex';
                         if(document.getElementById('upgrade-cta-main')) document.getElementById('upgrade-cta-main').style.display = 'inline-block';
+                        
+                        // Hide AI Panel and lite referral for FREE
+                        if(document.getElementById('ai-panel')) document.getElementById('ai-panel').style.display = 'none';
+                        if(document.getElementById('referral-promo')) document.getElementById('referral-promo').style.display = 'flex';
+                        if(document.getElementById('referral-content-wrapper')) document.getElementById('referral-content-wrapper').classList.add('lite-mode');
                     }
 
                     // Usage Meter Calculation (20 min total)
