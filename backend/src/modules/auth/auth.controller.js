@@ -66,14 +66,16 @@ const getMe = async (req, res) => {
         // MLM Stats
         const directs = await prisma.user.findMany({
             where: { sponsorId: userId },
-            select: { id: true }
+            select: { id: true, name: true, mobile: true, createdAt: true }
         });
         const directCount = directs.length;
         const directIds = directs.map(d => d.id);
         
-        const teamCount = await prisma.user.count({
-            where: { sponsorId: { in: directIds } }
+        const team = await prisma.user.findMany({
+            where: { sponsorId: { in: directIds } },
+            select: { name: true, mobile: true, sponsor: { select: { name: true } }, createdAt: true }
         });
+        const teamCount = team.length;
 
         return successResponse(res, 200, 'Profile Data', {
             id: user.id,
@@ -84,6 +86,8 @@ const getMe = async (req, res) => {
             cashBalance: cashBalance,
             directCount,
             teamCount,
+            directs,
+            team,
             transactions: transactions,
             dailyMinutesUsed: user.dailyMinutesUsed,
             referralCode: user.referralCode,
