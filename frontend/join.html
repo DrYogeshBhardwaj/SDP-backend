@@ -56,10 +56,14 @@
         <!-- STEP 2: OTP VERIFICATION -->
         <div id="step-otp" class="step">
             <div class="card-title">Security Gateway</div>
-            <h2>Enter OTP</h2>
+            <h2 style="font-size: 1.2rem; line-height: 1.4;">2 मिनट की therapy शुरू करने के लिए OTP डालें</h2>
             <input type="number" id="otp" placeholder="XXXXXX">
             <button onclick="verifyOTP()" class="btn-primary" style="width: 100%;">Authorize</button>
-            <p style="margin-top: 1rem; cursor: pointer; text-decoration: underline; font-size: 0.8rem;" onclick="goBackToMobile()">Change Mobile</p>
+            <div style="font-size: 0.7rem; color: #a5d6a7; margin-top: 1rem; line-height: 1.5; opacity: 0.8;">
+                ✔ आपका नंबर सुरक्षित है<br>
+                ✔ कोई spam नहीं होगा
+            </div>
+            <p style="margin-top: 1.5rem; cursor: pointer; text-decoration: underline; font-size: 0.8rem; color: var(--text-dim);" onclick="goBackToMobile()">⬅ वापस जाएं (Change Mobile)</p>
         </div>
         
         <p id="msg" style="margin-top: 1.5rem; font-size: 0.9rem;"></p>
@@ -153,14 +157,17 @@
                 const data = await res.json();
                 
                 if (data.success) {
-                    if (data.data.exists) {
-                        return performLogin(urlMobile);
-                    } else {
-                        // NEW USER -> REGISTER AS FREE AND GO TO DASHBOARD
-                        return performQuickRegister(urlMobile);
-                    }
+                    showMsg('Therapy शुरू हो रही है...', 'success');
+                    setTimeout(() => {
+                        if (data.data.exists) {
+                            return performLogin(urlMobile);
+                        } else {
+                            // NEW USER -> REGISTER AS FREE AND GO TO DASHBOARD
+                            return performQuickRegister(urlMobile);
+                        }
+                    }, 1000);
                 } else {
-                    showMsg('Invalid OTP', 'error');
+                    showMsg('⚠️ OTP सही नहीं है, फिर से कोशिश करें', 'error');
                 }
             } catch (e) { showMsg('Verification failed', 'error'); }
         }

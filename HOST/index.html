@@ -287,8 +287,8 @@
                 <div class="access-tag">🔴 Limited Free Access Today</div>
                 
                 <div style="margin-bottom: 1rem;">
-                    <button onclick="location.href='join.html'" class="btn-start">👉 2 मिनट FREE ट्राय करें</button>
-                    <span class="micro-line">⚡ सिर्फ 2 मिनट — तुरंत शुरू करें<br>📱 मोबाइल OTP से सुरक्षित शुरुआत</span>
+                    <button id="main-start-btn" onclick="startLoading(this)" class="btn-start">👉 2 मिनट FREE ट्राय करें</button>
+                    <span class="micro-line" style="color: #a5d6a7;">⚡ सिर्फ 2 मिनट — तुरंत शुरू करें<br>📱 मोबाइल OTP से सुरक्षित शुरुआत 🛡️</span>
                 </div>
                 
                 <div class="social-proof-small">
@@ -364,5 +364,15 @@
     </script>
     <script src="js/config.js"></script>
     <script src="js/analytics.js"></script>
+    <script>
+        function startLoading(btn) {
+            btn.innerHTML = "👉 लोड हो रहा है...";
+            btn.style.opacity = "0.8";
+            btn.style.pointerEvents = "none";
+            setTimeout(() => {
+                location.href = 'join.html';
+            }, 800);
+        }
+    </script>
 </body>
 </html>
