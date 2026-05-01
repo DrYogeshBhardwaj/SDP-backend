@@ -500,15 +500,21 @@
                         }
                     }
                     
-                    // Business Unlock UI
-                    if (u.isBusinessUnlocked) {
+                    // Business Unlock UI & AI Panel
+                    const isPaid = u.plan === 'PREMIUM' || u.isBusinessUnlocked;
+                    console.log("[DEBUG] User Paid Status:", isPaid, "Plan:", u.plan, "Unlocked:", u.isBusinessUnlocked);
+
+                    if (isPaid) {
                         document.getElementById('business-lock').style.display = 'none';
                         document.getElementById('business-section').querySelector('div:last-child').style.opacity = '1';
                         if(document.getElementById('upgrade-btn-top')) document.getElementById('upgrade-btn-top').style.display = 'none';
                         if(document.getElementById('upgrade-cta-main')) document.getElementById('upgrade-cta-main').style.display = 'none';
                         
                         // Show AI Panel and normal referral for PAID
-                        if(document.getElementById('ai-panel')) document.getElementById('ai-panel').style.display = 'block';
+                        if(document.getElementById('ai-panel')) {
+                            console.log("[DEBUG] Showing AI Panel");
+                            document.getElementById('ai-panel').style.display = 'block';
+                        }
                         if(document.getElementById('referral-promo')) document.getElementById('referral-promo').style.display = 'none';
                         if(document.getElementById('referral-content-wrapper')) document.getElementById('referral-content-wrapper').classList.remove('lite-mode');
                     } else {
