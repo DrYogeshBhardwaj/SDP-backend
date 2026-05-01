@@ -200,17 +200,25 @@
         }
 
         async function performLogin(mobile) {
+            if (!mobile) return showMsg('Mobile number missing', 'error');
             showMsg('Accessing Identity...');
-            const res = await fetch(CONFIG.API_BASE_URL + '/api/login', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ mobile })
-            });
-            const data = await res.json();
-            if (data.success) {
-                localStorage.setItem('session', data.data.token);
-                localStorage.setItem('mobile', mobile);
-                window.location.href = "dashboard.html";
+            try {
+                const res = await fetch(CONFIG.API_BASE_URL + '/api/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ mobile })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    localStorage.setItem('session', data.data.token);
+                    localStorage.setItem('mobile', mobile);
+                    window.location.href = "dashboard.html";
+                } else {
+                    showMsg(data.message || 'Login failed', 'error');
+                }
+            } catch (e) {
+                console.error('Login Error:', e);
+                showMsg('Connection Failed', 'error');
             }
         }
 
