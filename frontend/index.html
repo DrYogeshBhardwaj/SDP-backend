@@ -2,17 +2,17 @@
 <html lang="en">
 <head>
     <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-SM76B4W3PN"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-SM76B4W3PN');
-</script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-SM76B4W3PN"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-SM76B4W3PN');
+    </script>
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sinaank Therapy | Now Heal your Aura digitally</title>
+    <title>Sinaank Therapy | 2 Minute Digital Healing</title>
     <link rel="stylesheet" href="css/v1.css">
     <link rel="icon" type="image/png" href="Logo.png">
     <!-- Hindi & English Optimized Fonts -->
@@ -22,162 +22,237 @@
         :root {
             --brand-blue: #00D8FF;
             --brand-orange: #FF6A00;
+            --bg-dark: #050510;
+        }
+        body {
+            background-color: var(--bg-dark);
+            color: #fff;
+            margin: 0;
+            font-family: 'Poppins', 'Hind', sans-serif;
         }
         .hero {
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
-            flex-direction: column;
-            justify-content: center;
             align-items: center;
-            text-align: center;
+            justify-content: center;
             padding: 2rem;
             position: relative;
             overflow: hidden;
-            background: radial-gradient(circle at center, #0a0a20 0%, #000 100%);
+            background: radial-gradient(circle at center, #0a0a25 0%, #050510 100%);
         }
-        
-        /* Animated Planets & Energy Background */
-        .aura-glow {
-            position: absolute;
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(0, 216, 255, 0.15) 0%, transparent 70%);
-            border-radius: 50%;
-            filter: blur(80px);
-            animation: pulse-aura 8s infinite ease-in-out;
-            z-index: 1;
-        }
-        @keyframes pulse-aura {
-            0%, 100% { transform: scale(1); opacity: 0.5; }
-            50% { transform: scale(1.2); opacity: 0.8; }
-        }
-
-        .hero-content {
-            position: relative;
-            z-index: 10;
-            max-width: 800px;
-            padding: 4rem 1rem;
-        }
-
-        .top-label {
-            font-size: 0.8rem;
-            letter-spacing: 4px;
-            color: var(--brand-blue);
-            text-transform: uppercase;
-            font-weight: 700;
-            margin-bottom: 1rem;
-            opacity: 0.8;
-        }
-
-        .hero h1 { 
-            font-size: clamp(3.5rem, 12vw, 7rem); 
-            margin: 0;
-            line-height: 1;
-            font-weight: 900;
-            background: linear-gradient(135deg, #fff 30%, var(--brand-blue) 70%, var(--brand-orange));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 30px rgba(0, 216, 255, 0.3));
-        }
-
-        .tagline {
-            font-size: clamp(1.2rem, 4vw, 2.2rem);
-            margin: 1.5rem 0 2.5rem;
-            font-weight: 300;
-            color: #fff;
-            opacity: 0.9;
-        }
-
-        .feature-pills {
+        .hero-container {
             display: flex;
-            gap: 20px;
-            justify-content: center;
-            margin-bottom: 3rem;
-            flex-wrap: wrap;
+            width: 100%;
+            max-width: 1200px;
+            gap: 4rem;
+            align-items: center;
+            z-index: 10;
         }
-        .pill {
-            padding: 8px 20px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(0, 216, 255, 0.2);
-            border-radius: 50px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            letter-spacing: 1px;
+        .hero-text {
+            flex: 1;
+            text-align: left;
+        }
+        .hero-image-container {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .hero-image-container img {
+            width: 100%;
+            max-width: 500px;
+            border-radius: 30px;
+            box-shadow: 0 0 50px rgba(0, 216, 255, 0.2);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .image-tag {
+            position: absolute;
+            top: -10px;
+            right: 10%;
+            background: rgba(0, 216, 255, 0.9);
+            color: #000;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            backdrop-filter: blur(5px);
+            z-index: 11;
+        }
+        .image-caption {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.8rem;
             color: var(--brand-blue);
+            font-weight: 600;
         }
 
-        .btn-start {
-            padding: 20px 60px;
+        .top-brand {
             font-size: 1.2rem;
             font-weight: 800;
-            text-transform: uppercase;
-            background: linear-gradient(90deg, var(--brand-blue), var(--brand-orange));
+            color: var(--brand-blue);
+            margin-bottom: 2rem;
+            display: block;
+        }
+        .headline {
+            font-family: 'Hind', sans-serif;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+        }
+        .headline-en {
+            font-size: 1.5rem;
+            opacity: 0.8;
+            font-weight: 400;
+            margin-bottom: 2rem;
+            display: block;
+        }
+        .sub-headline {
+            font-size: 1.2rem;
+            color: var(--brand-blue);
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        .access-tag {
+            display: inline-block;
+            background: rgba(255,0,0,0.1);
+            color: #ff5252;
+            padding: 5px 15px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255,0,0,0.2);
+        }
+        .btn-start {
+            padding: 18px 45px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--brand-blue), var(--brand-orange));
             border: none;
             border-radius: 12px;
             color: #fff;
             cursor: pointer;
-            transition: 0.4s;
-            box-shadow: 0 10px 40px rgba(0, 216, 255, 0.3);
-            letter-spacing: 2px;
+            box-shadow: 0 10px 30px rgba(0, 216, 255, 0.3);
+            transition: 0.3s;
         }
         .btn-start:hover {
-            transform: translateY(-5px) scale(1.05);
-            box-shadow: 0 15px 50px rgba(255, 106, 0, 0.4);
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(0, 216, 255, 0.4);
+        }
+        .social-proof-small {
+            margin-top: 1.5rem;
+            font-size: 0.85rem;
+            color: #ccc;
+            line-height: 1.8;
         }
 
-        .floating-elements {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 2;
+        /* Social Proof Section */
+        .testimonials {
+            padding: 4rem 2rem;
+            background: rgba(255,255,255,0.02);
+            text-align: center;
         }
-        .planet {
-            position: absolute;
-            border-radius: 50%;
+        .testimonial-grid {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+        .testimonial-card {
             background: rgba(255,255,255,0.05);
+            padding: 1.5rem;
+            border-radius: 15px;
             border: 1px solid rgba(255,255,255,0.1);
+            min-width: 250px;
+        }
+
+        /* CTA Section */
+        .cta-bottom {
+            padding: 6rem 2rem;
+            text-align: center;
+            background: radial-gradient(circle at center, #101035 0%, #050510 100%);
+        }
+
+        @media (max-width: 900px) {
+            .hero-container {
+                flex-direction: column;
+                text-align: center;
+                gap: 3rem;
+            }
+            .hero-text {
+                text-align: center;
+            }
+            .hero-image-container {
+                order: 2;
+            }
+            .headline {
+                font-size: 2.5rem;
+            }
+        }
+
+        .aura-glow {
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(0, 216, 255, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(100px);
+            z-index: 1;
         }
     </style>
 </head>
 <body class="scientific-grid">
     <div class="scanline"></div>
 
-    <section class="hero" style="height: auto; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem 1rem;">
+    <section class="hero">
         <div class="aura-glow"></div>
-        
-        <div class="hero-content" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
-            <!-- Center Logo -->
-            <img src="Logo.png" alt="Sinaank Logo" style="width: 150px; height: auto; margin-bottom: 2rem; filter: drop-shadow(0 0 20px rgba(0, 216, 255, 0.4)); display: block; margin-left: auto; margin-right: auto;">
-            
-            <div class="top-label" style="color: #fff; background: rgba(0,216,255,0.1); padding: 12px 25px; border-radius: 50px; display: inline-block; margin-bottom: 2rem; letter-spacing: 0; font-family: 'Hind', sans-serif; font-size: 0.9rem; line-height: 1.6; overflow: visible;">सीनांक थेरेपी | SINAANK THERAPY</div>
-            
-            <h1 style="font-family: 'Hind', sans-serif; font-weight: 700; line-height: 1.8; margin-bottom: 1rem; overflow: visible; font-size: 2.2rem; padding: 10px 0;">
-                <span style="display: inline-block; padding-top: 10px;">2 मिनट में</span><br>
-                <span style="color: var(--brand-blue); text-shadow: 0 0 15px rgba(0,216,255,0.3); display: inline-block; padding-top: 10px;">अनुभव करें</span>
-            </h1>
-
-            <div class="tagline" style="font-family: 'Hind', sans-serif; margin-bottom: 2.5rem;">
-                <div style="font-size: 1rem; color: #fff; opacity: 0.9; margin-bottom: 12px;">Calm • Focus • Deep Sleep</div>
-                <div style="font-size: 1.2rem; color: var(--brand-blue); font-weight: 700; letter-spacing: normal;">पहले अनुभव करें, फिर कमाएँ</div>
-            </div>
-            
-            <div class="feature-pills" style="margin-bottom: 2.5rem;">
-                <div class="pill" style="background: rgba(0, 216, 255, 0.1); color: #fff; border: 1px solid var(--brand-blue); padding: 10px 20px; border-radius: 50px; font-size: 0.8rem; font-family: 'Hind', sans-serif;">पहले 100 users – 20 मिनट FREE</div>
+        <div class="hero-container">
+            <div class="hero-text">
+                <span class="top-brand">🌌 Sinaank Therapy</span>
+                <h1 class="headline">2 मिनट में मन शांत करें</h1>
+                <span class="headline-en">Calm your mind in just 2 minutes</span>
+                
+                <div class="sub-headline">👉 पहले अनुभव करें, फिर कमाएं</div>
+                <div class="access-tag">🔴 Limited Free Access Today</div>
+                
+                <div>
+                    <button onclick="location.href='join.html'" class="btn-start">FREE शुरू करें</button>
+                </div>
+                
+                <div class="social-proof-small">
+                    ✔ 127+ लोगों ने अनुभव किया<br>
+                    ✔ No App Needed | 100% Online
+                </div>
             </div>
 
-            <button onclick="location.href='join.html'" class="btn-start" style="padding: 20px 60px; font-size: 1.2rem; border-radius: 15px; font-family: 'Hind', sans-serif; font-weight: 700; background: linear-gradient(135deg, #00D8FF, #FF6A00); color: #fff; border: none; cursor: pointer; box-shadow: 0 10px 30px rgba(0,216,255,0.2);">FREE शुरू करें</button>
-            
-            <div style="margin-top: 4rem; font-size: 0.8rem; color: #fff; opacity: 0.6; background: rgba(255,255,255,0.03); padding: 12px 25px; border-radius: 10px; font-family: sans-serif;">
-                Experience the power of digital frequency alignment.
+            <div class="hero-image-container">
+                <div class="image-tag">🔵 Digital Healing</div>
+                <div style="width: 100%;">
+                    <img src="med_ai_hero.png" alt="Digital Therapy">
+                    <div class="image-caption">
+                        AI Powered Digital Therapy<br>
+                        <span style="font-weight: 400; opacity: 0.7; font-size: 0.7rem;">No Medicine • No Device • Only Experience</span>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
-     <!-- Visual Elements Decoration -->
-        <div class="floating-elements">
-            <div class="planet" style="width: 100px; height: 100px; top: 15%; right: 10%; background: radial-gradient(circle at 30% 30%, #444, #000); opacity: 0.4;"></div>
-            <div class="planet" style="width: 60px; height: 60px; bottom: 20%; left: 15%; background: radial-gradient(circle at 30% 30%, #555, #000); opacity: 0.3;"></div>
-            <div style="position: absolute; width: 200px; height: 2px; background: linear-gradient(90deg, transparent, var(--brand-blue), transparent); top: 50%; left: 0; opacity: 0.2; transform: rotate(-45deg);"></div>
+
+    <section class="testimonials">
+        <div class="testimonial-grid">
+            <div class="testimonial-card">⭐ “पहले दिन ही सुकून महसूस हुआ”</div>
+            <div class="testimonial-card">⭐ “नींद बेहतर हुई”</div>
+            <div class="testimonial-card">⭐ “2 मिनट में फर्क”</div>
         </div>
+    </section>
+
+    <section class="cta-bottom">
+        <h2 style="font-family: 'Hind', sans-serif; margin-bottom: 2rem;">👉 अभी 2 मिनट ट्राय करें</h2>
+        <button onclick="location.href='join.html'" class="btn-start">FREE शुरू करें</button>
+    </section>
 
     <footer class="main-footer">
         <div class="footer-links">
@@ -196,7 +271,7 @@
             window.location.href = "dashboard.html";
         }
     </script>
-<script src="js/config.js"></script>
-<script src="js/analytics.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/analytics.js"></script>
 </body>
 </html>
