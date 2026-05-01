@@ -16,7 +16,8 @@ const login = async (req, res) => {
         const token = generateToken({ userId: user.id }, user.isBusinessUnlocked);
         return successResponse(res, 200, 'Login Success', { token, user: { id: user.id, mobile: user.mobile } });
     } catch (err) {
-        return errorResponse(res, 500, 'Login failed');
+        console.error('[LOGIN_ERROR]', err);
+        return errorResponse(res, 500, `Login failed: ${err.message}`);
     }
 };
 
