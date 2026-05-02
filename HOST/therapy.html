@@ -233,20 +233,63 @@
             <div id="header-mobile" style="font-family: monospace; opacity: 0.7; font-size: 0.8rem;">+91 ----------</div>
         </header>
 
-        <!-- FIXED NAVIGATION BAR -->
-        <div class="hub-nav-fixed" style="background: rgba(0,0,0,0.9); border-bottom: 1px solid var(--border-glass); padding: 10px; z-index: 100; text-align: center;">
-            <div style="font-size: 0.6rem; color: var(--primary); font-weight: 800; margin-bottom: 8px; letter-spacing: 2px;">SINAANK THERAPY HUB</div>
-            <div class="tab-bar" style="margin: 0; gap: 5px; display: flex; justify-content: center;">
-                <div class="tab active" onclick="switchTab('auto', this)" style="font-size: 0.65rem; padding: 8px 15px;">AUTO</div>
-                <div class="tab" onclick="switchTab('combo', this)" style="font-size: 0.65rem; padding: 8px 15px;">COMBO</div>
-                <div class="tab" onclick="switchTab('choice', this)" style="font-size: 0.65rem; padding: 8px 15px;">CUSTOM</div>
+        <!-- MODE SELECTION BAR (Enhanced) -->
+        <div class="hub-nav-fixed" id="main-nav" style="background: rgba(0,0,0,0.9); border-bottom: 1px solid var(--border-glass); display: none; z-index: 100; text-align: center;">
+            <div onclick="showSelector()" style="font-size: 0.6rem; color: var(--primary); font-weight: 800; margin-bottom: 8px; letter-spacing: 2px; cursor: pointer;">SINAANK THERAPY HUB</div>
+            <div class="tab-bar" style="margin: 0; display: flex; justify-content: center;">
+                <div class="tab active" onclick="switchTab('auto', this)">AUTO</div>
+                <div class="tab" onclick="switchTab('combo', this)">COMBO</div>
+                <div class="tab" onclick="switchTab('choice', this)">CUSTOM</div>
             </div>
         </div>
 
         <div id="setup-view" class="view-content" style="flex: 1; overflow-y: auto; padding: 1.5rem 1rem; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;">
             
+            <!-- Step 0: Mode Selection Screen -->
+            <div id="mode-selection-screen" style="width: 100%; max-width: 450px; text-align: center;">
+                <div class="card-title">CHOOSE YOUR EXPERIENCE</div>
+                <h2 style="font-size: 1.8rem; margin: 0.5rem 0;">Therapy Modes</h2>
+                <p style="color: var(--text-dim); margin-bottom: 2rem; font-size: 0.85rem;">Select how you want to align your energy today</p>
+
+                <div class="mode-selector-grid">
+                    <!-- Auto Mode Card -->
+                    <div class="mode-card" onclick="selectMode('auto')">
+                        <div class="mode-icon">🤖</div>
+                        <div class="mode-info">
+                            <h3>AUTO MODE <span class="hindi-hint">स्वचालित मोड</span></h3>
+                            <p>Deep analysis of your mobile number pattern for automatic frequency alignment.</p>
+                            <div class="mode-select-btn">SELECT →</div>
+                        </div>
+                    </div>
+
+                    <!-- Combo Mode Card -->
+                    <div class="mode-card" onclick="selectMode('combo')">
+                        <div class="mode-icon">🎯</div>
+                        <div class="mode-info">
+                            <h3>COMBO MODE <span class="hindi-hint">कॉम्बो मोड</span></h3>
+                            <p>Choose specific goals like Money, Health, Education or Peace for targeted healing.</p>
+                            <div class="mode-select-btn">SELECT →</div>
+                        </div>
+                    </div>
+
+                    <!-- Custom Mode Card -->
+                    <div class="mode-card" onclick="selectMode('choice')">
+                        <div class="mode-icon">🧬</div>
+                        <div class="mode-info">
+                            <h3>CUSTOM MODE <span class="hindi-hint">कस्टम मोड</span></h3>
+                            <p>Upload your own personalized sounds and visuals for a unique therapy session.</p>
+                            <div class="mode-select-btn">SELECT →</div>
+                        </div>
+                    </div>
+                </div>
+
+                <p style="margin-top: 2rem; color: var(--text-dim); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px;">
+                    80% of users start with Auto Mode
+                </p>
+            </div>
+
             <!-- Auto View -->
-            <div id="view-auto" class="mode-view active" style="width: 100%; max-width: 450px;">
+            <div id="view-auto" class="mode-view" style="width: 100%; max-width: 450px;">
                 <div class="card-title">SINAANK THERAPY</div>
                 <h2 style="font-size: 1.6rem; margin: 0.5rem 0;">Your Energy Analysis</h2>
                 <p style="color: var(--text-dim); margin-bottom: 1rem; font-size: 0.8rem;">Based on your number pattern</p>
@@ -425,27 +468,6 @@
                 updateTimeUI(10);
 
                 calculateAuto();
-
-                // Restore persistent preferences
-                if (userData.therapyImage) {
-                    const img = document.getElementById('personal-image-preview');
-                    img.src = userData.therapyImage;
-                    img.style.opacity = 0.5;
-                    choiceFiles.image = 'saved'; // Mark as ready
-                    const statusDiv = document.getElementById('image-status');
-                    if (statusDiv) {
-                        statusDiv.innerText = `✓ VISUAL READY`;
-                        statusDiv.style.color = 'var(--primary)';
-                    }
-                }
-                if (userData.therapySound) {
-                    choiceFiles.audio = 'saved'; // Mark as ready
-                    const statusDiv = document.getElementById('audio-status');
-                    if (statusDiv) {
-                        statusDiv.innerText = `✓ SOUND READY`;
-                        statusDiv.style.color = 'var(--primary)';
-                    }
-                }
             }
             renderPlanetGrid();
         }
@@ -500,8 +522,23 @@
         function switchTab(mode, el) {
             currentMode = mode;
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            el.classList.add('active');
+            if (el) el.classList.add('active');
+            else {
+                // Find tab and activate it if el is not provided
+                document.querySelectorAll('.tab').forEach(t => {
+                    if (t.innerText.toLowerCase() === mode.toLowerCase() || 
+                       (mode === 'choice' && t.innerText.toLowerCase() === 'custom')) {
+                        t.classList.add('active');
+                    }
+                });
+            }
             
+            // Show Nav
+            document.getElementById('main-nav').style.display = 'block';
+
+            // Hide Selector
+            document.getElementById('mode-selection-screen').style.display = 'none';
+
             // Show/Hide Mode Views
             document.querySelectorAll('.mode-view').forEach(v => v.classList.remove('active'));
             const targetView = document.getElementById('view-' + mode);
@@ -512,6 +549,19 @@
             if(setupView) setupView.scrollTop = 0;
 
             validateGlobalBtn();
+        }
+
+        function selectMode(mode) {
+            switchTab(mode);
+        }
+
+        function showSelector() {
+            document.getElementById('main-nav').style.display = 'none';
+            document.getElementById('mode-selection-screen').style.display = 'block';
+            document.querySelectorAll('.mode-view').forEach(v => v.classList.remove('active'));
+            // Reset scroll
+            const setupView = document.getElementById('setup-view');
+            if(setupView) setupView.scrollTop = 0;
         }
 
 
@@ -601,54 +651,35 @@
         let choiceFiles = { audio: null, image: null };
         let purposePlanets = [];
 
-        async function handleFile(input, type) {
+        function handleFile(input, type) {
             if (input.files && input.files[0]) {
                 const file = input.files[0];
+                choiceFiles[type] = file;
                 
-                // Limit size for persistence (e.g., 2MB for images, 5MB for sounds)
-                const maxSize = type === 'image' ? 2 * 1024 * 1024 : 5 * 1024 * 1024;
-                if (file.size > maxSize) {
-                    alert(`File too large. Max ${type === 'image' ? '2MB' : '5MB'} for saving.`);
-                    return;
+                if (type === 'image') {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = document.getElementById('personal-image-preview');
+                        img.src = e.target.result;
+                        img.style.opacity = 0.5;
+                    };
+                    reader.readAsDataURL(file);
                 }
 
-                const reader = new FileReader();
-                reader.onload = async (e) => {
-                    const base64 = e.target.result;
-                    
-                    if (type === 'image') {
-                        const img = document.getElementById('personal-image-preview');
-                        img.src = base64;
-                        img.style.opacity = 0.5;
-                        choiceFiles.image = base64;
-                    } else {
-                        choiceFiles.audio = base64;
-                    }
-
-                    // Save to server
-                    const token = localStorage.getItem('session');
-                    const field = type === 'image' ? 'therapyImage' : 'therapySound';
-                    await fetch(CONFIG.API_BASE_URL + '/api/user/update-profile', {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                        body: JSON.stringify({ [field]: base64 })
-                    });
-
-                    // Update Status Text
-                    const label = input.parentElement;
-                    label.style.borderColor = 'var(--primary)';
-                    label.style.background = 'rgba(0, 216, 255, 0.1)';
-                    
-                    const statusId = type === 'audio' ? 'audio-status' : 'image-status';
-                    const statusDiv = document.getElementById(statusId);
-                    if (statusDiv) {
-                        statusDiv.innerText = `✓ ${type.toUpperCase()} SAVED`;
-                        statusDiv.style.color = 'var(--primary)';
-                    }
-                    
-                    validateGlobalBtn();
-                };
-                reader.readAsDataURL(file);
+                // Update Status Text
+                const label = input.parentElement;
+                label.style.borderColor = 'var(--primary)';
+                label.style.background = 'rgba(0, 216, 255, 0.1)';
+                
+                const statusId = type === 'audio' ? 'audio-status' : 'image-status';
+                const statusDiv = document.getElementById(statusId);
+                if (statusDiv) {
+                    statusDiv.innerText = `✓ ${type.toUpperCase()} READY`;
+                    statusDiv.style.color = 'var(--primary)';
+                }
+                
+                console.log(`[FILE_SELECTED] ${type} is ready.`);
+                validateGlobalBtn();
             }
         }
 
@@ -687,11 +718,7 @@
             document.getElementById('active-mode-label').innerText = `${mode} Frequency Active`;
 
             if (mode === 'CHOICE' && choiceFiles.audio) {
-                if (choiceFiles.audio === 'saved') {
-                    playPersistentAudio(userData.therapySound, sessionPlanets);
-                } else {
-                    playPersonalAudio(sessionPlanets);
-                }
+                playPersonalAudio(sessionPlanets);
             } else {
                 initBinaural(sessionPlanets);
             }
@@ -752,23 +779,13 @@
         }
 
         function playPersonalAudio(p) {
-            personalAudio = new Audio(choiceFiles.audio); // Now using Base64 directly
+            personalAudio = new Audio(URL.createObjectURL(choiceFiles.audio));
             personalAudio.loop = true;
             personalAudio.play();
             document.getElementById('orb-1').style.backgroundColor = p[0].color;
             document.getElementById('orb-2').style.backgroundColor = p[0].color;
             document.getElementById('glow-l').style.background = `linear-gradient(to right, ${p[0].color}, transparent)`;
             document.getElementById('bottom-signal-details').innerHTML = `Personal Choice Playing • 432Hz Center`;
-        }
-
-        function playPersistentAudio(base64, p) {
-            personalAudio = new Audio(base64);
-            personalAudio.loop = true;
-            personalAudio.play();
-            document.getElementById('orb-1').style.backgroundColor = p[0].color;
-            document.getElementById('orb-2').style.backgroundColor = p[0].color;
-            document.getElementById('glow-l').style.background = `linear-gradient(to right, ${p[0].color}, transparent)`;
-            document.getElementById('bottom-signal-details').innerHTML = `Persistent Sound Playing • 432Hz Center`;
         }
 
         function startTimer() {
@@ -844,5 +861,6 @@
             Copyright © 2026 Sinaank Therapy. All Rights Reserved.
         </div>
     </footer>
+<script src="js/analytics.js"></script>
 </body>
 </html>
