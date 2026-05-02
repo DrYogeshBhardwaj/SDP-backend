@@ -200,6 +200,93 @@
             transition: 0.3s;
         }
         .btn-choice:hover { border-color: var(--primary); background: rgba(255,215,0,0.05); }
+
+        /* MODE SELECTION STYLES */
+        .mode-selector-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 450px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        .mode-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 1.5rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .mode-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+        .mode-card::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, var(--mode-color), transparent 70%);
+            opacity: 0.1;
+            transition: 0.3s;
+        }
+        .mode-card:hover::after { opacity: 0.2; }
+        
+        .mode-icon {
+            font-size: 2.2rem;
+            min-width: 65px;
+            height: 65px;
+            background: rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 18px;
+            border: 1px solid var(--mode-color);
+            box-shadow: 0 0 20px var(--mode-glow);
+        }
+        .mode-info h3 {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+            color: #fff;
+            font-weight: 800 !important;
+        }
+        .mode-info p {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            line-height: 1.4;
+        }
+        .mode-select-btn {
+            display: inline-block;
+            margin-top: 12px;
+            font-size: 0.7rem;
+            font-weight: 900;
+            color: var(--mode-color);
+            background: rgba(0, 0, 0, 0.2);
+            padding: 6px 15px;
+            border-radius: 30px;
+            border: 1px solid var(--mode-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.3s;
+        }
+        .mode-card:hover .mode-select-btn {
+            background: var(--mode-color);
+            color: #000;
+            box-shadow: 0 0 15px var(--mode-glow);
+        }
+
+        /* Specific Colors */
+        .mode-auto { --mode-color: #00D8FF; --mode-glow: rgba(0, 216, 255, 0.3); }
+        .mode-combo { --mode-color: #FFD54F; --mode-glow: rgba(255, 213, 79, 0.3); }
+        .mode-custom { --mode-color: #A855F7; --mode-glow: rgba(168, 85, 247, 0.3); }
     </style>
 </head>
 <body class="scientific-grid">
@@ -253,32 +340,32 @@
 
                 <div class="mode-selector-grid">
                     <!-- Auto Mode Card -->
-                    <div class="mode-card" onclick="selectMode('auto')">
+                    <div class="mode-card mode-auto" onclick="selectMode('auto')">
                         <div class="mode-icon">🤖</div>
                         <div class="mode-info">
                             <h3>AUTO MODE <span class="hindi-hint">स्वचालित मोड</span></h3>
                             <p>Deep analysis of your mobile number pattern for automatic frequency alignment.</p>
-                            <div class="mode-select-btn">SELECT →</div>
+                            <div class="mode-select-btn">SELECT AUTO →</div>
                         </div>
                     </div>
 
                     <!-- Combo Mode Card -->
-                    <div class="mode-card" onclick="selectMode('combo')">
+                    <div class="mode-card mode-combo" onclick="selectMode('combo')">
                         <div class="mode-icon">🎯</div>
                         <div class="mode-info">
                             <h3>COMBO MODE <span class="hindi-hint">कॉम्बो मोड</span></h3>
                             <p>Choose specific goals like Money, Health, Education or Peace for targeted healing.</p>
-                            <div class="mode-select-btn">SELECT →</div>
+                            <div class="mode-select-btn">SELECT COMBO →</div>
                         </div>
                     </div>
 
                     <!-- Custom Mode Card -->
-                    <div class="mode-card" onclick="selectMode('choice')">
+                    <div class="mode-card mode-custom" onclick="selectMode('choice')">
                         <div class="mode-icon">🧬</div>
                         <div class="mode-info">
                             <h3>CUSTOM MODE <span class="hindi-hint">कस्टम मोड</span></h3>
                             <p>Upload your own personalized sounds and visuals for a unique therapy session.</p>
-                            <div class="mode-select-btn">SELECT →</div>
+                            <div class="mode-select-btn">SELECT CUSTOM →</div>
                         </div>
                     </div>
                 </div>
