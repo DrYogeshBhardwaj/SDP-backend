@@ -233,20 +233,60 @@
             <div id="header-mobile" style="font-family: monospace; opacity: 0.7; font-size: 0.8rem;">+91 ----------</div>
         </header>
 
-        <!-- FIXED NAVIGATION BAR -->
-        <div class="hub-nav-fixed" style="background: rgba(0,0,0,0.9); border-bottom: 1px solid var(--border-glass); padding: 10px; z-index: 100; text-align: center;">
-            <div style="font-size: 0.6rem; color: var(--primary); font-weight: 800; margin-bottom: 8px; letter-spacing: 2px;">SINAANK THERAPY HUB</div>
-            <div class="tab-bar" style="margin: 0; gap: 5px; display: flex; justify-content: center;">
-                <div class="tab active" onclick="switchTab('auto', this)" style="font-size: 0.65rem; padding: 8px 15px;">AUTO</div>
-                <div class="tab" onclick="switchTab('combo', this)" style="font-size: 0.65rem; padding: 8px 15px;">COMBO</div>
-                <div class="tab" onclick="switchTab('choice', this)" style="font-size: 0.65rem; padding: 8px 15px;">CUSTOM</div>
+        <!-- MODE SELECTION BAR (Enhanced) -->
+        <div class="hub-nav-fixed" id="main-nav" style="background: rgba(0,0,0,0.9); border-bottom: 1px solid var(--border-glass); display: none; z-index: 100; text-align: center;">
+            <div onclick="showSelector()" style="font-size: 0.6rem; color: var(--primary); font-weight: 800; margin-bottom: 8px; letter-spacing: 2px; cursor: pointer;">SINAANK THERAPY HUB</div>
+            <div class="tab-bar" style="margin: 0; display: flex; justify-content: center;">
+                <div class="tab active" onclick="switchTab('auto', this)">AUTO</div>
+                <div class="tab" onclick="switchTab('combo', this)">COMBO</div>
+                <div class="tab" onclick="switchTab('choice', this)">CUSTOM</div>
             </div>
         </div>
 
         <div id="setup-view" class="view-content" style="flex: 1; overflow-y: auto; padding: 1.5rem 1rem; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;">
             
+            <!-- Step 0: Mode Selection Screen -->
+            <div id="mode-selection-screen" style="width: 100%; max-width: 450px; text-align: center;">
+                <div class="card-title">CHOOSE YOUR EXPERIENCE</div>
+                <h2 style="font-size: 1.8rem; margin: 0.5rem 0;">Therapy Modes</h2>
+                <p style="color: var(--text-dim); margin-bottom: 2rem; font-size: 0.85rem;">Select how you want to align your energy today</p>
+
+                <div class="mode-selector-grid">
+                    <!-- Auto Mode Card -->
+                    <div class="mode-card" onclick="selectMode('auto')">
+                        <div class="mode-icon">🤖</div>
+                        <div class="mode-info">
+                            <h3>AUTO MODE <span class="hindi-hint">स्वचालित मोड</span></h3>
+                            <p>Deep analysis of your mobile number pattern for automatic frequency alignment.</p>
+                        </div>
+                    </div>
+
+                    <!-- Combo Mode Card -->
+                    <div class="mode-card" onclick="selectMode('combo')">
+                        <div class="mode-icon">🎯</div>
+                        <div class="mode-info">
+                            <h3>COMBO MODE <span class="hindi-hint">कॉम्बो मोड</span></h3>
+                            <p>Choose specific goals like Money, Health, Education or Peace for targeted healing.</p>
+                        </div>
+                    </div>
+
+                    <!-- Custom Mode Card -->
+                    <div class="mode-card" onclick="selectMode('choice')">
+                        <div class="mode-icon">🧬</div>
+                        <div class="mode-info">
+                            <h3>CUSTOM MODE <span class="hindi-hint">कस्टम मोड</span></h3>
+                            <p>Upload your own personalized sounds and visuals for a unique therapy session.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <p style="margin-top: 2rem; color: var(--text-dim); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px;">
+                    80% of users start with Auto Mode
+                </p>
+            </div>
+
             <!-- Auto View -->
-            <div id="view-auto" class="mode-view active" style="width: 100%; max-width: 450px;">
+            <div id="view-auto" class="mode-view" style="width: 100%; max-width: 450px;">
                 <div class="card-title">SINAANK THERAPY</div>
                 <h2 style="font-size: 1.6rem; margin: 0.5rem 0;">Your Energy Analysis</h2>
                 <p style="color: var(--text-dim); margin-bottom: 1rem; font-size: 0.8rem;">Based on your number pattern</p>
@@ -479,8 +519,23 @@
         function switchTab(mode, el) {
             currentMode = mode;
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            el.classList.add('active');
+            if (el) el.classList.add('active');
+            else {
+                // Find tab and activate it if el is not provided
+                document.querySelectorAll('.tab').forEach(t => {
+                    if (t.innerText.toLowerCase() === mode.toLowerCase() || 
+                       (mode === 'choice' && t.innerText.toLowerCase() === 'custom')) {
+                        t.classList.add('active');
+                    }
+                });
+            }
             
+            // Show Nav
+            document.getElementById('main-nav').style.display = 'block';
+
+            // Hide Selector
+            document.getElementById('mode-selection-screen').style.display = 'none';
+
             // Show/Hide Mode Views
             document.querySelectorAll('.mode-view').forEach(v => v.classList.remove('active'));
             const targetView = document.getElementById('view-' + mode);
@@ -491,6 +546,19 @@
             if(setupView) setupView.scrollTop = 0;
 
             validateGlobalBtn();
+        }
+
+        function selectMode(mode) {
+            switchTab(mode);
+        }
+
+        function showSelector() {
+            document.getElementById('main-nav').style.display = 'none';
+            document.getElementById('mode-selection-screen').style.display = 'block';
+            document.querySelectorAll('.mode-view').forEach(v => v.classList.remove('active'));
+            // Reset scroll
+            const setupView = document.getElementById('setup-view');
+            if(setupView) setupView.scrollTop = 0;
         }
 
 
