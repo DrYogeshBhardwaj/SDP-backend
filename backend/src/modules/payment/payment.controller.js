@@ -71,12 +71,14 @@ const simulateSuccess = async (req, res) => {
             });
 
             // B. Unlock User
+            const currentUser = await tx.user.findUnique({ where: { id: userId } });
             const user = await tx.user.update({
                 where: { id: userId },
                 data: { 
                     plan: 'PREMIUM',
                     isBusinessUnlocked: true,
-                    referralCode: user.referralCode || generateReferralCode()
+                    referralCode: currentUser.referralCode || generateReferralCode(),
+                    minutesBalance: { increment: 3600 }
                 }
             });
 
@@ -150,6 +152,17 @@ const verifyPayment = async (req, res) => {
 
         // Atomic Register + Commission
         const user = await registerUser({ mobile, sponsorCode, name, upiId });
+        
+        // UPGRADE USER IMMEDIATELY AS THEY PAID 299
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { 
+                plan: 'PREMIUM', 
+                isBusinessUnlocked: true,
+                minutesBalance: { increment: 3600 } 
+            }
+        });
+
         const token = generateToken({ userId: user.id }, true);
 
         // LOG REVENUE TRANSACTION
@@ -209,7 +222,11 @@ const verifyPasswordPayment = async (req, res) => {
             // but we ensure it's unlocked here.
             user = await prisma.user.update({
                 where: { id: user.id },
-                data: { plan: 'PREMIUM', isBusinessUnlocked: true }
+                data: { 
+                    plan: 'PREMIUM', 
+                    isBusinessUnlocked: true,
+                    minutesBalance: { increment: 3600 }
+                }
             });
         }
         

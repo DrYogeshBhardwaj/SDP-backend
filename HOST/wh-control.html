@@ -205,10 +205,19 @@
                         <div class="stat-value" id="stats-today-in" style="font-size: 3rem; color: #00c853;">₹--</div>
                         <p style="color: var(--text-dim);">DATE: <span class="current-date-display">--</span></p>
                     </div>
-                    <div class="stat-card glass" style="padding: 2.5rem; background: rgba(255, 171, 0, 0.05);">
-                        <div class="card-title">To-be-Paid (Next Liability)</div>
-                        <div class="stat-value" id="stats-liability" style="font-size: 3rem; color: #ffab00;">₹--</div>
-                        <p style="color: var(--text-dim);">CURRENT COLLECTIVE WALLETS</p>
+                    <div class="stat-card glass" style="padding: 2.5rem; background: rgba(0, 216, 255, 0.05); grid-column: span 2;">
+                        <div class="card-title">User Funnel (Today)</div>
+                        <div style="display: flex; gap: 40px; margin-top: 1rem;">
+                            <div>
+                                <div class="stat-value" id="stats-today-users" style="font-size: 3rem; color: var(--primary);">0</div>
+                                <p style="color: var(--text-dim); font-size: 0.7rem;">NEW REGISTRATIONS</p>
+                            </div>
+                            <div style="border-left: 1px solid var(--border-glass); padding-left: 40px;">
+                                <div class="stat-value" id="stats-today-visits-ws" style="font-size: 3rem; color: #fff; opacity: 0.8;">0</div>
+                                <p style="color: var(--text-dim); font-size: 0.7rem;">DEMO VISITORS</p>
+                            </div>
+                        </div>
+                        <p style="color: var(--text-dim); margin-top: 1rem; font-size: 0.6rem;">DATE: <span class="current-date-display">--</span></p>
                     </div>
                 </div>
             </div>
@@ -670,6 +679,10 @@
                 document.getElementById('stats-total-out').innerText = '₹' + s.totalOut;
                 document.getElementById('stats-today-in').innerText = '₹' + s.todayIn;
                 document.getElementById('stats-liability').innerText = '₹' + s.totalLiability;
+                
+                // Funnel Stats
+                document.getElementById('stats-today-users').innerText = s.todayUsers || 0;
+                document.getElementById('stats-today-visits-ws').innerText = s.todayVisits || 0;
 
                 // Alerts
                 const alertsDiv = document.getElementById('admin-alerts');

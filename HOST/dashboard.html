@@ -17,15 +17,6 @@
     <link rel="icon" type="image/png" href="Logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Hind:wght@400;700&display=swap" rel="stylesheet">
     <script src="js/config.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    
-    <!-- PWA & Mobile App Tags -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#00D8FF">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Sinaank">
-    <link rel="apple-touch-icon" href="Logo.png">
 
     <style>
         .dashboard-grid {
@@ -105,7 +96,7 @@
                         <li style="margin-bottom: 12px;">✓ Team Earning: ₹80 per level 2</li>
                         <li style="margin-bottom: 12px;">✓ Lifetime Activation</li>
                     </ul>
-                    <button onclick="upgradePlan('MASTER', 299)" class="btn-primary glow-start" style="width: 100%;">ACTIVATE NOW</button>
+                    <button onclick="upgradePlan('MASTER', 299, this)" class="btn-primary glow-start" style="width: 100%;">ACTIVATE NOW</button>
                     <div style="margin-top: 1.5rem; font-size: 0.8rem; color: var(--text-dim); display: flex; align-items: center; justify-content: center; gap: 10px;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3m-3-3l-2.25-2.25"></path></svg>
                         <span>Have an activation code? <span onclick="activateByCode()" style="color: var(--primary); cursor: pointer; text-decoration: underline; font-weight: 700;">Use it here</span></span>
@@ -114,6 +105,19 @@
             </div>
 
             <button onclick="document.getElementById('plans-modal').style.display='none'" style="margin-top: 3rem; background: none; border: none; color: var(--text-dim); cursor: pointer; display: block; margin-left: auto; margin-right: auto;">[ CLOSE ]</button>
+        </div>
+    </div>
+
+    <!-- Password Modal -->
+    <div id="password-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(10px);">
+        <div class="glass" style="width: 350px; padding: 2.5rem; text-align: center; border: 1px solid var(--primary);">
+            <div style="font-size: 2rem; margin-bottom: 1rem;">🔑</div>
+            <h3 style="margin-bottom: 1.5rem;">Enter Activation Code</h3>
+            <input type="password" id="activation-password-input" placeholder="••••••••" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--primary); border-radius: 8px; color: #fff; text-align: center; font-size: 1.2rem; letter-spacing: 4px; margin-bottom: 1.5rem;">
+            <div style="display: flex; gap: 10px;">
+                <button onclick="document.getElementById('password-modal').style.display='none'" style="flex: 1; background: none; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 8px; cursor: pointer;">CANCEL</button>
+                <button onclick="submitActivationCode()" style="flex: 2; background: var(--primary); color: #000; border: none; padding: 10px; border-radius: 8px; font-weight: 800; cursor: pointer;">ACTIVATE</button>
+            </div>
         </div>
     </div>
     
@@ -149,19 +153,6 @@
                 </thead>
                 <tbody id="team-list-body"></tbody>
             </table>
-        </div>
-    </div>
-
-    <!-- Password Modal -->
-    <div id="password-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(10px);">
-        <div class="glass" style="width: 350px; padding: 2.5rem; text-align: center; border: 1px solid var(--primary);">
-            <div style="font-size: 2rem; margin-bottom: 1rem;">🔑</div>
-            <h3 style="margin-bottom: 1.5rem;">Enter Activation Code</h3>
-            <input type="password" id="activation-password-input" placeholder="••••••••" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--primary); border-radius: 8px; color: #fff; text-align: center; font-size: 1.2rem; letter-spacing: 4px; margin-bottom: 1.5rem;">
-            <div style="display: flex; gap: 10px;">
-                <button onclick="document.getElementById('password-modal').style.display='none'" style="flex: 1; background: none; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 8px; cursor: pointer;">CANCEL</button>
-                <button onclick="submitActivationCode()" style="flex: 2; background: var(--primary); color: #000; border: none; padding: 10px; border-radius: 8px; font-weight: 800; cursor: pointer;">ACTIVATE</button>
-            </div>
         </div>
     </div>
 
@@ -332,68 +323,6 @@
             <div style="font-size: 0.6rem; color: var(--text-dim); margin-top: 5px;">Consistency</div>
         </div>
 
-        <!-- 5. GROWTH MILESTONES -->
-        <div class="stat-card" style="grid-column: 1 / -1; background: linear-gradient(135deg, #0f2027, #203a43); border: 1px solid rgba(0,216,255,0.2); border-radius: 20px; padding: 2.5rem; text-align: left; position: relative; overflow: hidden;">
-            <div style="position: absolute; top: -20px; right: -20px; font-size: 8rem; opacity: 0.05; color: var(--primary); pointer-events: none;">📈</div>
-            <h3 style="font-size: 1.5rem; color: #fff; margin-bottom: 0.5rem; font-family: 'Poppins', sans-serif; font-weight: 800;">Growth Milestones</h3>
-            <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 2rem;">Achieve levels through sharing Sinaank Therapy</p>
-
-            <!-- Standard Plan Highlight -->
-            <div style="background: rgba(0, 216, 255, 0.05); border: 1px solid rgba(0, 216, 255, 0.3); border-radius: 12px; padding: 1.5rem; margin-bottom: 2.5rem; display: flex; justify-content: space-around; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-                <div>
-                    <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; font-weight: 600;">1 Direct Referral</div>
-                    <div style="font-size: 2rem; font-weight: 900; color: var(--primary); text-shadow: 0 0 10px var(--primary-glow);">₹100</div>
-                </div>
-                <div style="width: 1px; background: rgba(255,255,255,0.1);"></div>
-                <div>
-                    <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; font-weight: 600;">1 Team Referral (L2)</div>
-                    <div style="font-size: 2rem; font-weight: 900; color: #00D8FF; text-shadow: 0 0 10px rgba(0,216,255,0.5);">₹80</div>
-                </div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
-                <div class="milestone-group">
-                    <h4 style="color: var(--primary); font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 1rem; text-transform: uppercase;">Direct Referrals</h4>
-                    <div style="display: flex; flex-direction: column; gap: 12px;">
-                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px;">
-                            <span>5 Direct</span> <span style="font-weight: 800; color: var(--primary);">₹500</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px;">
-                            <span>10 Direct</span> <span style="font-weight: 800; color: var(--primary);">₹1500</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px;">
-                            <span>20 Direct</span> <span style="font-weight: 800; color: var(--primary);">₹4000</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px;">
-                            <span>50 Direct</span> <span style="font-weight: 800; color: var(--primary);">₹12000</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px;">
-                            <span>100 Direct</span> <span style="font-weight: 800; color: var(--primary);">₹40000</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="milestone-group">
-                    <h4 style="color: #00D8FF; font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 1rem; text-transform: uppercase;">Team Growth</h4>
-                    <div style="display: flex; flex-direction: column; gap: 12px;">
-                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px;">
-                            <span>100 Team</span> <span style="font-weight: 800; color: #00D8FF;">₹2000</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px;">
-                            <span>500 Team</span> <span style="font-weight: 800; color: #00D8FF;">₹10000</span>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 5px;">
-                            <span>2500 Team</span> <span style="font-weight: 800; color: #00D8FF;">₹65000</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <p style="margin-top: 2rem; font-size: 11px; opacity: 0.5; font-style: italic;">
-                * Bonuses are milestone-based and subject to verification.
-            </p>
-        </div>
-
         <!-- Logout & Footer links -->
         <div style="grid-column: 1 / -1; text-align: center; margin-top: 2rem;">
              <div style="color: var(--primary); font-weight: 800; font-size: 0.7rem; margin-bottom: 1rem; letter-spacing: 2px;">पहले अनुभव करें, फिर कमाएँ</div>
@@ -401,7 +330,7 @@
         </div>
     </div>
 
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
         let currentLink = "";
 
@@ -459,6 +388,8 @@
             if (!confirm("Are you sure you want to clear your query history?")) return;
             const token = localStorage.getItem('session');
             try {
+                // We'll need a backend endpoint for this or just clear local view if backend not ready
+                // For now, let's assume we want to clear from backend
                 const res = await fetch(CONFIG.API_BASE_URL + '/api/user/queries/clear', {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -522,6 +453,7 @@
                 alert(data.message);
             }
         }
+
         function showNetworkDetails() {
             const modal = document.getElementById('network-modal');
             const directBody = document.getElementById('direct-list-body');
@@ -529,7 +461,7 @@
             
             modal.style.display = 'flex';
             
-            directBody.innerHTML = (window.directsList || []).map(d => `
+            directBody.innerHTML = window.directsList.map(d => `
                 <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                     <td style="padding: 10px;">${d.name || 'Anonymous'}</td>
                     <td style="padding: 10px;">+91 ${d.mobile}</td>
@@ -537,7 +469,7 @@
                 </tr>
             `).join('') || '<tr><td colspan="3" style="padding: 2rem; text-align: center; color: var(--text-dim);">No direct referrals yet.</td></tr>';
             
-            teamBody.innerHTML = (window.teamList || []).map(t => `
+            teamBody.innerHTML = window.teamList.map(t => `
                 <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                     <td style="padding: 10px;">${t.name || 'Anonymous'}</td>
                     <td style="padding: 10px;">+91 ${t.mobile}</td>
@@ -652,70 +584,54 @@
 
                     // History
                     const ledgerBody = document.getElementById('ledger-body');
-                    if (ledgerBody) {
-                        let transactions = u.transactions || [];
-                        transactions.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+                    let transactions = u.transactions || [];
+                    transactions.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-                        if (transactions.length === 0) {
-                            ledgerBody.innerHTML = '<tr><td style="padding: 2rem; text-align: center; color: var(--text-dim);">No history yet.</td></tr>';
-                        } else {
-                            ledgerBody.innerHTML = transactions.map(t => {
-                                const date = new Date(t.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-                                let desc = t.description || 'Activity';
-                                if (t.category === 'BONUS') desc = `Earned from referral`;
-                                if (t.category === 'PAYOUT') desc = `Withdrawal Request`;
-                                
-                                return `
-                                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                                        <td style="padding: 12px 0;">
-                                            <div style="font-size: 0.85rem; color: #fff; font-weight: 600;">${desc}</div>
-                                            <div style="font-size: 0.7rem; color: var(--text-dim);">${date}</div>
-                                        </td>
-                                        <td style="padding: 12px 0; text-align: right; font-weight: 800; color: ${t.type === 'CREDIT' ? '#00D8FF' : '#ff5252'}">
-                                            ${t.type === 'CREDIT' ? '+' : '-'} ₹${t.amount}
-                                        </td>
-                                    </tr>
-                                `;
-                            }).join('');
-                        }
+                    if (transactions.length === 0) {
+                        ledgerBody.innerHTML = '<tr><td style="padding: 2rem; text-align: center; color: var(--text-dim);">No history yet.</td></tr>';
+                    } else {
+                        ledgerBody.innerHTML = transactions.map(t => {
+                            const date = new Date(t.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+                            let desc = t.description || 'Activity';
+                            if (t.category === 'BONUS') desc = `Earned from referral`;
+                            if (t.category === 'PAYOUT') desc = `Withdrawal Request`;
+                            
+                            return `
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                    <td style="padding: 12px 0;">
+                                        <div style="font-size: 0.85rem; color: #fff; font-weight: 600;">${desc}</div>
+                                        <div style="font-size: 0.7rem; color: var(--text-dim);">${date}</div>
+                                    </td>
+                                    <td style="padding: 12px 0; text-align: right; font-weight: 800; color: ${t.type === 'CREDIT' ? '#00D8FF' : '#ff5252'}">
+                                        ${t.type === 'CREDIT' ? '+' : '-'} ₹${t.amount}
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('');
                     }
                     
                     // Referral
                     const refCode = u.referralCode || u.referral_code || u.mobile;
-                    console.log("[DEBUG] User Referral Code:", refCode);
                     if (refCode) {
                         currentLink = `https://sinaank.com/join.html?ref=${refCode}`;
-                        console.log("[DEBUG] Generated Link:", currentLink);
-                        
-                        const linkInput = document.getElementById('visible-referral-link');
-                        if (linkInput) linkInput.value = currentLink;
-
+                        document.getElementById('visible-referral-link').value = currentLink;
                         const qrcodeEl = document.getElementById('qrcode');
-                        if (qrcodeEl) {
+                        qrcodeEl.innerHTML = '';
+                        setTimeout(() => {
                             try {
-                                qrcodeEl.innerHTML = '';
-                                if (typeof QRCode === 'undefined') {
-                                    console.error("QRCode library not loaded!");
-                                    qrcodeEl.innerHTML = '<div style="color:red;font-size:10px;">Library Error</div>';
-                                    return;
-                                }
-                                setTimeout(() => {
-                                    new QRCode(qrcodeEl, {
-                                        text: currentLink,
-                                        width: 140,
-                                        height: 140,
-                                        colorDark : "#000000",
-                                        colorLight : "#ffffff",
-                                        correctLevel : QRCode.CorrectLevel.H
-                                    });
-                                    console.log("[DEBUG] QR Code generated successfully");
-                                }, 50);
-                            } catch (e) {
-                                console.error("QR Generation Failed:", e);
+                                new QRCode(qrcodeEl, {
+                                    text: currentLink,
+                                    width: 140,
+                                    height: 140,
+                                    colorDark : "#000000",
+                                    colorLight : "#ffffff",
+                                    correctLevel : QRCode.CorrectLevel.H
+                                });
+                            } catch(err) {
+                                console.error("QR Code rendering error:", err);
+                                qrcodeEl.innerHTML = '<span style="color:red;font-size:0.8rem;">Barcode Error</span>';
                             }
-                        }
-                    } else {
-                        console.warn("[DEBUG] Referral Code is MISSING in profile response");
+                        }, 100);
                     }
                 } else {
                     logout();
@@ -731,16 +647,10 @@
         }
 
         function copyToClipboard() {
-            if (!currentLink) {
-                alert("Referral link not ready yet. Please refresh.");
-                return;
-            }
             const fullText = `Experience Sinaank Digital Therapy 🌿 Start your energy alignment journey here: ${currentLink}`;
-            
-            // Standard method
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(fullText).then(() => {
-                    alert("Sinaank Promotional Link Copied! 🚀");
+                    alert("Sinaank Promotional Link Copied!");
                 }).catch(err => {
                     fallbackCopy(fullText);
                 });
@@ -756,9 +666,8 @@
             textArea.select();
             try {
                 document.execCommand('copy');
-                alert("Sinaank Promotional Link Copied! 🚀");
+                alert("Sinaank Promotional Link Copied!");
             } catch (err) {
-                console.error('Fallback copy failed', err);
                 alert("Could not copy. Link: " + text);
             }
             document.body.removeChild(textArea);
@@ -816,9 +725,14 @@
             document.getElementById('plans-modal').style.display = 'flex';
         }
 
-        async function upgradePlan(planName, amount) {
+        async function upgradePlan(planName, amount, btn) {
             const confirmed = confirm(`Confirm upgrade to ${planName} Plan for ₹${amount}?`);
             if (!confirmed) return;
+
+            if (btn) {
+                btn.innerText = "Processing...";
+                btn.disabled = true;
+            }
 
             const token = localStorage.getItem('session');
             const res = await fetch(CONFIG.API_BASE_URL + '/api/payment/create-order', {
@@ -830,7 +744,8 @@
 
             if (data.success) {
                 // Initialize Razorpay (Dummy for now or actual if ready)
-                alert(`Order Created: ${data.data.orderId}\nProceeding to payment...`);
+                console.log(`Order Created: ${data.data.orderId}`);
+                
                 // For V1.1 local testing, we can simulate success:
                 const simSuccess = await fetch(CONFIG.API_BASE_URL + '/api/payment/simulate-success', {
                     method: 'POST',
@@ -842,9 +757,13 @@
                     if (typeof gtag === 'function') gtag('event', 'payment_success');
                     alert("Upgrade Successful! Welcome to " + planName);
                     location.reload();
+                } else {
+                    alert("Activation Error: " + (simData.message || "Failed"));
+                    if (btn) { btn.innerText = "ACTIVATE NOW"; btn.disabled = false; }
                 }
             } else {
                 alert(data.message);
+                if (btn) { btn.innerText = "ACTIVATE NOW"; btn.disabled = false; }
             }
         }
 
@@ -913,5 +832,6 @@
             Copyright © 2026 Sinaank Therapy. All Rights Reserved.
         </div>
     </footer>
+<script src="js/analytics.js"></script>
 </body>
 </html>

@@ -96,7 +96,7 @@
                         <li style="margin-bottom: 12px;">✓ Team Earning: ₹80 per level 2</li>
                         <li style="margin-bottom: 12px;">✓ Lifetime Activation</li>
                     </ul>
-                    <button onclick="upgradePlan('MASTER', 299)" class="btn-primary glow-start" style="width: 100%;">ACTIVATE NOW</button>
+                    <button onclick="upgradePlan('MASTER', 299, this)" class="btn-primary glow-start" style="width: 100%;">ACTIVATE NOW</button>
                     <div style="margin-top: 1.5rem; font-size: 0.8rem; color: var(--text-dim); display: flex; align-items: center; justify-content: center; gap: 10px;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3m-3-3l-2.25-2.25"></path></svg>
                         <span>Have an activation code? <span onclick="activateByCode()" style="color: var(--primary); cursor: pointer; text-decoration: underline; font-weight: 700;">Use it here</span></span>
@@ -725,9 +725,14 @@
             document.getElementById('plans-modal').style.display = 'flex';
         }
 
-        async function upgradePlan(planName, amount) {
+        async function upgradePlan(planName, amount, btn) {
             const confirmed = confirm(`Confirm upgrade to ${planName} Plan for ₹${amount}?`);
             if (!confirmed) return;
+
+            if (btn) {
+                btn.innerText = "Processing...";
+                btn.disabled = true;
+            }
 
             const token = localStorage.getItem('session');
             const res = await fetch(CONFIG.API_BASE_URL + '/api/payment/create-order', {
@@ -739,7 +744,8 @@
 
             if (data.success) {
                 // Initialize Razorpay (Dummy for now or actual if ready)
-                alert(`Order Created: ${data.data.orderId}\nProceeding to payment...`);
+                console.log(`Order Created: ${data.data.orderId}`);
+                
                 // For V1.1 local testing, we can simulate success:
                 const simSuccess = await fetch(CONFIG.API_BASE_URL + '/api/payment/simulate-success', {
                     method: 'POST',
@@ -751,9 +757,13 @@
                     if (typeof gtag === 'function') gtag('event', 'payment_success');
                     alert("Upgrade Successful! Welcome to " + planName);
                     location.reload();
+                } else {
+                    alert("Activation Error: " + (simData.message || "Failed"));
+                    if (btn) { btn.innerText = "ACTIVATE NOW"; btn.disabled = false; }
                 }
             } else {
                 alert(data.message);
+                if (btn) { btn.innerText = "ACTIVATE NOW"; btn.disabled = false; }
             }
         }
 
