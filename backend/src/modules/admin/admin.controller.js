@@ -68,6 +68,16 @@ const getStats = async (req, res) => {
             where: { createdAt: { gte: today } }
         });
 
+        // Today's New Users (Registrations)
+        const todayUsers = await prisma.user.count({
+            where: { createdAt: { gte: today } }
+        });
+
+        // Today's Visits (Demo Users)
+        const todayVisits = await prisma.siteVisit.count({
+            where: { createdAt: { gte: today } }
+        });
+
         return successResponse(res, 200, 'Admin Stats', {
             wholesale: {
                 totalUsers,
@@ -77,6 +87,8 @@ const getStats = async (req, res) => {
                 totalOut,
                 totalLiability,
                 recentTransactions,
+                todayUsers,
+                todayVisits,
                 alerts
             }
         });
