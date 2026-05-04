@@ -30,6 +30,7 @@ router.post('/sweep-payouts', adminController.sweepToPayouts);
 router.get('/queries', adminController.getQueries);
 router.put('/query/:id', adminController.updateQuery);
 router.put('/user/:id', adminController.updateUser);
+router.put('/upgrade-user/:id', adminController.manualUpgrade);
 router.get('/config', adminController.getSystemConfig);
 router.post('/update-config', adminController.updateSystemConfig);
 router.post('/manual-payout', adminController.createManualPayout);

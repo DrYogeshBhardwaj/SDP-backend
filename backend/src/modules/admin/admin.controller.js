@@ -306,6 +306,58 @@ const updateUser = async (req, res) => {
     }
 };
 
+const manualUpgrade = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { distributeCommissions } = require('../payment/payment.controller');
+        const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+
+        // 1. Fetch User
+        const user = await prisma.user.findUnique({ where: { id } });
+        if (!user) return errorResponse(res, 404, 'User not found');
+        if (user.plan === 'PREMIUM') return errorResponse(res, 400, 'User is already PREMIUM');
+
+        // 2. Perform Atomic Upgrade
+        const updated = await prisma.$transaction([
+            // Update User Stats
+            prisma.user.update({
+                where: { id },
+                data: {
+                    plan: 'PREMIUM',
+                    isBusinessUnlocked: true,
+                    minutesBalance: { increment: 3600 }
+                }
+            }),
+            // Record Revenue (Admin Collected)
+            prisma.transaction.create({
+                data: {
+                    userId: id,
+                    amount: 299,
+                    type: 'CREDIT',
+                    category: 'PLAN_UPGRADE',
+                    description: `Manual Upgrade by Admin (Cash Collected). IP: ${ip}`
+                }
+            }),
+            // Log Security
+            prisma.securityLog.create({
+                data: {
+                    event: 'ADMIN_MANUAL_UPGRADE',
+                    details: `Admin manually upgraded user ${user.mobile}. Commission distributed. IP: ${ip}`,
+                    ip
+                }
+            })
+        ]);
+
+        // 3. Trigger Commissions (The Soul of the System)
+        await distributeCommissions(id, 299, user.mobile);
+
+        return successResponse(res, 200, 'User upgraded to PREMIUM successfully. Commissions distributed.', updated[0]);
+    } catch (err) {
+        console.error('[ADMIN_UPGRADE_ERROR]', err);
+        return errorResponse(res, 500, 'Upgrade failed: ' + err.message);
+    }
+};
+
 const updateQuery = async (req, res) => {
     try {
         const { id } = req.params;
@@ -651,5 +703,6 @@ module.exports = {
     getSecurityLogs,
     verifyAdminMFA,
     createManualPayout,
+    manualUpgrade,
     getAnalytics
 };

@@ -514,10 +514,11 @@
                 <input type="tel" id="edit-sponsor" placeholder="Enter New Sponsor Mobile" style="width: 100%; padding: 10px; background: rgba(255,171,0,0.05); border: 1px solid #ffab00; border-radius: 4px; color: #fff; margin-bottom: 0.5rem;">
                 <p id="edit-earnings-warning" style="font-size: 0.65rem; color: #ffab00; margin-bottom: 1.5rem; display: none;">⚠️ User has already earned referral income. Changing sponsor will not move past payments.</p>
             </div>
-            <div style="display: flex; gap: 10px;">
-                <button onclick="saveUserChanges()" class="btn-primary" style="flex: 1;">SAVE CHANGES</button>
-                <button id="btn-downgrade" onclick="downgradeUser()" class="btn-primary" style="flex: 1; background: rgba(255,82,82,0.1); color: #ff5252; border: 1px solid #ff5252;">DOWNGRADE TO FREE</button>
-                <button onclick="closeEditModal()" class="btn-primary" style="flex: 1; background: #444;">CANCEL</button>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button onclick="saveUserChanges()" class="btn-primary" style="flex: 1; min-width: 120px;">SAVE CHANGES</button>
+                <button id="btn-upgrade" onclick="upgradeUserManual()" class="btn-primary" style="flex: 1; min-width: 120px; background: linear-gradient(45deg, #FFD700, #FFA500); color: #000; border: none; font-weight: 800; display: none;">UPGRADE TO PAID</button>
+                <button id="btn-downgrade" onclick="downgradeUser()" class="btn-primary" style="flex: 1; min-width: 120px; background: rgba(255,82,82,0.1); color: #ff5252; border: 1px solid #ff5252; display: none;">DOWNGRADE TO FREE</button>
+                <button onclick="closeEditModal()" class="btn-primary" style="flex: 1; min-width: 120px; background: #444;">CANCEL</button>
             </div>
         </div>
     </div>
@@ -988,6 +989,11 @@
             document.getElementById('edit-upi').value = user.upiId || '';
             document.getElementById('edit-sponsor').value = user.sponsor?.mobile || '';
             
+            // Toggle Upgrade/Downgrade buttons
+            const isPaid = user.plan === 'PREMIUM' || user.isBusinessUnlocked;
+            document.getElementById('btn-upgrade').style.display = isPaid ? 'none' : 'block';
+            document.getElementById('btn-downgrade').style.display = isPaid ? 'block' : 'none';
+
             if (user.totalEarnings > 0) {
                 document.getElementById('edit-earnings-warning').style.display = 'block';
                 document.getElementById('edit-earnings-warning').innerText = `⚠️ User has earned ₹${user.totalEarnings} in Referral Income. Changing sponsor will not move past payments.`;
@@ -1027,6 +1033,31 @@
                 }, 500);
             } else {
                 alert('Failed to downgrade user: ' + (data.message || 'Unknown error'));
+            }
+        }
+
+        async function upgradeUserManual() {
+            const id = document.getElementById('edit-user-id').value;
+            const mobile = allUsers.find(u => u.id === id)?.mobile;
+            
+            if (!confirm(`UPGRADE ${mobile} TO PAID STATUS?\n\nThis will:\n1. Charge ₹299 (Admin Collected)\n2. Add 3600 Minutes\n3. DISTRIBUTE COMMISSIONS (₹100 + ₹80)\n4. Unlock Business Access\n\nContinue?`)) return;
+
+            const btn = document.getElementById('btn-upgrade');
+            btn.innerText = "UPGRADING...";
+            btn.disabled = true;
+
+            const data = await api('/upgrade-user/' + id, 'PUT');
+            if (data.success) {
+                alert('User UPGRADED Successfully! Commissions have been distributed to uplines.');
+                closeEditModal();
+                setTimeout(() => {
+                    loadUsers();
+                    loadStats(true);
+                }, 500);
+            } else {
+                alert('Upgrade failed: ' + (data.message || 'Unknown error'));
+                btn.innerText = "UPGRADE TO PAID";
+                btn.disabled = false;
             }
         }
 
