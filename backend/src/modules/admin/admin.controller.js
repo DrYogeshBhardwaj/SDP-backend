@@ -136,12 +136,25 @@ const getAllUsers = async (req, res) => {
         const users = await prisma.user.findMany({
             include: { 
                 wallets: true,
-                sponsor: { select: { mobile: true } }
+                sponsor: { select: { mobile: true } },
+                transactions: {
+                    where: { category: 'BONUS' },
+                    select: { amount: true }
+                }
             },
             orderBy: { createdAt: 'desc' }
         });
-        return successResponse(res, 200, 'User List', users);
+
+        // Calculate total earnings for each user
+        const usersWithEarnings = users.map(u => {
+            const earnings = u.transactions.reduce((acc, t) => acc + t.amount, 0);
+            const { transactions, ...userWithoutTxs } = u;
+            return { ...userWithoutTxs, totalEarnings: earnings };
+        });
+
+        return successResponse(res, 200, 'User List', usersWithEarnings);
     } catch (err) {
+        console.error('[GET_ALL_USERS_ERR]', err);
         return errorResponse(res, 500, 'Failed to fetch users');
     }
 };
