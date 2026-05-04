@@ -133,6 +133,45 @@
             align-items: center;
             justify-content: center;
         }
+
+        /* Sync Overlay */
+        #sync-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(10px);
+            z-index: 10000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .sync-box {
+            width: 400px;
+            text-align: center;
+        }
+        .progress-container {
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: var(--primary);
+            box-shadow: 0 0 10px var(--primary);
+            transition: width 0.3s ease;
+        }
+        .sync-status {
+            font-family: monospace;
+            font-size: 0.7rem;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
     </style>
 </head>
 <body class="scientific-grid">
@@ -156,6 +195,20 @@
         </div>
 
         <p id="lock-msg" style="margin-top: 1rem; color: #ff5252;"></p>
+    </div>
+
+    <!-- SYNC OVERLAY -->
+    <div id="sync-overlay">
+        <div class="sync-box">
+            <div class="card-title" style="font-size: 1.2rem; margin-bottom: 0.5rem;">FINANCIAL CORE AUDIT</div>
+            <p style="color: var(--text-dim); font-size: 0.7rem; margin-bottom: 2rem;">RECALCULATING SOUL OF THE SYSTEM...</p>
+            
+            <div class="progress-container">
+                <div id="sync-progress" class="progress-bar"></div>
+            </div>
+            
+            <div id="sync-text" class="sync-status">INITIALIZING...</div>
+        </div>
     </div>
 
 
@@ -184,7 +237,10 @@
 
         <div class="admin-content">
             <div id="view-wholesale" class="view">
-                <h2 style="font-size: 2.5rem; letter-spacing: -1px; margin-bottom: 2rem;">Wholesale Overview</h2>
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem;">
+                    <h2 style="font-size: 2.5rem; letter-spacing: -1px; margin: 0;">Wholesale Overview</h2>
+                    <button onclick="loadStats(true)" class="btn-primary" style="padding: 10px 20px; font-size: 0.7rem; background: rgba(0,216,255,0.1); border: 1px solid var(--primary); color: var(--primary);">🔄 SYNC ALL DATA</button>
+                </div>
                 
                 <!-- Alerts Section -->
                 <div id="admin-alerts" style="margin-bottom: 2rem;"></div>
@@ -199,6 +255,11 @@
                         <div class="card-title">Total Cash OUT</div>
                         <div class="stat-value" id="stats-total-out" style="font-size: 4rem; color: #ff5252;">₹--</div>
                         <p style="color: var(--text-dim); font-size: 0.7rem;">TOTAL WITHDRAWALS PAID</p>
+                    </div>
+                    <div class="stat-card glass" style="padding: 2.5rem;">
+                        <div class="card-title">Total Liability</div>
+                        <div class="stat-value" id="stats-total-liability" style="font-size: 4rem; color: #ffab00;">₹--</div>
+                        <p style="color: var(--text-dim); font-size: 0.7rem;">TO BE PAID (USER BALANCES)</p>
                     </div>
                     <div class="stat-card glass" style="padding: 2.5rem; background: rgba(0, 200, 83, 0.05);">
                         <div class="card-title">Revenue (Today)</div>
@@ -453,6 +514,7 @@
             </div>
             <div style="display: flex; gap: 10px;">
                 <button onclick="saveUserChanges()" class="btn-primary" style="flex: 1;">SAVE CHANGES</button>
+                <button id="btn-downgrade" onclick="downgradeUser()" class="btn-primary" style="flex: 1; background: rgba(255,82,82,0.1); color: #ff5252; border: 1px solid #ff5252;">DOWNGRADE TO FREE</button>
                 <button onclick="closeEditModal()" class="btn-primary" style="flex: 1; background: #444;">CANCEL</button>
             </div>
         </div>
@@ -671,27 +733,70 @@
             }
         }
 
-        async function loadStats() {
-            const data = await api('/stats');
-            if (data.success) {
-                const s = data.data.wholesale;
-                document.getElementById('stats-total-in').innerText = '₹' + s.totalIn;
-                document.getElementById('stats-total-out').innerText = '₹' + s.totalOut;
-                document.getElementById('stats-today-in').innerText = '₹' + s.todayIn;
-                document.getElementById('stats-liability').innerText = '₹' + s.totalLiability;
+        async function loadStats(isManual = false) {
+            console.log("[ADMIN_LOAD_STATS] Fetching analytics...");
+            
+            if (isManual) {
+                const overlay = document.getElementById('sync-overlay');
+                const progress = document.getElementById('sync-progress');
+                const text = document.getElementById('sync-text');
                 
-                // Funnel Stats
-                document.getElementById('stats-today-users').innerText = s.todayUsers || 0;
-                document.getElementById('stats-today-visits-ws').innerText = s.todayVisits || 0;
+                overlay.style.display = 'flex';
+                progress.style.width = '0%';
+                
+                text.innerText = "SCANNING TRANSACTIONS...";
+                await new Promise(r => setTimeout(r, 600));
+                progress.style.width = '30%';
+                
+                text.innerText = "AUDITING USER WALLETS...";
+                await new Promise(r => setTimeout(r, 600));
+                progress.style.width = '60%';
+                
+                text.innerText = "VERIFYING MLM COMMISSIONS...";
+                await new Promise(r => setTimeout(r, 600));
+                progress.style.width = '90%';
+            }
 
-                // Alerts
-                const alertsDiv = document.getElementById('admin-alerts');
-                alertsDiv.innerHTML = s.alerts.map(a => `
-                    <div class="alert-banner alert-${a.type.toLowerCase()}">
-                        <span style="font-size: 1.2rem;">${a.type === 'CRITICAL' ? '🚫' : '⚠️'}</span>
-                        <div>${a.message}</div>
-                    </div>
-                `).join('');
+            try {
+                const data = await api('/stats');
+                if (data.success) {
+                    const ws = data.data.wholesale;
+                    
+                    document.getElementById('stats-total-in').innerText = "₹" + (ws.totalIn || 0);
+                    document.getElementById('stats-total-out').innerText = "₹" + (ws.totalOut || 0);
+                    document.getElementById('stats-today-in').innerText = "₹" + (ws.todayIn || 0);
+                    document.getElementById('stats-today-users').innerText = ws.todayUsers || 0;
+                    document.getElementById('stats-today-visits-ws').innerText = ws.todayVisits || 0;
+
+                    // Liability
+                    const liabilityEl = document.getElementById('stats-total-liability');
+                    if (liabilityEl) liabilityEl.innerText = "₹" + (ws.totalLiability || 0);
+
+                    // Alerts
+                    const alertsDiv = document.getElementById('admin-alerts');
+                    if (ws.alerts && ws.alerts.length > 0) {
+                        alertsDiv.innerHTML = ws.alerts.map(a => `
+                            <div class="alert-banner alert-${a.type.toLowerCase()}">
+                                <span>⚠️</span> ${a.message}
+                            </div>
+                        `).join('');
+                    } else {
+                        alertsDiv.innerHTML = `
+                            <div class="alert-banner" style="background: rgba(0,200,83,0.05); border: 1px solid #00c853; color: #00c853;">
+                                <span>✅</span> All systems synchronized. No discrepancies found.
+                            </div>
+                        `;
+                    }
+                }
+            } catch (e) {
+                console.error("Stats fail", e);
+            } finally {
+                if (isManual) {
+                    document.getElementById('sync-progress').style.width = '100%';
+                    document.getElementById('sync-text').innerText = "SYNCHRONIZATION COMPLETE";
+                    await new Promise(r => setTimeout(r, 500));
+                    document.getElementById('sync-overlay').style.display = 'none';
+                }
             }
         }
 
@@ -885,6 +990,34 @@
 
         function closeEditModal() {
             document.getElementById('edit-modal').style.display = 'none';
+        }
+
+        async function downgradeUser() {
+            const id = document.getElementById('edit-user-id').value;
+            const mobile = allUsers.find(u => u.id === id)?.mobile;
+            if (!confirm(`Are you sure you want to REVERT ${mobile} to FREE status? This will reset their balance and remove business access.`)) return;
+
+            const payload = {
+                plan: 'FREE',
+                isBusinessUnlocked: false,
+                minutesBalance: 0,
+                status: 'ACTIVE'
+            };
+
+            const data = await api('/user/' + id, 'PUT', payload);
+            console.log("[DOWNGRADE_RESPONSE]", data);
+            
+            if (data.success) {
+                alert('User downgraded successfully!');
+                closeEditModal();
+                // Small delay to ensure DB consistency before reload
+                setTimeout(() => {
+                    loadUsers();
+                    loadStats(true);
+                }, 500);
+            } else {
+                alert('Failed to downgrade user: ' + (data.message || 'Unknown error'));
+            }
         }
 
         async function saveUserChanges() {

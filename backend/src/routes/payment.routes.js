@@ -10,7 +10,6 @@ router.post('/create-order', (req, res, next) => {
     next();
 }, paymentController.createOrder);
 
-router.post('/simulate-success', auth, paymentController.simulateSuccess);
 router.post('/verify-payment', paymentController.verifyPayment);
 router.post('/verify-password', paymentController.verifyPasswordPayment);
 

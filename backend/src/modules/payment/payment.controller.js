@@ -5,6 +5,76 @@ const { registerUser } = require('../auth/registration.service');
 const { generateToken } = require('../../utils/jwt');
 const { generateReferralCode } = require('../../utils/referral');
 const Razorpay = require('razorpay');
+const crypto = require('crypto');
+
+/**
+ * Helper to distribute MLM commissions (The Soul of the System)
+ */
+const distributeCommissions = async (userId, amount, mobile) => {
+    try {
+        console.log(`[COMMISSION_START] Distributing for user ${userId} (${mobile})`);
+        
+        // 1. Get the user and their uplines
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            include: { sponsor: { include: { sponsor: true } } }
+        });
+
+        if (!user || !user.sponsorId) {
+            console.log(`[COMMISSION_SKIP] No sponsor for ${mobile}`);
+            return;
+        }
+
+        const l1Sponsor = user.sponsor;
+        const l2Sponsor = l1Sponsor.sponsor;
+
+        // 2. Level 1 Commission (₹100)
+        if (l1Sponsor && l1Sponsor.plan === 'PREMIUM') {
+            await prisma.$transaction([
+                prisma.wallet.updateMany({
+                    where: { userId: l1Sponsor.id, type: 'CASH' },
+                    data: { balance: { increment: 100 } }
+                }),
+                prisma.transaction.create({
+                    data: {
+                        userId: l1Sponsor.id,
+                        fromUserId: userId,
+                        amount: 100,
+                        type: 'CREDIT',
+                        category: 'BONUS',
+                        description: `Referral Income (L1) from ${mobile}`
+                    }
+                })
+            ]);
+            console.log(`[COMMISSION_L1_SUCCESS] ₹100 to ${l1Sponsor.mobile}`);
+        }
+
+        // 3. Level 2 Commission (₹80)
+        if (l2Sponsor && l2Sponsor.plan === 'PREMIUM') {
+            await prisma.$transaction([
+                prisma.wallet.updateMany({
+                    where: { userId: l2Sponsor.id, type: 'CASH' },
+                    data: { balance: { increment: 80 } }
+                }),
+                prisma.transaction.create({
+                    data: {
+                        userId: l2Sponsor.id,
+                        fromUserId: userId,
+                        amount: 80,
+                        type: 'CREDIT',
+                        category: 'BONUS',
+                        description: `Team Income (L2) from ${mobile}`
+                    }
+                })
+            ]);
+            console.log(`[COMMISSION_L2_SUCCESS] ₹80 to ${l2Sponsor.mobile}`);
+        }
+
+    } catch (err) {
+        console.error('[COMMISSION_ERROR]', err);
+    }
+};
+
 
 const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
@@ -51,130 +121,75 @@ const createOrder = async (req, res) => {
     }
 };
 
-const simulateSuccess = async (req, res) => {
-    try {
-        const { orderId } = req.body;
-        const userId = req.user.userId;
-
-        const order = await prisma.paymentOrder.findUnique({ where: { orderId } });
-        if (!order) return errorResponse(res, 404, 'Order not found');
-
-        // Logic for Upgrade
-        const plan = 'PREMIUM';
-
-        // 3. ATOMIC UPGRADE + COMMISSION
-        await prisma.$transaction(async (tx) => {
-            // A. Mark Order
-            await tx.paymentOrder.update({
-                where: { orderId },
-                data: { status: 'PAID' }
-            });
-
-            // B. Unlock User
-            const currentUser = await tx.user.findUnique({ where: { id: userId } });
-            const user = await tx.user.update({
-                where: { id: userId },
-                data: { 
-                    plan: 'PREMIUM',
-                    isBusinessUnlocked: true,
-                    referralCode: currentUser.referralCode || generateReferralCode(),
-                    minutesBalance: { increment: 3600 }
-                }
-            });
-
-            // C. Log Revenue
-            await tx.transaction.create({
-                data: {
-                    userId,
-                    amount: order.amount,
-                    type: 'CREDIT',
-                    category: 'PLAN_UPGRADE',
-                    description: `Upgraded to MASTER LICENSE (₹299)`
-                }
-            });
-
-            // D. MLM Commission Distribution (₹100 / ₹80)
-            if (user.sponsorId) {
-                // Level 1: ₹100
-                await tx.wallet.updateMany({
-                    where: { userId: user.sponsorId, type: 'CASH' },
-                    data: { balance: { increment: 100 } }
-                });
-                await tx.transaction.create({
-                    data: {
-                        userId: user.sponsorId,
-                        fromUserId: user.id,
-                        amount: 100,
-                        type: 'CREDIT',
-                        category: 'BONUS',
-                        description: `Direct Comm from ${user.mobile}`
-                    }
-                });
-
-                // Level 2: ₹80
-                const sponsor = await tx.user.findUnique({ where: { id: user.sponsorId } });
-                if (sponsor && sponsor.sponsorId) {
-                    await tx.wallet.updateMany({
-                        where: { userId: sponsor.sponsorId, type: 'CASH' },
-                        data: { balance: { increment: 80 } }
-                    });
-                    await tx.transaction.create({
-                        data: {
-                            userId: sponsor.sponsorId,
-                            fromUserId: user.id,
-                            amount: 80,
-                            type: 'CREDIT',
-                            category: 'BONUS',
-                            description: `Team Comm from ${user.mobile}`
-                        }
-                    });
-                }
-            }
-        });
-
-        return successResponse(res, 200, 'Master License Activated Successfully');
-    } catch (err) {
-        console.error('[SIMULATE_ERROR]', err);
-        return errorResponse(res, 500, 'Simulation failed');
-    }
-};
+// Simulation removed for security
 
 
 const verifyPayment = async (req, res) => {
     try {
-        const { order_id, mobile, sponsorCode, name, upiId } = req.body;
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature, mobile, sponsorCode, name, upiId } = req.body;
         
-        // Mark Order PAID
+        // 1. SECURE SIGNATURE VERIFICATION
+        const secret = process.env.RAZORPAY_KEY_SECRET;
+        const body = razorpay_order_id + "|" + razorpay_payment_id;
+        const expectedSignature = crypto
+            .createHmac('sha256', secret)
+            .update(body.toString())
+            .digest('hex');
+
+        if (expectedSignature !== razorpay_signature) {
+            console.error(`[PAYMENT_VERIFY_FAIL] Invalid signature for ${mobile}`);
+            return errorResponse(res, 400, 'Invalid payment signature');
+        }
+
+        // 2. Mark Order PAID
         await prisma.paymentOrder.updateMany({
-            where: { orderId: order_id },
+            where: { orderId: razorpay_order_id },
             data: { status: 'PAID' }
         });
 
-        // Atomic Register + Commission
-        const user = await registerUser({ mobile, sponsorCode, name, upiId });
+        // 3. Atomic Register or Upgrade
+        let user = await prisma.user.findUnique({ where: { mobile } });
         
-        // UPGRADE USER IMMEDIATELY AS THEY PAID 299
-        await prisma.user.update({
-            where: { id: user.id },
-            data: { 
-                plan: 'PREMIUM', 
-                isBusinessUnlocked: true,
-                minutesBalance: { increment: 3600 } 
-            }
-        });
+        if (user) {
+            console.log(`[PAYMENT_UPGRADING] Upgrading existing user ${user.id}...`);
+            user = await prisma.user.update({
+                where: { mobile },
+                data: {
+                    name: name || user.name,
+                    upiId: upiId || user.upiId,
+                    plan: 'PREMIUM',
+                    isBusinessUnlocked: true,
+                    referralCode: user.referralCode || generateReferralCode(),
+                    minutesBalance: { increment: 3600 }
+                }
+            });
+        } else {
+            console.log(`[PAYMENT_REGISTERING] Registering new user ${mobile}...`);
+            user = await registerUser({ mobile, sponsorCode, name, upiId });
+            await prisma.user.update({
+                where: { id: user.id },
+                data: { 
+                    plan: 'PREMIUM', 
+                    isBusinessUnlocked: true,
+                    minutesBalance: { increment: 3600 } 
+                }
+            });
+        }
 
         const token = generateToken({ userId: user.id }, true);
 
-        // LOG REVENUE TRANSACTION
         await prisma.transaction.create({
             data: {
                 userId: user.id,
                 amount: 299,
                 type: 'CREDIT',
-                category: 'REGISTRATION_FEE',
-                description: `Payment Received from ${mobile}`
+                category: 'PLAN_UPGRADE',
+                description: `Verified Payment Received from ${mobile}`
             }
         });
+
+        // 4. DISTRIBUTE COMMISSIONS (Soul of the System)
+        await distributeCommissions(user.id, 299, mobile);
 
         return successResponse(res, 200, 'Payment Verified', {
             token,
@@ -182,7 +197,6 @@ const verifyPayment = async (req, res) => {
         });
     } catch (err) {
         console.error('[V1_PAYMENT_ERROR]', err);
-        if (err.message === 'ALREADY_EXISTS') return errorResponse(res, 400, 'Already registered');
         return errorResponse(res, 500, `Verification failed: ${err.message}`);
     }
 };
@@ -212,7 +226,8 @@ const verifyPasswordPayment = async (req, res) => {
                     upiId: upiId || user.upiId,
                     plan: 'PREMIUM',
                     isBusinessUnlocked: true,
-                    referralCode: user.referralCode || generateReferralCode()
+                    referralCode: user.referralCode || generateReferralCode(),
+                    minutesBalance: { increment: 3600 }
                 }
             });
         } else {
@@ -243,6 +258,9 @@ const verifyPasswordPayment = async (req, res) => {
             }
         });
 
+        // 4. DISTRIBUTE COMMISSIONS (Soul of the System)
+        await distributeCommissions(user.id, 299, mobile);
+
         return successResponse(res, 200, 'Activation Successful', {
             token,
             user: { id: user.id, mobile: user.mobile }
@@ -253,5 +271,4 @@ const verifyPasswordPayment = async (req, res) => {
     }
 };
 
-module.exports = { createOrder, verifyPayment, verifyPasswordPayment, simulateSuccess };
-
+module.exports = { createOrder, verifyPayment, verifyPasswordPayment };

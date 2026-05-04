@@ -18,9 +18,13 @@ const getStats = async (req, res) => {
         const today = new Date();
         today.setHours(0,0,0,0);
 
-        // 1. Total In (Revenue)
+        // 1. Total In (Revenue - Consolidated)
+        // We look for both legacy REGISTRATION_FEE and new PLAN_UPGRADE
         const revenueAgg = await prisma.transaction.aggregate({
-            where: { category: 'REGISTRATION_FEE' },
+            where: { 
+                category: { in: ['REGISTRATION_FEE', 'PLAN_UPGRADE'] },
+                type: 'CREDIT' 
+            },
             _sum: { amount: true }
         });
         const totalIn = revenueAgg._sum.amount || 0;
@@ -28,7 +32,8 @@ const getStats = async (req, res) => {
         // 2. Today's In
         const todayReceipts = await prisma.transaction.findMany({
             where: { 
-                category: 'REGISTRATION_FEE',
+                category: { in: ['REGISTRATION_FEE', 'PLAN_UPGRADE'] },
+                type: 'CREDIT',
                 createdAt: { gte: today }
             }
         });
@@ -45,22 +50,34 @@ const getStats = async (req, res) => {
         const wallets = await prisma.wallet.findMany({ where: { type: 'CASH' } });
         const totalLiability = wallets.reduce((acc, w) => acc + w.balance, 0);
 
-        // 5. System Alerts (Gadbad Detection)
+        // 5. System Alerts (Audit)
         const alerts = [];
         const negativeWallets = wallets.filter(w => w.balance < 0);
         if (negativeWallets.length > 0) {
             alerts.push({
                 type: 'CRITICAL',
-                message: `${negativeWallets.length} users have negative balances (ILLegal).`
+                message: `${negativeWallets.length} users have negative balances.`
             });
         }
 
-        // Quick Audit: Total In SHOULD be >= Total Out + Total Liability
-        // (Revenue >= Paid + Owed)
+        // Audit: Total In SHOULD be >= Total Out + Total Liability
+        // We also check for users who are PAID but have no revenue record
+        const paidUsers = await prisma.user.findMany({
+            where: { plan: 'PREMIUM' },
+            include: { transactions: { where: { category: 'PLAN_UPGRADE' } } }
+        });
+        const usersMissingRevenue = paidUsers.filter(u => u.transactions.length === 0);
+        if (usersMissingRevenue.length > 0) {
+            alerts.push({
+                type: 'WARNING',
+                message: `${usersMissingRevenue.length} Premium users missing revenue records.`
+            });
+        }
+
         if (totalIn < (totalOut + totalLiability)) {
             alerts.push({
                 type: 'WARNING',
-                message: `Audit Mismatch: Distributed commissions (${totalOut + totalLiability} exceeds Total Revenue (${totalIn}).`
+                message: `Audit Mismatch: Distributed commissions (${totalOut + totalLiability}) exceeds Total Revenue (${totalIn}).`
             });
         }
 
@@ -68,12 +85,12 @@ const getStats = async (req, res) => {
             where: { createdAt: { gte: today } }
         });
 
-        // Today's New Users (Registrations)
+        // Today's New Users
         const todayUsers = await prisma.user.count({
             where: { createdAt: { gte: today } }
         });
 
-        // Today's Visits (Demo Users)
+        // Today's Visits
         const todayVisits = await prisma.siteVisit.count({
             where: { createdAt: { gte: today } }
         });
@@ -219,9 +236,9 @@ const getCashLogs = async (req, res) => {
 const updateUser = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status, name, minutesBalance, role, upiId, sponsorMobile } = req.body;
+        const { status, name, minutesBalance, role, upiId, sponsorMobile, plan, isBusinessUnlocked } = req.body;
 
-        console.log(`[ADMIN_UPDATE] Updating user ${id}:`, { name, status, role, minutesBalance, upiId, sponsorMobile });
+        console.log(`[ADMIN_UPDATE] Updating user ${id}:`, { name, status, role, minutesBalance, upiId, sponsorMobile, plan, isBusinessUnlocked });
 
         let sponsorId = undefined;
         if (sponsorMobile) {
@@ -230,22 +247,37 @@ const updateUser = async (req, res) => {
             sponsorId = sponsor.id;
         }
 
+        // Strict type casting for boolean/int
+        const dataToUpdate = {
+            status,
+            name,
+            role,
+            upiId,
+            sponsorId,
+            plan: plan || undefined,
+            minutesBalance: minutesBalance !== undefined ? parseInt(minutesBalance) : undefined,
+            isBusinessUnlocked: isBusinessUnlocked === true || isBusinessUnlocked === 'true' ? true : (isBusinessUnlocked === false || isBusinessUnlocked === 'false' ? false : undefined)
+        };
+
         const updated = await prisma.user.update({
             where: { id },
-            data: { 
-                status, 
-                name, 
-                minutesBalance: parseInt(minutesBalance) || 0, 
-                role,
-                upiId,
-                sponsorId
+            data: dataToUpdate
+        });
+
+        // Log the change
+        const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+        await prisma.securityLog.create({
+            data: {
+                event: 'ADMIN_USER_UPDATE',
+                details: `Admin updated user ${updated.mobile}. Plan: ${updated.plan}, Business: ${updated.isBusinessUnlocked}. IP: ${ip}`,
+                ip
             }
         });
 
         return successResponse(res, 200, 'User updated', updated);
     } catch (err) {
         console.error('[ADMIN_UPDATE_ERROR]', err);
-        return errorResponse(res, 500, 'Update failed');
+        return errorResponse(res, 500, 'Update failed: ' + err.message);
     }
 };
 
