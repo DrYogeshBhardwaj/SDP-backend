@@ -264,17 +264,29 @@ const updateUser = async (req, res) => {
             data: dataToUpdate
         });
 
+        // If downgrading to FREE, we should also remove the revenue record to amend "Total Cash IN"
+        let revenueCleaned = false;
+        if (plan === 'FREE') {
+            const deleted = await prisma.transaction.deleteMany({
+                where: { 
+                    userId: id, 
+                    category: 'PLAN_UPGRADE' 
+                }
+            });
+            if (deleted.count > 0) revenueCleaned = true;
+        }
+
         // Log the change
         const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
         await prisma.securityLog.create({
             data: {
                 event: 'ADMIN_USER_UPDATE',
-                details: `Admin updated user ${updated.mobile}. Plan: ${updated.plan}, Business: ${updated.isBusinessUnlocked}. IP: ${ip}`,
+                details: `Admin updated user ${updated.mobile}. Plan: ${updated.plan}, Business: ${updated.isBusinessUnlocked}. Revenue Amended: ${revenueCleaned}. IP: ${ip}`,
                 ip
             }
         });
 
-        return successResponse(res, 200, 'User updated', updated);
+        return successResponse(res, 200, 'User updated' + (revenueCleaned ? ' and revenue records amended.' : ''), updated);
     } catch (err) {
         console.error('[ADMIN_UPDATE_ERROR]', err);
         return errorResponse(res, 500, 'Update failed: ' + err.message);
