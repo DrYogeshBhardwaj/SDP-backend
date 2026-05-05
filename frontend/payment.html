@@ -136,7 +136,8 @@
                     "currency": "INR",
                     "name": "Sinaank Digital Therapy",
                     "description": "V1 Master License Activation",
-                    "order_id": orderData.data.order_id,
+                    "order_id": orderData.data.orderId,
+
                     "handler": async function (response){
                         await finalizeRegistration(response);
                     },

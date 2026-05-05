@@ -17,6 +17,8 @@
     <link rel="icon" type="image/png" href="Logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Hind:wght@400;700&display=swap" rel="stylesheet">
     <script src="js/config.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
 
     <style>
         .dashboard-grid {
@@ -759,36 +761,72 @@
                 btn.disabled = true;
             }
 
-            const token = localStorage.getItem('session');
-            const res = await fetch(CONFIG.API_BASE_URL + '/api/payment/create-order', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ amount, plan: planName })
-            });
-            const data = await res.json();
-
-            if (data.success) {
-                // Initialize Razorpay (Dummy for now or actual if ready)
-                console.log(`Order Created: ${data.data.orderId}`);
-                
-                // For V1.1 local testing, we can simulate success:
-                const simSuccess = await fetch(CONFIG.API_BASE_URL + '/api/payment/simulate-success', {
+            try {
+                const token = localStorage.getItem('session');
+                const res = await fetch(CONFIG.API_BASE_URL + '/api/payment/create-order', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ orderId: data.data.orderId })
+                    body: JSON.stringify({ amount, plan: planName })
                 });
-                const simData = await simSuccess.json();
-                if (simData.success) {
-                    if (typeof gtag === 'function') gtag('event', 'payment_success');
-                    alert("Upgrade Successful! Welcome to " + planName);
-                    location.reload();
-                } else {
-                    alert("Activation Error: " + (simData.message || "Failed"));
+                const orderData = await res.json();
+
+                if (!orderData.success) throw new Error(orderData.message || "Order creation failed");
+
+                const options = {
+                    "key": orderData.data.key_id,
+                    "amount": orderData.data.amount,
+                    "currency": "INR",
+                    "name": "Sinaank Digital Therapy",
+                    "description": "Master License Activation",
+                    "order_id": orderData.data.orderId,
+                    "handler": async function (response){
+                        await finalizeUpgrade(response);
+                    },
+                    "prefill": {
+                        "contact": localStorage.getItem('mobile')
+                    },
+                    "theme": {
+                        "color": "#00D8FF"
+                    }
+                };
+                const rzp = new Razorpay(options);
+                rzp.open();
+                
+                rzp.on('payment.failed', function (response){
+                    alert("Payment Failed: " + response.error.description);
                     if (btn) { btn.innerText = "ACTIVATE NOW"; btn.disabled = false; }
-                }
-            } else {
-                alert(data.message);
+                });
+
+            } catch (e) {
+                alert("Payment Error: " + e.message);
                 if (btn) { btn.innerText = "ACTIVATE NOW"; btn.disabled = false; }
+            }
+        }
+
+        async function finalizeUpgrade(rzpResponse) {
+            const token = localStorage.getItem('session');
+            const mobile = localStorage.getItem('mobile');
+            const name = document.getElementById('user-name').innerText;
+            
+            const res = await fetch(CONFIG.API_BASE_URL + '/api/payment/verify-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ 
+                    razorpay_order_id: rzpResponse.razorpay_order_id,
+                    razorpay_payment_id: rzpResponse.razorpay_payment_id,
+                    razorpay_signature: rzpResponse.razorpay_signature,
+                    mobile,
+                    name,
+                    upiId: '' // We can ask for this or use existing if we had a field
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                if (typeof gtag === 'function') gtag('event', 'payment_success');
+                alert("Upgrade Successful! Welcome to MASTER plan.");
+                location.reload();
+            } else {
+                alert("Verification Failed: " + (data.message || "Unknown Error"));
             }
         }
 

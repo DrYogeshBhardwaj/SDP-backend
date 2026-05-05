@@ -277,16 +277,35 @@ const updateUser = async (req, res) => {
             data: dataToUpdate
         });
 
-        // If downgrading to FREE, we should also remove the revenue record to amend "Total Cash IN"
+        // If downgrading to FREE, we should also remove the revenue record and revert commissions
         let revenueCleaned = false;
+        let commissionsReverted = 0;
+
         if (plan === 'FREE') {
-            const deleted = await prisma.transaction.deleteMany({
+            // 1. Delete Revenue Records (Both V1 and Legacy)
+            const deletedRev = await prisma.transaction.deleteMany({
                 where: { 
                     userId: id, 
-                    category: 'PLAN_UPGRADE' 
+                    category: { in: ['PLAN_UPGRADE', 'REGISTRATION_FEE'] }
                 }
             });
-            if (deleted.count > 0) revenueCleaned = true;
+            if (deletedRev.count > 0) revenueCleaned = true;
+
+            // 2. Find and Revert Commissions (BONUS records where this user was the source)
+            const bonuses = await prisma.transaction.findMany({
+                where: { fromUserId: id, category: 'BONUS' }
+            });
+
+            for (const bonus of bonuses) {
+                // Deduct from upline's wallet
+                await prisma.wallet.updateMany({
+                    where: { userId: bonus.userId, type: 'CASH' },
+                    data: { balance: { decrement: bonus.amount } }
+                });
+                // Delete the bonus record
+                await prisma.transaction.delete({ where: { id: bonus.id } });
+                commissionsReverted++;
+            }
         }
 
         // Log the change
@@ -294,12 +313,13 @@ const updateUser = async (req, res) => {
         await prisma.securityLog.create({
             data: {
                 event: 'ADMIN_USER_UPDATE',
-                details: `Admin updated user ${updated.mobile}. Plan: ${updated.plan}, Business: ${updated.isBusinessUnlocked}. Revenue Amended: ${revenueCleaned}. IP: ${ip}`,
+                details: `Admin updated user ${updated.mobile}. Plan: ${updated.plan}. Revenue Deleted: ${revenueCleaned}. Commissions Reverted: ${commissionsReverted}. IP: ${ip}`,
                 ip
             }
         });
 
-        return successResponse(res, 200, 'User updated' + (revenueCleaned ? ' and revenue records amended.' : ''), updated);
+        return successResponse(res, 200, `User updated. ${revenueCleaned ? 'Revenue cleared. ' : ''}${commissionsReverted > 0 ? commissionsReverted + ' commissions reverted.' : ''}`, updated);
+
     } catch (err) {
         console.error('[ADMIN_UPDATE_ERROR]', err);
         return errorResponse(res, 500, 'Update failed: ' + err.message);

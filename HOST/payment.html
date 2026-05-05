@@ -136,9 +136,10 @@
                     "currency": "INR",
                     "name": "Sinaank Digital Therapy",
                     "description": "V1 Master License Activation",
-                    "order_id": orderData.data.order_id,
+                    "order_id": orderData.data.orderId,
+
                     "handler": async function (response){
-                        await finalizeRegistration(response.razorpay_order_id);
+                        await finalizeRegistration(response);
                     },
                     "prefill": {
                         "contact": mobile
@@ -163,7 +164,7 @@
             }
         }
 
-        async function finalizeRegistration(order_id) {
+        async function finalizeRegistration(rzpResponse) {
             const sponsorCode = localStorage.getItem('refCode') || '';
             const name = document.getElementById('partner-name').value;
             const upiId = document.getElementById('upi-id').value;
@@ -172,7 +173,9 @@
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ 
-                    order_id, 
+                    razorpay_order_id: rzpResponse.razorpay_order_id,
+                    razorpay_payment_id: rzpResponse.razorpay_payment_id,
+                    razorpay_signature: rzpResponse.razorpay_signature,
                     mobile,
                     sponsorCode,
                     name,
@@ -273,5 +276,6 @@
             Copyright © 2026 Sinaank Therapy. All Rights Reserved.
         </div>
     </footer>
+<script src="js/analytics.js"></script>
 </body>
 </html>
