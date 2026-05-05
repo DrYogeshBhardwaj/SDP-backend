@@ -309,21 +309,26 @@
                 <button onclick="showPlans()" class="btn-primary" style="padding: 10px 20px; font-size: 0.8rem; white-space: nowrap;">ACTIVATE NOW</button>
             </div>
 
-            <div id="referral-content-wrapper">
-                <div class="stat-title-new">Your Master Link</div>
-                <div style="display: flex; align-items: center; gap: 20px; margin-top: 1rem; flex-wrap: wrap;">
-                    <div id="qrcode" style="background: #fff; padding: 10px; border-radius: 8px; min-width: 160px; min-height: 160px; display: flex; align-items: center; justify-content: center;"></div>
-                    <div style="flex: 1; min-width: 250px; text-align: left;">
-                        <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 1rem;">Share this link and earn ₹100 direct + ₹80 from team!</p>
-                        <input type="text" id="visible-referral-link" readonly style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--primary); border-radius: 8px; color: #fff; margin-bottom: 1rem; font-size: 0.8rem;" placeholder="Generating link...">
-                        <div style="display: flex; gap: 10px;">
-                            <button onclick="copyToClipboard()" class="btn-primary" style="font-size: 0.7rem; flex: 1;">COPY LINK</button>
-                            <button onclick="shareWhatsApp()" class="btn-primary" style="font-size: 0.7rem; flex: 1; background: #25D366; border: none; box-shadow: none;">WHATSAPP</button>
-                        </div>
+            </div>
+            
+            <!-- Earning Structure Guide -->
+            <div style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.5rem;">
+                <div style="font-size: 0.7rem; color: var(--primary); font-weight: 800; letter-spacing: 2px; margin-bottom: 1rem; text-align: left;">MASTER EARNING STRUCTURE 💰</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="glass" style="padding: 1.2rem; text-align: left; border: 1px solid rgba(0,216,255,0.1); background: linear-gradient(135deg, rgba(0,216,255,0.05), transparent);">
+                        <div style="font-size: 0.6rem; color: var(--text-dim); letter-spacing: 1px;">DIRECT (LEVEL 1)</div>
+                        <div style="font-size: 1.5rem; font-weight: 900; color: var(--primary); margin: 5px 0;">₹100</div>
+                        <div style="font-size: 0.6rem; color: var(--text-dim);">Per Active License</div>
+                    </div>
+                    <div class="glass" style="padding: 1.2rem; text-align: left; border: 1px solid rgba(0,216,255,0.1); background: linear-gradient(135deg, rgba(0,149,255,0.05), transparent);">
+                        <div style="font-size: 0.6rem; color: var(--text-dim); letter-spacing: 1px;">TEAM (LEVEL 2)</div>
+                        <div style="font-size: 1.5rem; font-weight: 900; color: #00D8FF; margin: 5px 0;">₹80</div>
+                        <div style="font-size: 0.6rem; color: var(--text-dim);">From Downline Sales</div>
                     </div>
                 </div>
             </div>
         </div>
+
 
         <!-- 4. CORE STATS -->
         <div class="stat-card glass">
