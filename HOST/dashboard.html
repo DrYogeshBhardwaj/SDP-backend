@@ -597,57 +597,69 @@
                         document.getElementById('welcome-popup').style.display = 'flex';
                     }
 
-                    // History
+                    // History - REMOVED or safely handled
                     const ledgerBody = document.getElementById('ledger-body');
-                    let transactions = u.transactions || [];
-                    transactions.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+                    if (ledgerBody) {
+                        let transactions = u.transactions || [];
+                        transactions.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-                    if (transactions.length === 0) {
-                        ledgerBody.innerHTML = '<tr><td style="padding: 2rem; text-align: center; color: var(--text-dim);">No history yet.</td></tr>';
-                    } else {
-                        ledgerBody.innerHTML = transactions.map(t => {
-                            const date = new Date(t.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-                            let desc = t.description || 'Activity';
-                            if (t.category === 'BONUS') desc = `Earned from referral`;
-                            if (t.category === 'PAYOUT') desc = `Withdrawal Request`;
-                            
-                            return `
-                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                                    <td style="padding: 12px 0;">
-                                        <div style="font-size: 0.85rem; color: #fff; font-weight: 600;">${desc}</div>
-                                        <div style="font-size: 0.7rem; color: var(--text-dim);">${date}</div>
-                                    </td>
-                                    <td style="padding: 12px 0; text-align: right; font-weight: 800; color: ${t.type === 'CREDIT' ? '#00D8FF' : '#ff5252'}">
-                                        ${t.type === 'CREDIT' ? '+' : '-'} ₹${t.amount}
-                                    </td>
-                                </tr>
-                            `;
-                        }).join('');
+                        if (transactions.length === 0) {
+                            ledgerBody.innerHTML = '<tr><td style="padding: 2rem; text-align: center; color: var(--text-dim);">No history yet.</td></tr>';
+                        } else {
+                            ledgerBody.innerHTML = transactions.map(t => {
+                                const date = new Date(t.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+                                let desc = t.description || 'Activity';
+                                if (t.category === 'BONUS') desc = `Earned from referral`;
+                                if (t.category === 'PAYOUT') desc = `Withdrawal Request`;
+                                
+                                return `
+                                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                        <td style="padding: 12px 0;">
+                                            <div style="font-size: 0.85rem; color: #fff; font-weight: 600;">${desc}</div>
+                                            <div style="font-size: 0.7rem; color: var(--text-dim);">${date}</div>
+                                        </td>
+                                        <td style="padding: 12px 0; text-align: right; font-weight: 800; color: ${t.type === 'CREDIT' ? '#00D8FF' : '#ff5252'}">
+                                            ${t.type === 'CREDIT' ? '+' : '-'} ₹${t.amount}
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('');
+                        }
                     }
                     
-                    // Referral
+                    // Referral - ROBUST FALLBACK
                     const refCode = u.referralCode || u.referral_code || u.mobile;
                     if (refCode) {
                         currentLink = `https://sinaank.com/join.html?ref=${refCode}`;
-                        document.getElementById('visible-referral-link').value = currentLink;
+                        const linkInput = document.getElementById('visible-referral-link');
+                        if (linkInput) {
+                            linkInput.value = currentLink;
+                        }
+                        
                         const qrcodeEl = document.getElementById('qrcode');
-                        qrcodeEl.innerHTML = '';
-                        setTimeout(() => {
-                            try {
-                                new QRCode(qrcodeEl, {
-                                    text: currentLink,
-                                    width: 140,
-                                    height: 140,
-                                    colorDark : "#000000",
-                                    colorLight : "#ffffff",
-                                    correctLevel : QRCode.CorrectLevel.H
-                                });
-                            } catch(err) {
-                                console.error("QR Code rendering error:", err);
-                                qrcodeEl.innerHTML = '<span style="color:red;font-size:0.8rem;">Barcode Error</span>';
-                            }
-                        }, 100);
+                        if (qrcodeEl) {
+                            qrcodeEl.innerHTML = '';
+                            setTimeout(() => {
+                                if (typeof QRCode !== 'undefined') {
+                                    try {
+                                        new QRCode(qrcodeEl, {
+                                            text: currentLink,
+                                            width: 140,
+                                            height: 140,
+                                            colorDark : "#000000",
+                                            colorLight : "#ffffff",
+                                            correctLevel : QRCode.CorrectLevel.H
+                                        });
+                                    } catch(err) {
+                                        console.error("QR Code rendering error:", err);
+                                    }
+                                } else {
+                                    console.warn("QRCode library not loaded yet");
+                                }
+                            }, 500);
+                        }
                     }
+
                 } else {
                     logout();
                 }
