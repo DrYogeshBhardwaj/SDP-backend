@@ -148,7 +148,16 @@ const powerRegister = async (req, res) => {
         const { registerUser } = require('./registration.service');
         
         const user = await registerUser({ mobile, sponsorCode });
-        const token = generateToken({ userId: user.id });
+        
+        // Session tracking
+        const { v4: uuidv4 } = require('uuid');
+        const sid = uuidv4();
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { activeSessionId: sid }
+        });
+
+        const token = generateToken({ userId: user.id, sid });
         
         return successResponse(res, 201, 'Power Registration Success', { 
             token, 

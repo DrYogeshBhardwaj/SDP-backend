@@ -622,8 +622,18 @@ const verifyAdminMFA = async (req, res) => {
                 data: { event: 'ADMIN_MFA_SUCCESS', details: `MFA Verified. Login complete. IP: ${ip}`, ip }
             });
 
+            // 2. Generate Session ID for Single-Device Logic
+            const { v4: uuidv4 } = require('uuid');
+            const sid = uuidv4();
+
+            // 3. Update Admin with new Session ID
+            await prisma.user.update({
+                where: { id: admin.id },
+                data: { activeSessionId: sid }
+            });
+
             const { generateToken } = require('../../utils/jwt');
-            const token = generateToken({ userId: admin.id });
+            const token = generateToken({ userId: admin.id, sid });
 
             return successResponse(res, 200, 'Access Granted', { token });
         } else {
