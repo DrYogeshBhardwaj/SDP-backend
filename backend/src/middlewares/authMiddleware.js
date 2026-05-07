@@ -1,7 +1,7 @@
 const { verifyToken } = require('../utils/jwt');
 const { errorResponse } = require('../utils/response');
 
-const authMiddleware = (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return errorResponse(res, 401, 'Unauthorized');
