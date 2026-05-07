@@ -507,6 +507,9 @@
                 <label style="font-size: 0.7rem; color: var(--primary);">MINUTES BALANCE</label>
                 <input type="number" id="edit-minutes" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); border-radius: 4px; color: #fff; margin-bottom: 1rem;">
 
+                <label style="font-size: 0.7rem; color: #ff5252;">DAILY MINUTES USED (Reset to 0 if limit reached)</label>
+                <input type="number" id="edit-daily-used" style="width: 100%; padding: 10px; background: rgba(255,82,82,0.05); border: 1px solid rgba(255,82,82,0.2); border-radius: 4px; color: #fff; margin-bottom: 1rem;">
+
                 <label style="font-size: 0.7rem; color: var(--primary);">UPI ID (ADMIN OVERRIDE)</label>
                 <input type="text" id="edit-upi" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); border-radius: 4px; color: #fff; margin-bottom: 1rem;">
 
@@ -990,6 +993,7 @@
             document.getElementById('edit-status').value = user.status;
             document.getElementById('edit-role').value = user.role;
             document.getElementById('edit-minutes').value = user.minutesBalance;
+            document.getElementById('edit-daily-used').value = user.dailyMinutesUsed || 0;
             document.getElementById('edit-upi').value = user.upiId || '';
             document.getElementById('edit-sponsor').value = user.sponsor?.mobile || '';
             
@@ -1071,7 +1075,8 @@
                 name: document.getElementById('edit-name').value,
                 status: document.getElementById('edit-status').value,
                 role: document.getElementById('edit-role').value,
-                minutesBalance: document.getElementById('edit-minutes').value,
+                minutesBalance: parseInt(document.getElementById('edit-minutes').value),
+                dailyMinutesUsed: parseInt(document.getElementById('edit-daily-used').value),
                 upiId: document.getElementById('edit-upi').value,
                 sponsorMobile: document.getElementById('edit-sponsor').value
             };
