@@ -273,6 +273,15 @@
     </style>
 </head>
 <body class="scientific-grid">
+    <!-- Zen Loader -->
+    <div id="zen-loader">
+        <img src="Logo.png" class="loader-logo" alt="Sinaank">
+        <div class="loader-text">Aligning Your Energy</div>
+        <div class="loader-progress-bar">
+            <div class="loader-progress-fill" id="loader-fill"></div>
+        </div>
+    </div>
+
     <div class="scanline"></div>
 
     <section class="hero">
@@ -280,11 +289,11 @@
         <div class="hero-container">
             <div class="hero-text">
                 <span class="top-brand"><img src="Logo.png" style="width: 25px; height: auto; vertical-align: middle; margin-right: 10px; filter: drop-shadow(0 0 5px var(--brand-blue));"> Sinaank Therapy</span>
-                <h1 class="headline">2 मिनट में तनाव कम करें<br><span style="font-size: 0.7em; opacity: 0.9;">मन शांत करें और नींद बेहतर बनाएं</span></h1>
-                <span class="headline-en">Reduce stress & sleep better in 2 minutes</span>
+                <h1 class="headline">क्या 24 घंटे में आप अपने लिए सिर्फ 2 मिनट भी नहीं निकाल सकते?<br><span style="font-size: 0.6em; opacity: 0.9;">Digital therapy for stress and mental balance.</span></h1>
+                <span class="headline-en">Daily 2-minute guided experience for a calm mind.</span>
                 
-                <div class="sub-headline">👉 पहले अनुभव करें, फिर कमाएं</div>
-                <div class="access-tag">🔴 Limited Free Access Today</div>
+                <div class="sub-headline">🌿 Reduce stress & sleep better instantly</div>
+                <div class="access-tag">🔴 Live Demo Available Now</div>
                 
                 <div style="margin-bottom: 1rem;">
                     <button id="main-start-btn" onclick="startLoading(this)" class="btn-start">👉 2 मिनट FREE ट्राय करें</button>
@@ -333,10 +342,46 @@
     </section>
 
     <section class="testimonials">
+        <h2 style="font-family: 'Hind', sans-serif; font-size: 2rem; margin-bottom: 2rem;">What Users Say</h2>
         <div class="testimonial-grid">
-            <div class="testimonial-card">⭐ “पहले दिन ही सुकून महसूस हुआ”</div>
-            <div class="testimonial-card">⭐ “नींद बेहतर हुई”</div>
-            <div class="testimonial-card">⭐ “2 मिनट में फर्क”</div>
+            <div class="testimonial-card">⭐ “Pehle din hi sukoon mehsoos hua - Highly recommended for stress.”</div>
+            <div class="testimonial-card">⭐ “Neend behtar hui aur focus badh gaya. Just 2 minutes daily!”</div>
+            <div class="testimonial-card">⭐ “Simple yet powerful. It really works in just 2 minutes.”</div>
+        </div>
+    </section>
+
+    <!-- About Sinaank Section -->
+    <section id="about" style="padding: 6rem 2rem; background: #050510;">
+        <div style="max-width: 900px; margin: 0 auto; text-align: left; background: rgba(255,255,255,0.02); padding: 3rem; border-radius: 30px; border: 1px solid rgba(0, 216, 255, 0.2);">
+            <div class="card-title" style="color: var(--brand-blue); font-weight: 800; letter-spacing: 2px; margin-bottom: 1rem;">WHAT IS SINAANK?</div>
+            <h2 style="font-size: 2.5rem; margin-bottom: 1.5rem; font-family: 'Hind', sans-serif;">एक सरल समाधान, आपके मन के लिए</h2>
+            <p style="color: var(--text-dim); line-height: 1.8; font-size: 1.1rem; margin-bottom: 2rem;">
+                Sinaank Therapy is a digital resonance platform designed to help you reset your mental state in just 2 minutes. Using AI-calibrated frequencies and visual alignment, it helps reduce the "digital noise" of modern life, allowing you to find focus and calmness whenever you need it.
+            </p>
+            <p style="color: var(--text-dim); line-height: 1.8; font-size: 1.1rem;">
+                No medicines, no complex apps, and no long sessions. Just you, your mobile, and 2 minutes of pure experience.
+            </p>
+        </div>
+    </section>
+
+    <!-- Founder Section -->
+    <section id="founder" style="padding: 6rem 2rem; background: #08081a;">
+        <div style="max-width: 1000px; margin: 0 auto; display: flex; align-items: center; gap: 4rem; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 300px; text-align: center;">
+                <div style="width: 200px; height: 200px; background: linear-gradient(135deg, var(--brand-blue), var(--brand-orange)); border-radius: 50%; margin: 0 auto 2rem; display: flex; align-items: center; justify-content: center; font-size: 4rem; box-shadow: 0 0 40px rgba(0, 216, 255, 0.3);">👤</div>
+                <h3 style="font-size: 1.8rem; margin-bottom: 0.5rem;">Dr. Yogesh Bhardwaj</h3>
+                <p style="color: var(--brand-blue); font-weight: 700;">Visionary behind Sinaank Therapy</p>
+            </div>
+            <div style="flex: 1.5; min-width: 300px;">
+                <h2 style="font-size: 2.2rem; margin-bottom: 1.5rem; font-family: 'Hind', sans-serif;">Our Mission</h2>
+                <p style="color: var(--text-dim); line-height: 1.8; font-size: 1.1rem; margin-bottom: 1.5rem;">
+                    "In today's fast-paced digital world, our mental peace is often the first thing we sacrifice. Sinaank was born out of a simple idea: to give everyone a way to hit 'Reset' on their stress, without needing hours of meditation or expensive treatments."
+                </p>
+                <div style="display: flex; gap: 20px; align-items: center;">
+                    <div style="width: 50px; height: 1px; background: var(--brand-blue);"></div>
+                    <span style="font-weight: 700; color: var(--brand-blue);">Dr. Yogesh Bhardwaj</span>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -365,13 +410,36 @@
     <script src="js/config.js"></script>
     <script src="js/analytics.js"></script>
     <script>
-        function startLoading(btn) {
-            btn.innerHTML = "👉 लोड हो रहा है...";
-            btn.style.opacity = "0.8";
-            btn.style.pointerEvents = "none";
+        window.addEventListener('load', () => {
+            const fill = document.getElementById('loader-fill');
+            fill.style.width = '100%';
             setTimeout(() => {
+                const loader = document.getElementById('zen-loader');
+                if(loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.style.display = 'none', 1000);
+                }
+            }, 600);
+        });
+
+        function startLoading(btn) {
+            const loader = document.getElementById('zen-loader');
+            const fill = document.getElementById('loader-fill');
+            
+            if(loader && fill) {
+                loader.style.display = 'flex';
+                loader.style.opacity = '1';
+                fill.style.width = '0%';
+                
+                setTimeout(() => {
+                    fill.style.width = '100%';
+                    setTimeout(() => {
+                        location.href = 'join.html';
+                    }, 800);
+                }, 50);
+            } else {
                 location.href = 'join.html';
-            }, 800);
+            }
         }
     </script>
 </body>

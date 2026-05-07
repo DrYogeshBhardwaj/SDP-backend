@@ -41,6 +41,14 @@
     </style>
 </head>
 <body class="scientific-grid">
+    <!-- Zen Loader -->
+    <div id="zen-loader">
+        <img src="Logo.png" class="loader-logo" alt="Sinaank">
+        <div class="loader-text">Finding Your Balance</div>
+        <div class="loader-progress-bar">
+            <div class="loader-progress-fill" id="loader-fill"></div>
+        </div>
+    </div>
     <div class="auth-card glass">
         <img src="Logo.png" alt="Sinaank Logo" style="width: 100px; height: auto; margin-bottom: 2rem; filter: drop-shadow(0 0 10px var(--primary-glow));">
         
@@ -70,6 +78,18 @@
     </div>
 
     <script>
+        window.addEventListener('load', () => {
+            const fill = document.getElementById('loader-fill');
+            fill.style.width = '100%';
+            setTimeout(() => {
+                const loader = document.getElementById('zen-loader');
+                if(loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.style.display = 'none', 1000);
+                }
+            }, 600);
+        });
+
         const urlParams = new URLSearchParams(window.location.search);
         const urlMobile = urlParams.get('mobile');
 
@@ -113,8 +133,8 @@
                 const checkData = await checkRes.json();
                 
                 if (checkData.success && checkData.data.exists && urlParams.get('ref')) {
-                    showMsg(`${mobile} is already our business partner! 🙏`, "success");
-                    btn.innerText = "LOGIN ANYWAY";
+                    showMsg(`${mobile} is already registered! 🙏`, "success");
+                    btn.innerText = "CONTINUE TO THERAPY";
                     btn.style.background = "#00c853"; 
                     return;
                 }
@@ -240,11 +260,11 @@
         if (refCode) {
             localStorage.setItem('refCode', refCode);
             // UI adjustment for referral mode
-            document.querySelectorAll('.card-title').forEach(el => el.innerText = "Join Sinaank Team");
+            document.querySelectorAll('.card-title').forEach(el => el.innerText = "Sinaank Wellness Hub");
             const h2 = document.querySelector('#step-mobile h2');
-            if (h2) h2.innerText = "Registration";
+            if (h2) h2.innerText = "Start Experience";
             const btn = document.getElementById('otp-btn');
-            if (btn) btn.innerText = "Join Now";
+            if (btn) btn.innerText = "Start Now";
         }
     </script>
     <footer class="main-footer">

@@ -157,17 +157,30 @@ h1, h2, h3, .tagline, .btn-start, .pill, .btn-primary {
 }
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
+    body { font-size: 14px; }
+    .hero { padding: 1rem; }
+    .hero-container { gap: 1.5rem; }
+    .headline { font-size: 2rem !important; }
+    
     .footer-links {
         flex-direction: column;
         gap: 15px;
         align-items: center;
     }
     .main-footer {
-        padding: 3rem 1rem;
+        padding: 3rem 1.5rem;
     }
     .copyright {
         font-size: 0.65rem;
-        line-height: 1.4;
+        line-height: 1.6;
+        opacity: 0.5;
+    }
+    .stat-card {
+        padding: 1.5rem !important;
+    }
+    .btn-primary {
+        padding: 12px 20px;
+        font-size: 0.9rem;
     }
 }
 /* Mode Selection Grid */
@@ -305,4 +318,64 @@ h1, h2, h3, .tagline, .btn-start, .pill, .btn-primary {
     .mode-info h3 {
         font-size: 1rem;
     }
+}
+/* Zen Loader */
+#zen-loader {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: #050810;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 1s ease-out;
+}
+
+.loader-logo {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 2rem;
+    filter: drop-shadow(0 0 20px var(--primary-glow));
+    animation: pulse-scale 2s infinite ease-in-out;
+}
+
+.loader-text {
+    font-size: 0.7rem;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 5px;
+    font-weight: 800;
+    opacity: 0.6;
+}
+
+.loader-progress-bar {
+    width: 150px;
+    height: 2px;
+    background: rgba(255,255,255,0.05);
+    margin-top: 1.5rem;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.loader-progress-fill {
+    width: 0%;
+    height: 100%;
+    background: var(--primary);
+    transition: width 0.5s;
+}
+
+@keyframes pulse-scale {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.1); opacity: 1; }
+}
+
+/* Page Transitions */
+.fade-in {
+    animation: fadeIn 0.8s forwards ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }

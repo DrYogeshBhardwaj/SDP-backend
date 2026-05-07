@@ -290,6 +290,14 @@
     </style>
 </head>
 <body class="scientific-grid">
+    <!-- Zen Loader -->
+    <div id="zen-loader">
+        <img src="Logo.png" class="loader-logo" alt="Sinaank">
+        <div class="loader-text">Calibrating Frequencies</div>
+        <div class="loader-progress-bar">
+            <div class="loader-progress-fill" id="loader-fill"></div>
+        </div>
+    </div>
     <!-- Upgrade Popup -->
     <div id="upgrade-popup" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(10px);">
         <div class="glass" style="width: 400px; padding: 3rem; text-align: center; border: 1px solid var(--primary);">
@@ -353,7 +361,7 @@
                     <div class="mode-card mode-combo" onclick="selectMode('combo')">
                         <div class="mode-icon">🎯</div>
                         <div class="mode-info">
-                            <h3>COMBO MODE</h3>
+                            <h3>COMBO MODE <span style="font-size: 0.6rem; background: var(--primary); color: #000; padding: 2px 6px; border-radius: 10px; margin-left: 5px;">PAID</span></h3>
                             <p>Choose specific goals like Money, Health, Education or Peace for targeted healing.</p>
                             <div class="mode-select-btn">SELECT COMBO →</div>
                         </div>
@@ -363,7 +371,7 @@
                     <div class="mode-card mode-custom" onclick="selectMode('choice')">
                         <div class="mode-icon">🧬</div>
                         <div class="mode-info">
-                            <h3>CUSTOM MODE</h3>
+                            <h3>CUSTOM MODE <span style="font-size: 0.6rem; background: var(--primary); color: #000; padding: 2px 6px; border-radius: 10px; margin-left: 5px;">PAID</span></h3>
                             <p>Upload your own personalized sounds and visuals for a unique therapy session.</p>
                             <div class="mode-select-btn">SELECT CUSTOM →</div>
                         </div>
@@ -465,12 +473,16 @@
         <!-- Completion View -->
         <div id="completion-view" class="view-content" style="display: none;">
             <div class="stat-card glass" style="width: 100%; max-width: 450px; padding: 3rem;">
-                <h1 style="font-size: 2.5rem; color: var(--primary);">Session Complete</h1>
-                <p style="margin: 1.5rem 0 2.5rem; color: #fff;">Your energy is now balanced</p>
+                <h1 style="font-size: 2.5rem; color: var(--primary); font-family: 'Hind', sans-serif;">सत्र पूर्ण हुआ</h1>
+                <p style="margin: 1.5rem 0 2.5rem; color: var(--text-dim); line-height: 1.6;">Your energy is now balanced. Take a deep breath and feel the shift in your state of mind.</p>
                 
+                <div style="background: rgba(0,216,255,0.05); padding: 1.5rem; border-radius: 15px; margin-bottom: 2rem; border-left: 3px solid var(--primary);">
+                    <p id="mindful-quote" style="font-style: italic; font-size: 0.9rem; color: #fff;">"Real peace is found within, not in the noise outside."</p>
+                </div>
+
                 <div style="display: flex; flex-direction: column; gap: 10px;">
-                    <button onclick="showImpact()" class="btn-primary" style="background: var(--primary); color: #000;">VIEW IMPACT</button>
-                    <button onclick="startAgain()" class="btn-primary" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass);">START AGAIN</button>
+                    <button onclick="showImpact()" class="btn-primary" style="background: var(--primary); color: #000;">VIEW ENERGY IMPACT</button>
+                    <button onclick="startAgain()" class="btn-primary" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass);">REPEAT SESSION</button>
                 </div>
 
                 <div style="margin-top: 2rem; border-top: 1px solid var(--border-glass); padding-top: 1.5rem;">
@@ -485,17 +497,18 @@
         <!-- Impact View -->
         <div id="impact-view" class="view-content" style="display: none;">
             <div class="stat-card glass" style="width: 100%; max-width: 450px; padding: 2.5rem; text-align: left;">
-                <h2 style="color: var(--primary); margin-bottom: 1.5rem;">Energy Shift Report</h2>
+                <h2 style="color: var(--primary); margin-bottom: 1.5rem; font-family: 'Hind', sans-serif;">Energy Alignment Report</h2>
+                <p style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 2rem;">Frequency resonance detected following metrics shift:</p>
                 
                 <div style="margin-bottom: 2rem;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span>Focus Level</span> <span style="color: #00c853;">↑ 85%</span>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+                        <span style="font-size: 0.9rem;">Neural Focus</span> <span style="color: #00c853; font-weight: 800;">+85% Stable</span>
                     </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span>Stress Relief</span> <span style="color: #00c853;">↑ 92%</span>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+                        <span style="font-size: 0.9rem;">Cortisol Reset</span> <span style="color: #00c853; font-weight: 800;">+92% Relaxed</span>
                     </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span>Aura Alignment</span> <span style="color: #00c853;">↑ 78%</span>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+                        <span style="font-size: 0.9rem;">Digital Detox</span> <span style="color: #00c853; font-weight: 800;">+78% Aligned</span>
                     </div>
                 </div>
 
@@ -517,6 +530,18 @@
     </div>
 
     <script>
+        window.addEventListener('load', () => {
+            const fill = document.getElementById('loader-fill');
+            fill.style.width = '100%';
+            setTimeout(() => {
+                const loader = document.getElementById('zen-loader');
+                if(loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.style.display = 'none', 1000);
+                }
+            }, 600);
+        });
+
         const planets = [
             { id: 1, name: 'Surya', color: '#FF6A00', freq: 126.22 },
             { id: 2, name: 'Chandra', color: '#CFCFFF', freq: 210.42 },
@@ -639,6 +664,10 @@
         }
 
         function selectMode(mode) {
+            if (userData && userData.plan === 'FREE' && mode !== 'auto') {
+                showUpgradePopup();
+                return;
+            }
             switchTab(mode);
         }
 
@@ -800,8 +829,15 @@
             
             document.getElementById('timer').innerText = `${String(selectedTime).padStart(2,'0')}:00`;
             document.querySelectorAll('.view-content').forEach(v => v.style.display = 'none');
-            document.getElementById('session-view').style.display = 'flex';
-            document.getElementById('vortex').style.display = 'flex';
+            
+            const sessionView = document.getElementById('session-view');
+            const vortex = document.getElementById('vortex');
+            
+            sessionView.style.display = 'flex';
+            sessionView.classList.add('fade-in');
+            vortex.style.display = 'flex';
+            vortex.classList.add('fade-in');
+            
             document.getElementById('active-mode-label').innerText = `${mode} Frequency Active`;
 
             if (mode === 'CHOICE' && choiceFiles.audio) {
@@ -875,13 +911,36 @@
             document.getElementById('bottom-signal-details').innerHTML = `Personal Choice Playing • 432Hz Center`;
         }
 
+        const mindfulnessMessages = [
+            "Aligning your digital energy...",
+            "Reducing mental noise...",
+            "Resonating with earth frequencies...",
+            "Balancing aura layers...",
+            "Clearing subconscious blocks...",
+            "Finalizing energy stabilization..."
+        ];
+
         function startTimer() {
+            let msgIdx = 0;
             timerInterval = setInterval(() => {
                 timeLeft--;
                 const m = Math.floor(timeLeft / 60);
                 const s = timeLeft % 60;
                 document.getElementById('timer').innerText = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
                 
+                // Update status text every 15 seconds
+                if (timeLeft % 15 === 0) {
+                    msgIdx = (msgIdx + 1) % mindfulnessMessages.length;
+                    const statusText = document.getElementById('session-status-text');
+                    if(statusText) {
+                        statusText.style.opacity = '0';
+                        setTimeout(() => {
+                            statusText.innerText = mindfulnessMessages[msgIdx];
+                            statusText.style.opacity = '1';
+                        }, 500);
+                    }
+                }
+
                 // Subtle pulse at midpoint
                 if (timeLeft === Math.floor((selectedTime * 60) / 2)) {
                     playTone(220, 220, 1);
