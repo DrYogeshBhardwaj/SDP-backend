@@ -22,7 +22,10 @@ const startSession = async (req, res) => {
 
 
         if (user.minutesBalance < reqDuration) return errorResponse(res, 400, 'Insufficient balance');
-        if (user.dailyMinutesUsed + reqDuration > 15) return errorResponse(res, 400, 'Daily limit reached');
+        const dailyLimit = user.plan === 'PREMIUM' ? 60 : 15;
+        if (user.dailyMinutesUsed + reqDuration > dailyLimit) {
+            return errorResponse(res, 400, `Daily limit reached (${dailyLimit} min/day)`);
+        }
 
         const session = await prisma.therapySession.create({
             data: {
