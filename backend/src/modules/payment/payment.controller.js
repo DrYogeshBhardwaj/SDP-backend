@@ -160,7 +160,7 @@ const verifyPayment = async (req, res) => {
                     plan: 'PREMIUM',
                     isBusinessUnlocked: true,
                     referralCode: user.referralCode || generateReferralCode(),
-                    minutesBalance: { increment: 3600 }
+                    minutesBalance: 3600
                 }
             });
         } else {
@@ -171,7 +171,7 @@ const verifyPayment = async (req, res) => {
                 data: { 
                     plan: 'PREMIUM', 
                     isBusinessUnlocked: true,
-                    minutesBalance: { increment: 3600 } 
+                    minutesBalance: 3600 
                 }
             });
         }
@@ -227,7 +227,7 @@ const verifyPasswordPayment = async (req, res) => {
                     plan: 'PREMIUM',
                     isBusinessUnlocked: true,
                     referralCode: user.referralCode || generateReferralCode(),
-                    minutesBalance: { increment: 3600 }
+                    minutesBalance: 3600
                 }
             });
         } else {
@@ -240,7 +240,7 @@ const verifyPasswordPayment = async (req, res) => {
                 data: { 
                     plan: 'PREMIUM', 
                     isBusinessUnlocked: true,
-                    minutesBalance: { increment: 3600 }
+                    minutesBalance: 3600
                 }
             });
         }

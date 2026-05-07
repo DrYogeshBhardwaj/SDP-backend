@@ -345,7 +345,7 @@ const manualUpgrade = async (req, res) => {
                 data: {
                     plan: 'PREMIUM',
                     isBusinessUnlocked: true,
-                    minutesBalance: { increment: 3600 }
+                    minutesBalance: 3600
                 }
             }),
             // Record Revenue (Admin Collected)
