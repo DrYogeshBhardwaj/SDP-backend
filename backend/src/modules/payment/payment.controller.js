@@ -141,6 +141,15 @@ const verifyPayment = async (req, res) => {
             return errorResponse(res, 400, 'Invalid payment signature');
         }
 
+        // 1b. Anti-Replay: Check if order already PAID
+        const existingOrder = await prisma.paymentOrder.findUnique({
+            where: { orderId: razorpay_order_id }
+        });
+        if (existingOrder && existingOrder.status === 'PAID') {
+            console.warn(`[PAYMENT_REPLAY] Order ${razorpay_order_id} already processed.`);
+            return successResponse(res, 200, 'Payment already verified');
+        }
+
         // 2. Mark Order PAID
         await prisma.paymentOrder.updateMany({
             where: { orderId: razorpay_order_id },
