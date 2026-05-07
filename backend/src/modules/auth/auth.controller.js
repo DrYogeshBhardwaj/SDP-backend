@@ -22,8 +22,8 @@ const login = async (req, res) => {
         }
 
         // 2. Generate Session ID
-        const { v4: uuidv4 } = require('uuid');
-        const sid = uuidv4();
+        const crypto = require('crypto');
+        const sid = crypto.randomUUID();
 
         // 3. Update User with new Session ID
         await prisma.user.update({
@@ -150,8 +150,8 @@ const powerRegister = async (req, res) => {
         const user = await registerUser({ mobile, sponsorCode });
         
         // Session tracking
-        const { v4: uuidv4 } = require('uuid');
-        const sid = uuidv4();
+        const crypto = require('crypto');
+        const sid = crypto.randomUUID();
         await prisma.user.update({
             where: { id: user.id },
             data: { activeSessionId: sid }

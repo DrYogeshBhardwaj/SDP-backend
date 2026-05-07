@@ -623,8 +623,8 @@ const verifyAdminMFA = async (req, res) => {
             });
 
             // 2. Generate Session ID for Single-Device Logic
-            const { v4: uuidv4 } = require('uuid');
-            const sid = uuidv4();
+            const crypto = require('crypto');
+            const sid = crypto.randomUUID();
 
             // 3. Update Admin with new Session ID
             await prisma.user.update({

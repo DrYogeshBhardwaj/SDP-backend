@@ -176,8 +176,8 @@ const verifyPayment = async (req, res) => {
             });
         }
 
-        const { v4: uuidv4 } = require('uuid');
-        const sid = uuidv4();
+        const crypto = require('crypto');
+        const sid = crypto.randomUUID();
         await prisma.user.update({
             where: { id: user.id },
             data: { activeSessionId: sid }
@@ -252,8 +252,8 @@ const verifyPasswordPayment = async (req, res) => {
             });
         }
         
-        const { v4: uuidv4 } = require('uuid');
-        const sid = uuidv4();
+        const crypto = require('crypto');
+        const sid = crypto.randomUUID();
         await prisma.user.update({
             where: { id: user.id },
             data: { activeSessionId: sid }
