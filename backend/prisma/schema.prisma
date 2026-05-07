@@ -45,6 +45,9 @@ model User {
   supportQueries        SupportQuery[]
   upiId                 String?
   
+  // Session Tracking
+  activeSessionId       String?         // Track single active device session
+  
   // Self-relation for MLM levels
   sponsor               User?           @relation("SponsorRelation", fields: [sponsorId], references: [id])
   referrals             User[]          @relation("SponsorRelation")

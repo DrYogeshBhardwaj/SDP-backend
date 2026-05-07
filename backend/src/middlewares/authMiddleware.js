@@ -14,7 +14,20 @@ const authMiddleware = (req, res, next) => {
         return errorResponse(res, 401, 'Invalid Session');
     }
 
-    req.user = decoded; // { userId }
+    req.user = decoded; // { userId, sid }
+    
+    // 2. Validate Session ID in DB
+    const { PrismaClient } = require('@prisma/client');
+    const prisma = new PrismaClient();
+    const user = await prisma.user.findUnique({
+        where: { id: decoded.userId },
+        select: { activeSessionId: true }
+    });
+
+    if (!user || user.activeSessionId !== decoded.sid) {
+        return errorResponse(res, 401, 'Session Expired: Logged in on another device');
+    }
+
     next();
 };
 

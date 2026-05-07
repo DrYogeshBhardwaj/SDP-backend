@@ -10,5 +10,6 @@ router.post('/verify-otp', otpController.verifyOTP);
 router.post('/login', authController.login);
 router.post('/power-register', authController.powerRegister);
 router.get('/me', authMiddleware, authController.getMe);
+router.post('/logout', authMiddleware, authController.logout);
 
 module.exports = router;

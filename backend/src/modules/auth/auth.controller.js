@@ -8,16 +8,47 @@ const { successResponse, errorResponse } = require('../../utils/response');
  */
 const login = async (req, res) => {
     try {
-        const { mobile } = req.body;
+        const { mobile, force } = req.body;
         const user = await prisma.user.findUnique({ where: { mobile } });
         
         if (!user) return errorResponse(res, 404, 'User not found');
         
-        const token = generateToken({ userId: user.id }, user.isBusinessUnlocked);
+        // 1. Check for active session
+        if (user.activeSessionId && !force) {
+            return successResponse(res, 200, 'ALREADY_LOGGED_IN', { 
+                needsConfirmation: true,
+                message: 'You are already logged in on another device. Do you want to logout from there and continue?'
+            });
+        }
+
+        // 2. Generate Session ID
+        const { v4: uuidv4 } = require('uuid');
+        const sid = uuidv4();
+
+        // 3. Update User with new Session ID
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { activeSessionId: sid }
+        });
+
+        const token = generateToken({ userId: user.id, sid }, user.isBusinessUnlocked);
         return successResponse(res, 200, 'Login Success', { token, user: { id: user.id, mobile: user.mobile } });
     } catch (err) {
         console.error('[LOGIN_ERROR]', err);
         return errorResponse(res, 500, `Login failed: ${err.message}`);
+    }
+};
+
+const logout = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        await prisma.user.update({
+            where: { id: userId },
+            data: { activeSessionId: null }
+        });
+        return successResponse(res, 200, 'Logout Success');
+    } catch (err) {
+        return errorResponse(res, 500, 'Logout failed');
     }
 };
 
@@ -130,4 +161,4 @@ const powerRegister = async (req, res) => {
     }
 };
 
-module.exports = { login, getMe, powerRegister };
+module.exports = { login, getMe, powerRegister, logout };

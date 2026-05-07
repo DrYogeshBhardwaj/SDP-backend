@@ -811,7 +811,16 @@
             window.location.href = 'therapy.html';
         }
 
-        function logout() {
+        async function logout() {
+            const token = localStorage.getItem('session');
+            if (token) {
+                try {
+                    await fetch(CONFIG.API_BASE_URL + '/api/logout', {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                } catch (e) { console.warn("Backend logout failed", e); }
+            }
             localStorage.clear();
             sessionStorage.clear();
             window.location.href = 'index.html';

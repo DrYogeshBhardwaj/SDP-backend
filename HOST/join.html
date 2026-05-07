@@ -218,16 +218,26 @@
             } catch (e) { showMsg("Network Error", "error"); }
         }
 
-        async function performLogin(mobile) {
+        async function performLogin(mobile, force = false) {
             if (!mobile) return showMsg('Mobile number missing', 'error');
             showMsg('Accessing Identity...');
             try {
                 const res = await fetch(CONFIG.API_BASE_URL + '/api/login', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ mobile })
+                    body: JSON.stringify({ mobile, force })
                 });
                 const data = await res.json();
+                
+                if (data.message === 'ALREADY_LOGGED_IN') {
+                    if (confirm(data.data.message)) {
+                        return performLogin(mobile, true);
+                    } else {
+                        showMsg('Login cancelled. Please logout from other devices.', 'error');
+                        return;
+                    }
+                }
+
                 if (data.success) {
                     localStorage.setItem('session', data.data.token);
                     localStorage.setItem('mobile', mobile);
