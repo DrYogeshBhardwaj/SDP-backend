@@ -711,7 +711,7 @@
 
         async function api(path, method = 'GET', body = null) {
             const token = localStorage.getItem('session');
-            if (!token) { window.location.href = 'join.html'; return; }
+            if (!token) { location.reload(); return; }
             
             try {
                 const options = {
@@ -726,8 +726,12 @@
                 const res = await fetch(CONFIG.API_BASE_URL + '/api/admin' + path, options);
                 const data = await res.json();
                 
-                if (res.status === 401) { alert('Session Expired. Please Login Again.'); window.location.href = 'join.html'; }
-                if (res.status === 403) { alert('Permission Denied: You are not an Admin. Please Login with Admin number.'); window.location.href = 'join.html'; }
+                if (res.status === 401) { 
+                    alert('Session Expired or logged in on another device.'); 
+                    sessionStorage.clear();
+                    location.reload(); 
+                }
+                if (res.status === 403) { alert('Permission Denied: Master Admin access required.'); location.reload(); }
                 
                 return data;
             } catch (err) {
