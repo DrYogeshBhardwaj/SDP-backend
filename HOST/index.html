@@ -32,7 +32,7 @@
             scroll-behavior: smooth;
         }
         .hero {
-            min-height: 100vh;
+            min-height: 85vh;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -110,10 +110,11 @@
         }
         .headline-en {
             font-size: 1.4rem;
-            opacity: 0.8;
-            font-weight: 400;
+            opacity: 0.9;
+            font-weight: 500;
             margin-bottom: 2rem;
             display: block;
+            color: #ddd;
         }
         .sub-headline {
             font-size: 1.3rem;
@@ -270,6 +271,45 @@
             filter: blur(100px);
             z-index: 1;
         }
+
+        /* Floating Demo Button */
+        .floating-demo {
+            position: fixed;
+            bottom: 25px;
+            left: 25px;
+            z-index: 100;
+            background: linear-gradient(135deg, var(--brand-blue), #0095FF);
+            color: #000;
+            padding: 12px 20px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            text-decoration: none;
+            box-shadow: 0 5px 20px rgba(0, 216, 255, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: 0.3s;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .floating-demo:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 216, 255, 0.4);
+        }
+        .floating-demo .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: #fff;
+            border-radius: 50%;
+            animation: dot-pulse 1.5s infinite;
+        }
+        @keyframes dot-pulse {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(2.5); opacity: 0; }
+        }
+        @media (max-width: 600px) {
+            .floating-demo { bottom: 15px; left: 15px; font-size: 0.75rem; padding: 10px 16px; }
+        }
     </style>
 </head>
 <body class="scientific-grid">
@@ -284,15 +324,20 @@
 
     <div class="scanline"></div>
 
+    <a href="join.html" class="floating-demo">
+        <div class="pulse-dot"></div>
+        FREE DEMO
+    </a>
+
     <section class="hero">
         <div class="aura-glow"></div>
         <div class="hero-container">
             <div class="hero-text">
                 <span class="top-brand"><img src="Logo.png" style="width: 25px; height: auto; vertical-align: middle; margin-right: 10px; filter: drop-shadow(0 0 5px var(--brand-blue));"> Sinaank Therapy</span>
                 <h1 class="headline">क्या 24 घंटे में आप अपने लिए सिर्फ 2 मिनट भी नहीं निकाल सकते?<br><span style="font-size: 0.6em; opacity: 0.9;">Digital therapy for stress and mental balance.</span></h1>
-                <span class="headline-en">Daily 2-minute guided experience for a calm mind.</span>
+                <span class="headline-en">Stress, overthinking aur mental fatigue ke liye daily digital therapy experience.</span>
                 
-                <div class="sub-headline">🌿 Reduce stress & sleep better instantly</div>
+                <div class="sub-headline">🌿 Support calmness, better sleep & mental balance.</div>
                 <div class="access-tag">🔴 Live Demo Available Now</div>
                 
                 <div style="margin-bottom: 1rem;">
@@ -342,7 +387,7 @@
     </section>
 
     <section class="testimonials">
-        <h2 style="font-family: 'Hind', sans-serif; font-size: 2rem; margin-bottom: 2rem;">What Users Say</h2>
+        <h2 style="font-family: 'Hind', sans-serif; font-size: 2rem; margin-bottom: 2rem;">Early User Experiences</h2>
         <div class="testimonial-grid">
             <div class="testimonial-card">⭐ “Pehle din hi sukoon mehsoos hua - Highly recommended for stress.”</div>
             <div class="testimonial-card">⭐ “Neend behtar hui aur focus badh gaya. Just 2 minutes daily!”</div>
@@ -351,14 +396,14 @@
     </section>
 
     <!-- About Sinaank Section -->
-    <section id="about" style="padding: 6rem 2rem; background: #050510;">
-        <div style="max-width: 900px; margin: 0 auto; text-align: left; background: rgba(255,255,255,0.02); padding: 3rem; border-radius: 30px; border: 1px solid rgba(0, 216, 255, 0.2);">
-            <div class="card-title" style="color: var(--brand-blue); font-weight: 800; letter-spacing: 2px; margin-bottom: 1rem;">WHAT IS SINAANK?</div>
-            <h2 style="font-size: 2.5rem; margin-bottom: 1.5rem; font-family: 'Hind', sans-serif;">एक सरल समाधान, आपके मन के लिए</h2>
-            <p style="color: var(--text-dim); line-height: 1.8; font-size: 1.1rem; margin-bottom: 2rem;">
+    <section id="about" style="padding: 8rem 2rem; background: #050510;">
+        <div style="max-width: 900px; margin: 0 auto; text-align: left; background: rgba(255,255,255,0.02); padding: 4rem; border-radius: 40px; border: 1px solid rgba(0, 216, 255, 0.2); backdrop-filter: blur(10px);">
+            <div class="card-title" style="color: var(--brand-blue); font-weight: 800; letter-spacing: 3px; margin-bottom: 1.5rem; font-size: 0.9rem;">WHAT IS SINAANK?</div>
+            <h2 style="font-size: 3rem; margin-bottom: 2rem; font-family: 'Hind', sans-serif; line-height: 1.2;">एक सरल समाधान, आपके मन के लिए</h2>
+            <p style="color: rgba(255,255,255,0.8); line-height: 1.8; font-size: 1.25rem; margin-bottom: 2.5rem; font-weight: 400;">
                 Sinaank Therapy is a digital resonance platform designed to help you reset your mental state in just 2 minutes. Using AI-calibrated frequencies and visual alignment, it helps reduce the "digital noise" of modern life, allowing you to find focus and calmness whenever you need it.
             </p>
-            <p style="color: var(--text-dim); line-height: 1.8; font-size: 1.1rem;">
+            <p style="color: rgba(255,255,255,0.8); line-height: 1.8; font-size: 1.25rem; font-weight: 400;">
                 No medicines, no complex apps, and no long sessions. Just you, your mobile, and 2 minutes of pure experience.
             </p>
         </div>
@@ -370,7 +415,7 @@
             <div style="flex: 1; min-width: 300px; text-align: center;">
                 <div style="width: 200px; height: 200px; background: linear-gradient(135deg, var(--brand-blue), var(--brand-orange)); border-radius: 50%; margin: 0 auto 2rem; display: flex; align-items: center; justify-content: center; font-size: 4rem; box-shadow: 0 0 40px rgba(0, 216, 255, 0.3);">👤</div>
                 <h3 style="font-size: 1.8rem; margin-bottom: 0.5rem;">Dr. Yogesh Bhardwaj</h3>
-                <p style="color: var(--brand-blue); font-weight: 700;">Visionary behind Sinaank Therapy</p>
+                <p style="color: var(--brand-blue); font-weight: 700;">Founder, Sinaank Therapy</p>
             </div>
             <div style="flex: 1.5; min-width: 300px;">
                 <h2 style="font-size: 2.2rem; margin-bottom: 1.5rem; font-family: 'Hind', sans-serif;">Our Mission</h2>
