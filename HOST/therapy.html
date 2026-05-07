@@ -287,6 +287,34 @@
         .mode-auto { --mode-color: #00D8FF; --mode-glow: rgba(0, 216, 255, 0.3); }
         .mode-combo { --mode-color: #FFD54F; --mode-glow: rgba(255, 213, 79, 0.3); }
         .mode-custom { --mode-color: #A855F7; --mode-glow: rgba(168, 85, 247, 0.3); }
+
+        /* Breath Guide */
+        .breath-guide {
+            margin-top: 3rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+        .breath-circle {
+            width: 80px;
+            height: 80px;
+            border: 2px solid var(--primary);
+            border-radius: 50%;
+            animation: breathe-circle 8s infinite ease-in-out;
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+        .breath-text {
+            font-size: 0.8rem;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 800;
+        }
+        @keyframes breathe-circle {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.8); opacity: 1; box-shadow: 0 0 40px var(--primary-glow); }
+        }
     </style>
 </head>
 <body class="scientific-grid">
@@ -465,6 +493,12 @@
             <div style="font-size: 0.8rem; color: var(--primary); font-weight: 800; letter-spacing: 2px; margin-bottom: 2rem;" id="session-status-text">Aligning your energy with Sinaank Therapy...</div>
             <div class="card-title" id="active-mode-label" style="font-size: 1.2rem; margin-bottom: 1rem;">SINAANK THERAPY ACTIVE</div>
             <div class="timer-display" id="timer" style="filter: drop-shadow(0 0 20px var(--primary-glow));">02:00</div>
+            
+            <div class="breath-guide">
+                <div class="breath-circle"></div>
+                <div id="breath-text" class="breath-text">Breathe In...</div>
+            </div>
+
             <div style="margin-top: 4rem;">
                 <button onclick="endTherapy()" class="btn-primary" style="background: rgba(255,255,255,0.1); border: 1px solid #ff5252; color: #ff5252;">END SESSION</button>
             </div>
@@ -938,6 +972,16 @@
                             statusText.innerText = mindfulnessMessages[msgIdx];
                             statusText.style.opacity = '1';
                         }, 500);
+                    }
+                }
+
+                // Update breath text every 4 seconds (8s cycle)
+                const breathText = document.getElementById('breath-text');
+                if (breathText) {
+                    if (timeLeft % 8 >= 4) {
+                        breathText.innerText = "Breathe Out...";
+                    } else {
+                        breathText.innerText = "Breathe In...";
                     }
                 }
 

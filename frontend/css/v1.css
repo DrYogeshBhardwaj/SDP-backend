@@ -1,6 +1,6 @@
 :root {
     --primary: #00D8FF; /* Digital Cyan */
-    --primary-glow: rgba(0, 216, 255, 0.4);
+    --primary-glow: rgba(0, 216, 255, 0.25);
     --bg-deep: #050810; /* Deep Tech Blue */
     --glass: rgba(255, 255, 255, 0.03);
     --border-glass: rgba(0, 216, 255, 0.15);
