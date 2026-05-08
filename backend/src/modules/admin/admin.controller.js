@@ -715,6 +715,56 @@ const getAnalytics = async (req, res) => {
     }
 };
 
+const transferCommission = async (req, res) => {
+    try {
+        const { fromMobile, toMobile, amount, reason } = req.body;
+        console.log(`[ADMIN_TRANSFER] From: ${fromMobile}, To: ${toMobile}, Amount: ${amount}`);
+
+        const fromUser = await prisma.user.findUnique({ where: { mobile: fromMobile } });
+        const toUser = await prisma.user.findUnique({ where: { mobile: toMobile } });
+
+        if (!fromUser || !toUser) {
+            return errorResponse(res, 404, 'One or both sponsors not found');
+        }
+
+        await prisma.$transaction([
+            // 1. Deduct from OLD
+            prisma.wallet.updateMany({
+                where: { userId: fromUser.id, type: 'CASH' },
+                data: { balance: { decrement: amount } }
+            }),
+            prisma.transaction.create({
+                data: {
+                    userId: fromUser.id,
+                    amount: amount,
+                    type: 'DEBIT',
+                    category: 'BONUS',
+                    description: `COMMISSION REVERSAL: ${reason || 'Sponsor Change'}`
+                }
+            }),
+            // 2. Credit to NEW
+            prisma.wallet.updateMany({
+                where: { userId: toUser.id, type: 'CASH' },
+                data: { balance: { increment: amount } }
+            }),
+            prisma.transaction.create({
+                data: {
+                    userId: toUser.id,
+                    amount: amount,
+                    type: 'CREDIT',
+                    category: 'BONUS',
+                    description: `COMMISSION TRANSFER: ${reason || 'Sponsor Change'}`
+                }
+            })
+        ]);
+
+        return successResponse(res, 200, 'Commission Transferred Successfully');
+    } catch (err) {
+        console.error('[ADMIN_TRANSFER_ERROR]', err);
+        return errorResponse(res, 500, 'Transfer failed');
+    }
+};
+
 module.exports = { 
     getStats, 
     getAllUsers, 
@@ -734,5 +784,6 @@ module.exports = {
     verifyAdminMFA,
     createManualPayout,
     manualUpgrade,
-    getAnalytics
+    getAnalytics,
+    transferCommission
 };

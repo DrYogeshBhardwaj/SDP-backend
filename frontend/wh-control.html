@@ -1124,6 +1124,9 @@
 
         async function saveUserChanges() {
             const id = document.getElementById('edit-user-id').value;
+            const user = allUsers.find(u => u.id === id);
+            const oldSponsorMobile = user.sponsor?.mobile || '';
+            
             const payload = {
                 name: document.getElementById('edit-name').value,
                 status: document.getElementById('edit-status').value,
@@ -1136,12 +1139,28 @@
 
             const data = await api('/user/' + id, 'PUT', payload);
             if (data.success) {
+                // Check if sponsor changed for a PAID user
+                if (payload.sponsorMobile !== oldSponsorMobile && (user.plan === 'PREMIUM' || user.isBusinessUnlocked)) {
+                    if (oldSponsorMobile && payload.sponsorMobile) {
+                        const moveMoney = confirm(`SPONSOR CHANGED!\n\nDo you want to move the ₹100 commission from ${oldSponsorMobile} to the new sponsor ${payload.sponsorMobile}?`);
+                        if (moveMoney) {
+                            const transferRes = await api('/transfer-commission', 'POST', {
+                                fromMobile: oldSponsorMobile,
+                                toMobile: payload.sponsorMobile,
+                                amount: 100,
+                                reason: `Manual Sponsor Change for ${user.mobile}`
+                            });
+                            if (transferRes.success) alert('Commission Transferred Successfully!');
+                        }
+                    }
+                }
+
                 alert('User updated successfully!');
                 closeEditModal();
                 loadUsers();
                 loadStats(false);
             } else {
-                alert('Failed to update user.');
+                alert('Failed to update user: ' + (data.message || 'Unknown error'));
             }
         }
 
