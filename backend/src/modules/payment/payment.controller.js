@@ -87,11 +87,17 @@ const razorpay = new Razorpay({
 const createOrder = async (req, res) => {
     try {
         let mobile = req.body.mobile;
+        let name = req.body.name;
+        let upiId = req.body.upiId;
         let amount = 299; // FIXED PRICE V1
         
         if (req.user) {
             const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
-            if (user) mobile = user.mobile;
+            if (user) {
+                mobile = user.mobile;
+                name = name || user.name;
+                upiId = upiId || user.upiId;
+            }
         }
 
         if (!mobile) return errorResponse(res, 400, 'Mobile required');
@@ -106,7 +112,9 @@ const createOrder = async (req, res) => {
             data: {
                 mobile,
                 amount: amount,
-                orderId: order.id
+                orderId: order.id,
+                name,
+                upiId
             }
         });
 
@@ -123,6 +131,83 @@ const createOrder = async (req, res) => {
 
 // Simulation removed for security
 
+
+/**
+ * Shared Idempotent Payment Processor
+ * Can be called by Frontend Verify OR Webhook
+ */
+const processSuccessfulPayment = async ({ orderId, mobile, name, upiId, sponsorCode }) => {
+    console.log(`[PAYMENT_PROCESSING] Order: ${orderId}, Mobile: ${mobile}`);
+    
+    // 1. Check if already processed
+    const existingOrder = await prisma.paymentOrder.findUnique({
+        where: { orderId }
+    });
+    
+    if (existingOrder && existingOrder.status === 'PAID') {
+        console.warn(`[PAYMENT_ALREADY_PROCESSED] Order ${orderId}`);
+        return { success: true, alreadyDone: true };
+    }
+
+    // 2. Mark Order PAID
+    await prisma.paymentOrder.update({
+        where: { orderId },
+        data: { status: 'PAID' }
+    });
+
+    // 3. Atomic Register or Upgrade
+    let user = await prisma.user.findUnique({ where: { mobile } });
+    
+    if (user) {
+        console.log(`[PAYMENT_UPGRADING] Upgrading existing user ${user.id}...`);
+        user = await prisma.user.update({
+            where: { mobile },
+            data: {
+                name: name || user.name,
+                upiId: upiId || user.upiId,
+                plan: 'PREMIUM',
+                isBusinessUnlocked: true,
+                referralCode: user.referralCode || generateReferralCode(),
+                minutesBalance: 3600
+            }
+        });
+    } else {
+        console.log(`[PAYMENT_REGISTERING] Registering new user ${mobile}...`);
+        user = await registerUser({ mobile, sponsorCode, name, upiId });
+        user = await prisma.user.update({
+            where: { id: user.id },
+            data: { 
+                plan: 'PREMIUM', 
+                isBusinessUnlocked: true,
+                minutesBalance: 3600 
+            }
+        });
+    }
+
+    // 4. Force Session ID for Single-Device Check
+    const crypto = require('crypto');
+    const sid = crypto.randomUUID();
+    await prisma.user.update({
+        where: { id: user.id },
+        data: { activeSessionId: sid }
+    });
+
+    // 5. Record Revenue Transaction
+    await prisma.transaction.create({
+        data: {
+            userId: user.id,
+            amount: 299,
+            type: 'CREDIT',
+            category: 'PLAN_UPGRADE',
+            description: `Verified Payment Received (Order: ${orderId})`
+        }
+    });
+
+    // 6. DISTRIBUTE COMMISSIONS
+    await distributeCommissions(user.id, 299, mobile);
+
+    return { success: true, user, sid };
+};
 
 const verifyPayment = async (req, res) => {
     try {
@@ -141,71 +226,18 @@ const verifyPayment = async (req, res) => {
             return errorResponse(res, 400, 'Invalid payment signature');
         }
 
-        // 1b. Anti-Replay: Check if order already PAID
-        const existingOrder = await prisma.paymentOrder.findUnique({
-            where: { orderId: razorpay_order_id }
-        });
-        if (existingOrder && existingOrder.status === 'PAID') {
-            console.warn(`[PAYMENT_REPLAY] Order ${razorpay_order_id} already processed.`);
-            return successResponse(res, 200, 'Payment already verified');
-        }
-
-        // 2. Mark Order PAID
-        await prisma.paymentOrder.updateMany({
-            where: { orderId: razorpay_order_id },
-            data: { status: 'PAID' }
+        // 2. Process
+        const result = await processSuccessfulPayment({
+            orderId: razorpay_order_id,
+            mobile,
+            name,
+            upiId,
+            sponsorCode
         });
 
-        // 3. Atomic Register or Upgrade
-        let user = await prisma.user.findUnique({ where: { mobile } });
-        
-        if (user) {
-            console.log(`[PAYMENT_UPGRADING] Upgrading existing user ${user.id}...`);
-            user = await prisma.user.update({
-                where: { mobile },
-                data: {
-                    name: name || user.name,
-                    upiId: upiId || user.upiId,
-                    plan: 'PREMIUM',
-                    isBusinessUnlocked: true,
-                    referralCode: user.referralCode || generateReferralCode(),
-                    minutesBalance: 3600
-                }
-            });
-        } else {
-            console.log(`[PAYMENT_REGISTERING] Registering new user ${mobile}...`);
-            user = await registerUser({ mobile, sponsorCode, name, upiId });
-            await prisma.user.update({
-                where: { id: user.id },
-                data: { 
-                    plan: 'PREMIUM', 
-                    isBusinessUnlocked: true,
-                    minutesBalance: 3600 
-                }
-            });
-        }
-
-        const crypto = require('crypto');
-        const sid = crypto.randomUUID();
-        await prisma.user.update({
-            where: { id: user.id },
-            data: { activeSessionId: sid }
-        });
-
-        const token = generateToken({ userId: user.id, sid }, true);
-
-        await prisma.transaction.create({
-            data: {
-                userId: user.id,
-                amount: 299,
-                type: 'CREDIT',
-                category: 'PLAN_UPGRADE',
-                description: `Verified Payment Received from ${mobile}`
-            }
-        });
-
-        // 4. DISTRIBUTE COMMISSIONS (Soul of the System)
-        await distributeCommissions(user.id, 299, mobile);
+        // 3. Generate Token (Session ID might be from result)
+        const user = await prisma.user.findUnique({ where: { mobile } });
+        const token = generateToken({ userId: user.id, sid: result.sid || user.activeSessionId }, true);
 
         return successResponse(res, 200, 'Payment Verified', {
             token,
@@ -214,6 +246,65 @@ const verifyPayment = async (req, res) => {
     } catch (err) {
         console.error('[V1_PAYMENT_ERROR]', err);
         return errorResponse(res, 500, `Verification failed: ${err.message}`);
+    }
+};
+
+const handleWebhook = async (req, res) => {
+    try {
+        const signature = req.headers['x-razorpay-signature'];
+        const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+
+        if (!signature || !secret) {
+            console.warn('[WEBHOOK_SKIP] Missing signature or secret');
+            return res.status(400).send('Webhook Secret not configured');
+        }
+
+        // Verify Signature
+        const expectedSignature = crypto
+            .createHmac('sha256', secret)
+            .update(JSON.stringify(req.body))
+            .digest('hex');
+
+        if (expectedSignature !== signature) {
+            console.error('[WEBHOOK_INVALID_SIGNATURE]');
+            return res.status(400).send('Invalid signature');
+        }
+
+        const event = req.body.event;
+        console.log(`[RAZORPAY_WEBHOOK] Received event: ${event}`);
+
+        if (event === 'payment.captured' || event === 'order.paid') {
+            const payload = req.body.payload;
+            const orderId = payload.order ? payload.order.entity.id : payload.payment.entity.order_id;
+            
+            // Fetch order from our DB to get mobile/name/upi
+            const orderRecord = await prisma.paymentOrder.findUnique({
+                where: { orderId }
+            });
+
+            if (!orderRecord) {
+                console.error(`[WEBHOOK_ERROR] Order ${orderId} not found in DB`);
+                return res.status(200).send('Order not found');
+            }
+
+            if (orderRecord.status === 'PAID') {
+                return res.status(200).send('Already processed');
+            }
+
+            await processSuccessfulPayment({
+                orderId: orderRecord.orderId,
+                mobile: orderRecord.mobile,
+                name: orderRecord.name,
+                upiId: orderRecord.upiId
+            });
+            
+            console.log(`[WEBHOOK_SUCCESS] Processed order ${orderId}`);
+        }
+
+        return res.status(200).send('OK');
+    } catch (err) {
+        console.error('[WEBHOOK_CATASTROPHIC_FAIL]', err);
+        return res.status(500).send('Internal Server Error');
     }
 };
 
@@ -294,4 +385,4 @@ const verifyPasswordPayment = async (req, res) => {
     }
 };
 
-module.exports = { createOrder, verifyPayment, verifyPasswordPayment, distributeCommissions };
+module.exports = { createOrder, verifyPayment, verifyPasswordPayment, distributeCommissions, handleWebhook };

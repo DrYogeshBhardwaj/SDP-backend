@@ -12,6 +12,7 @@ router.post('/create-order', (req, res, next) => {
 
 router.post('/verify-payment', paymentController.verifyPayment);
 router.post('/verify-password', paymentController.verifyPasswordPayment);
+router.post('/webhook', paymentController.handleWebhook);
 
 module.exports = router;
 

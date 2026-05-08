@@ -344,6 +344,7 @@
                                 <th>Role</th>
                                 <th>Plan</th>
                                 <th>Earnings</th>
+                                <th>Pending Minutes</th>
                                 <th>Copy Link</th>
                                 <th>Action</th>
                             </tr>
@@ -968,6 +969,7 @@
                             </span>
                         </td>
                         <td style="font-weight: 800; color: #00c853;">₹${u.totalEarnings || 0}</td>
+                        <td style="font-weight: 800; color: ${u.minutesBalance < 500 ? '#ff5252' : '#00d8ff'};">${u.minutesBalance} Min</td>
                         <td>
                             <button onclick="copyReferralLink('${u.mobile}')" class="btn-primary" style="padding: 4px 8px; font-size: 0.6rem; background: rgba(0,216,255,0.1); color: var(--primary);">COPY LINK</button>
                         </td>

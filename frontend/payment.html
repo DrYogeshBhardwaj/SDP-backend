@@ -116,7 +116,7 @@
                 const res = await fetch(CONFIG.API_BASE_URL + '/api/payment/create-order', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ mobile, amount: 299 })
+                    body: JSON.stringify({ mobile, name, upiId, amount: 299 })
                 });
                 
                 if (!res.ok) {
