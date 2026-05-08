@@ -1088,11 +1088,10 @@
             if (data.success) {
                 alert('User downgraded successfully!');
                 closeEditModal();
-                // Small delay to ensure DB consistency before reload
                 setTimeout(() => {
                     loadUsers();
-                    loadStats(true);
-                }, 500);
+                    loadStats(false);
+                }, 100);
             } else {
                 alert('Failed to downgrade user: ' + (data.message || 'Unknown error'));
             }
@@ -1114,8 +1113,8 @@
                 closeEditModal();
                 setTimeout(() => {
                     loadUsers();
-                    loadStats(true);
-                }, 500);
+                    loadStats(false);
+                }, 100);
             } else {
                 alert('Upgrade failed: ' + (data.message || 'Unknown error'));
                 btn.innerText = "UPGRADE TO PAID";
@@ -1140,6 +1139,7 @@
                 alert('User updated successfully!');
                 closeEditModal();
                 loadUsers();
+                loadStats(false);
             } else {
                 alert('Failed to update user.');
             }
