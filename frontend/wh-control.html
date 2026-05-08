@@ -228,10 +228,19 @@
                 <div class="nav-item" onclick="showView('security', this)">6. Security Audit</div>
                 <div class="nav-item" onclick="showView('settings', this)">7. System Settings</div>
                 <div class="nav-item" onclick="showView('analytics', this)">8. Traffic Analytics</div>
+            </div>
 
-                <div style="margin-top: 3rem; padding: 20px; border-top: 1px solid var(--border-glass);">
-                    <button onclick="runDiagnostics()" class="btn-primary" style="width: 100%; font-size: 0.7rem; background: rgba(255,255,255,0.05);">🔍 RUN DIAGNOSTICS</button>
+            <div id="integrity-check" style="margin-top: auto; padding: 1.5rem; border-top: 1px solid var(--border-glass); background: rgba(255,255,255,0.02);">
+                <div style="font-size: 0.5rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px;">System Integrity Status</div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div id="integrity-dot" style="width: 10px; height: 10px; border-radius: 50%; background: #00c853; box-shadow: 0 0 15px #00c853;"></div>
+                    <div id="integrity-status" style="font-size: 0.75rem; font-weight: 900; color: #00c853; letter-spacing: 1px;">CORE_SECURE</div>
                 </div>
+                <div id="integrity-msg" style="font-size: 0.6rem; color: var(--text-dim); margin-top: 5px; font-family: monospace;">ALL CALCULATIONS ACCURATE</div>
+            </div>
+            
+            <div style="margin-top: 3rem; padding: 20px; border-top: 1px solid var(--border-glass);">
+                <button onclick="runDiagnostics()" class="btn-primary" style="width: 100%; font-size: 0.7rem; background: rgba(255,255,255,0.05);">🔍 RUN DIAGNOSTICS</button>
             </div>
         </div>
 
@@ -300,6 +309,30 @@
                             </thead>
                             <tbody id="revenue-logs-body">
                                 <tr><td colspan="5" style="text-align:center; padding: 2rem; color: var(--text-dim);">Loading Disbursement Data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Payout Disbursement Section -->
+                <div style="margin-top: 3rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="color: #ff5252; font-size: 1.2rem; letter-spacing: 1px;">PAYOUT DISBURSEMENT (BREAKDOWN OF TOTAL CASH OUT)</h3>
+                        <div style="font-size: 0.7rem; color: var(--text-dim);">MONEY SENT TO USERS</div>
+                    </div>
+                    <div class="stat-card glass" style="padding: 0;">
+                        <table id="payout-logs-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Mobile</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>UTR / Transaction ID</th>
+                                </tr>
+                            </thead>
+                            <tbody id="payout-logs-body">
+                                <tr><td colspan="5" style="text-align:center; padding: 2rem; color: var(--text-dim);">Loading Payout Data...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -826,9 +859,28 @@
                             </div>
                         `;
                     }
+
+                    // Update Integrity Indicator
+                    const integrityDot = document.getElementById('integrity-dot');
+                    const integrityStatus = document.getElementById('integrity-status');
+                    const integrityMsg = document.getElementById('integrity-msg');
+                    
+                    if (ws.alerts && ws.alerts.length > 0) {
+                        integrityDot.style.background = '#ff5252';
+                        integrityDot.style.boxShadow = '0 0 15px #ff5252';
+                        integrityStatus.innerText = "DISCREPANCY_FOUND";
+                        integrityStatus.style.color = "#ff5252";
+                        integrityMsg.innerText = ws.alerts[0].message;
+                    } else {
+                        integrityDot.style.background = '#00c853';
+                        integrityDot.style.boxShadow = '0 0 15px #00c853';
+                        integrityStatus.innerText = "CORE_SECURE";
+                        integrityStatus.style.color = "#00c853";
+                        integrityMsg.innerText = "ALL CALCULATIONS ACCURATE";
+                    }
                 }
                 
-                await loadRevenueLogs();
+                await loadDisbursements();
             } catch (e) {
                 console.error("Stats fail", e);
             } finally {
@@ -841,13 +893,12 @@
             }
         }
 
-        async function loadRevenueLogs() {
+        async function loadDisbursements() {
             try {
-                const data = await api('/cash-logs');
-                if (data.success) {
-                    // Filter for Revenue-related logs
-                    const revenueLogs = data.data.filter(l => ['REGISTRATION_FEE', 'PLAN_UPGRADE'].includes(l.category));
-                    
+                // 1. Load Revenue
+                const revData = await api('/cash-logs');
+                if (revData.success) {
+                    const revenueLogs = revData.data.filter(l => ['REGISTRATION_FEE', 'PLAN_UPGRADE'].includes(l.category));
                     document.getElementById('revenue-logs-body').innerHTML = revenueLogs.map(l => `
                         <tr>
                             <td>${formatDate(l.createdAt)}</td>
@@ -858,8 +909,25 @@
                         </tr>
                     `).join('');
                 }
+
+                // 2. Load Payouts (PAID only for disbursement view)
+                const payData = await api('/payouts');
+                if (payData.success) {
+                    const paidLogs = payData.data.filter(p => p.status === 'PAID');
+                    document.getElementById('payout-logs-body').innerHTML = paidLogs.length === 0 
+                        ? `<tr><td colspan="5" style="text-align:center; padding: 2rem; color: var(--text-dim);">No money has been sent out yet.</td></tr>`
+                        : paidLogs.map(p => `
+                        <tr>
+                            <td>${formatDate(p.createdAt)}</td>
+                            <td>${p.user ? p.user.mobile : '-'}</td>
+                            <td style="font-weight: 800; color: #ff5252;">₹${p.amount}</td>
+                            <td><span class="badge" style="background: #00c853; color: #000; font-size: 0.6rem;">DISBURSED</span></td>
+                            <td style="font-family: monospace; font-size: 0.7rem; color: var(--primary);">${p.transactionId || 'MANUAL'}</td>
+                        </tr>
+                    `).join('');
+                }
             } catch (e) {
-                console.error("Revenue logs load fail", e);
+                console.error("Disbursement load fail", e);
             }
         }
 
@@ -900,14 +968,18 @@
                     return;
                 }
                 document.getElementById('payout-table-body').innerHTML = data.data.map(p => `
-                    <tr>
+                    <tr style="${p.status === 'PAID' ? 'background: rgba(0,200,83,0.05);' : ''}">
                         <td>${formatDate(p.createdAt)}</td>
                         <td>${p.user.mobile}</td>
                         <td>
                             <div style="font-weight: 800; font-size: 1.1rem; color: #fff;">₹${p.amount}</div>
                             <div style="color: var(--primary); font-family: monospace; font-size: 0.8rem;">UPI: ${p.user.upiId || 'NOT SET'}</div>
                         </td>
-                        <td><span class="badge badge-${p.status.toLowerCase()}">${p.status}</span></td>
+                        <td>
+                            <span class="badge" style="background: ${p.status === 'PAID' ? '#00c853' : p.status === 'APPROVED' ? 'var(--primary)' : 'rgba(255,255,255,0.05)'}; color: ${p.status === 'PAID' || p.status === 'APPROVED' ? '#000' : 'var(--text-dim)'}; border: none;">
+                                ${p.status}
+                            </span>
+                        </td>
                         <td>
                             ${p.status === 'PENDING' ? `
                                 <button onclick="processPayout('${p.id}', 'APPROVED')" class="btn-primary" style="padding: 4px 8px; font-size:0.6rem; background:#00c853;">APPROVE</button>
@@ -915,6 +987,7 @@
                             ` : p.status === 'APPROVED' ? `
                                 <button onclick="processPayout('${p.id}', 'PAID')" class="btn-primary" style="padding: 4px 8px; font-size:0.6rem; background: var(--primary); color:#000;">CONFIRM PAID</button>
                             ` : `
+                                <div style="font-size: 0.65rem; font-weight: 800; color: #00c853;">✅ DISBURSED</div>
                                 <div style="font-size: 0.6rem; color: var(--text-dim);">UTR: ${p.transactionId || '-'}</div>
                             `}
                         </td>
