@@ -281,6 +281,29 @@
                         <p style="color: var(--text-dim); margin-top: 1rem; font-size: 0.6rem;">DATE: <span class="current-date-display">--</span></p>
                     </div>
                 </div>
+
+                <!-- Revenue Disbursement Section -->
+                <div style="margin-top: 3rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="color: var(--primary); font-size: 1.2rem; letter-spacing: 1px;">REVENUE DISBURSEMENT (BREAKDOWN OF TOTAL CASH IN)</h3>
+                    </div>
+                    <div class="stat-card glass" style="padding: 0;">
+                        <table id="revenue-logs-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Mobile</th>
+                                    <th>Category</th>
+                                    <th>Amount</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody id="revenue-logs-body">
+                                <tr><td colspan="5" style="text-align:center; padding: 2rem; color: var(--text-dim);">Loading Disbursement Data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
             <!-- Cash View -->
@@ -787,18 +810,25 @@
                     const alertsDiv = document.getElementById('admin-alerts');
                     if (ws.alerts && ws.alerts.length > 0) {
                         alertsDiv.innerHTML = ws.alerts.map(a => `
-                            <div class="alert-banner alert-${a.type.toLowerCase()}">
-                                <span>⚠️</span> ${a.message}
+                            <div class="stat-card glass" style="border-left: 4px solid #ff5252; padding: 1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 15px;">
+                                <div style="font-size: 1.5rem;">⚠️</div>
+                                <div>
+                                    <div style="font-weight: 800; font-size: 0.8rem; color: #ff5252;">${a.type}</div>
+                                    <div style="font-size: 0.7rem; opacity: 0.8;">${a.message}</div>
+                                </div>
                             </div>
                         `).join('');
                     } else {
                         alertsDiv.innerHTML = `
-                            <div class="alert-banner" style="background: rgba(0,200,83,0.05); border: 1px solid #00c853; color: #00c853;">
-                                <span>✅</span> All systems synchronized. No discrepancies found.
+                            <div class="stat-card glass" style="border-left: 4px solid #00c853; padding: 1rem; color: #00c853; font-size: 0.7rem; display: flex; align-items: center; gap: 10px;">
+                                <div style="font-size: 1.2rem;">✅</div>
+                                <div>All systems synchronized. No discrepancies found.</div>
                             </div>
                         `;
                     }
                 }
+                
+                await loadRevenueLogs();
             } catch (e) {
                 console.error("Stats fail", e);
             } finally {
@@ -808,6 +838,28 @@
                     await new Promise(r => setTimeout(r, 500));
                     document.getElementById('sync-overlay').style.display = 'none';
                 }
+            }
+        }
+
+        async function loadRevenueLogs() {
+            try {
+                const data = await api('/cash-logs');
+                if (data.success) {
+                    // Filter for Revenue-related logs
+                    const revenueLogs = data.data.filter(l => ['REGISTRATION_FEE', 'PLAN_UPGRADE'].includes(l.category));
+                    
+                    document.getElementById('revenue-logs-body').innerHTML = revenueLogs.map(l => `
+                        <tr>
+                            <td>${formatDate(l.createdAt)}</td>
+                            <td>${l.user ? l.user.mobile : '-'}</td>
+                            <td><span class="badge" style="background: rgba(0,200,83,0.1); color: #00c853; font-size: 0.6rem;">${l.category}</span></td>
+                            <td style="font-weight: 800; color: #00c853;">₹${l.amount}</td>
+                            <td style="font-size: 0.7rem; color: var(--text-dim);">${l.description}</td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (e) {
+                console.error("Revenue logs load fail", e);
             }
         }
 
