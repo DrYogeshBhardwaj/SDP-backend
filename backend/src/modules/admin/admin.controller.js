@@ -272,10 +272,21 @@ const updateUser = async (req, res) => {
             isBusinessUnlocked: isBusinessUnlocked === true || isBusinessUnlocked === 'true' ? true : (isBusinessUnlocked === false || isBusinessUnlocked === 'false' ? false : undefined)
         };
 
+        // Check if plan is being upgraded to trigger commissions
+        const oldUser = await prisma.user.findUnique({ where: { id } });
+        const isUpgrade = oldUser.plan === 'FREE' && plan === 'PREMIUM';
+
         const updated = await prisma.user.update({
             where: { id },
             data: dataToUpdate
         });
+
+        // Trigger commissions if upgraded
+        if (isUpgrade) {
+            const { distributeCommissions } = require('../payment/payment.controller');
+            await distributeCommissions(id, 299, updated.mobile);
+            console.log(`[ADMIN_UPGRADE_COMMISSION] Triggered commissions for ${updated.mobile}`);
+        }
 
         // If downgrading to FREE, we should also remove the revenue record and revert commissions
         let revenueCleaned = false;

@@ -194,11 +194,12 @@
 
         async function performQuickRegister(mobile) {
             showMsg('Creating Account...');
+            const sponsorCode = localStorage.getItem('refCode') || '';
             try {
                 const res = await fetch(CONFIG.API_BASE_URL + '/api/power-register', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ mobile, name: 'Sinaank User' })
+                    body: JSON.stringify({ mobile, name: 'Sinaank User', sponsorCode })
                 });
                 const data = await res.json();
                 if (data.success) {

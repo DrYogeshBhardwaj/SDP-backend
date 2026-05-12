@@ -393,22 +393,25 @@
             <div id="view-edit" class="view">
                 <h2>User Management</h2>
                 <div class="stat-card glass" style="margin-top: 2rem; padding: 0;">
-                    <table id="user-table">
-                        <thead>
-                            <tr>
-                                <th>Joined</th>
-                                <th>Mobile</th>
-                                <th>Name</th>
-                                <th>Role</th>
-                                <th>Plan</th>
-                                <th>Earnings</th>
-                                <th>Pending Minutes</th>
-                                <th>Copy Link</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="user-table-body"></tbody>
-                    </table>
+                        <div style="display: flex; gap: 10px; margin-bottom: 1rem;">
+                            <button class="tab-btn active" id="tab-paid-users" onclick="switchUserTab('paid')">PAID PARTNERS (WORKING)</button>
+                            <button class="tab-btn" id="tab-free-users" onclick="switchUserTab('free')">FREE ENTRIES</button>
+                        </div>
+                        <table id="user-table">
+                            <thead>
+                                <tr>
+                                    <th>Joined</th>
+                                    <th>Mobile</th>
+                                    <th>Name</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Earnings</th>
+                                    <th>Pending Min</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="user-table-body"></tbody>
+                        </table>
                 </div>
             </div>
 
@@ -561,6 +564,12 @@
                     <option value="CASHIER">CASHIER (Payouts Only)</option>
                     <option value="SUPPORT">SUPPORT (Queries Only)</option>
                     <option value="ADMIN">MASTER ADMIN</option>
+                </select>
+
+                <label style="font-size: 0.7rem; color: #FFD700; font-weight: 800;">MEMBERSHIP PLAN</label>
+                <select id="edit-plan" style="width: 100%; padding: 10px; background: #111; border: 1px solid #FFD700; border-radius: 4px; color: #FFD700; margin-bottom: 1rem; font-weight: 800;">
+                    <option value="FREE">FREE ENTRY</option>
+                    <option value="PREMIUM">PAID / PREMIUM</option>
                 </select>
 
                 <label style="font-size: 0.7rem; color: var(--primary);">MINUTES BALANCE</label>
@@ -1082,29 +1091,48 @@
 
         let allUsers = [];
 
+        let currentUserTab = 'paid';
+        function switchUserTab(tab) {
+            currentUserTab = tab;
+            document.querySelectorAll('#view-edit .tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab-' + tab + '-users').classList.add('active');
+            renderUserTable();
+        }
+
+        function renderUserTable() {
+            const filtered = allUsers.filter(u => {
+                const isPaid = u.plan === 'PREMIUM' || u.isBusinessUnlocked;
+                return currentUserTab === 'paid' ? isPaid : !isPaid;
+            });
+
+            document.getElementById('user-table-body').innerHTML = filtered.map(u => `
+                <tr>
+                    <td style="font-size: 0.7rem;">${formatDate(u.createdAt)}</td>
+                    <td>${u.mobile}</td>
+                    <td>${u.name || '-'}</td>
+                    <td>${u.role}</td>
+                    <td>
+                        <span class="badge" style="background: ${u.plan === 'PREMIUM' ? '#FFD700' : 'rgba(255,255,255,0.05)'}; color: ${u.plan === 'PREMIUM' ? '#000' : '#888'};">
+                            ${u.plan}
+                        </span>
+                    </td>
+                    <td style="font-weight: 800; color: #00c853;">₹${u.totalEarnings || 0}</td>
+                    <td style="font-weight: 800; color: ${u.minutesBalance < 500 ? '#ff5252' : '#00d8ff'};">${u.minutesBalance}</td>
+                    <td>
+                        <div style="display: flex; gap: 5px;">
+                            <button onclick="editUser('${u.id}')" class="btn-primary" style="padding: 4px 8px; font-size: 0.6rem;">EDIT</button>
+                            <button onclick="copyReferralLink('${u.mobile}')" class="btn-primary" style="padding: 4px 8px; font-size: 0.6rem; background: rgba(0,216,255,0.1); color: var(--primary);">LINK</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
         async function loadUsers() {
             const data = await api('/users');
             if (data.success) {
                 allUsers = data.data;
-                document.getElementById('user-table-body').innerHTML = allUsers.map(u => `
-                    <tr>
-                        <td>${formatDate(u.createdAt)}</td>
-                        <td>${u.mobile}</td>
-                        <td>${u.name || '-'}</td>
-                        <td>${u.role}</td>
-                        <td>
-                            <span class="badge" style="background: ${u.plan === 'PREMIUM' || u.isBusinessUnlocked ? 'linear-gradient(45deg, #FFD700, #FFA500)' : 'rgba(255,255,255,0.05)'}; color: ${u.plan === 'PREMIUM' || u.isBusinessUnlocked ? '#000' : 'var(--text-dim)'}; border: 1px solid ${u.plan === 'PREMIUM' || u.isBusinessUnlocked ? '#FFD700' : 'rgba(255,255,255,0.1)'};">
-                                ${u.plan === 'PREMIUM' || u.isBusinessUnlocked ? 'PAID / MASTER' : 'FREE'}
-                            </span>
-                        </td>
-                        <td style="font-weight: 800; color: #00c853;">₹${u.totalEarnings || 0}</td>
-                        <td style="font-weight: 800; color: ${u.minutesBalance < 500 ? '#ff5252' : '#00d8ff'};">${u.minutesBalance} Min</td>
-                        <td>
-                            <button onclick="copyReferralLink('${u.mobile}')" class="btn-primary" style="padding: 4px 8px; font-size: 0.6rem; background: rgba(0,216,255,0.1); color: var(--primary);">COPY LINK</button>
-                        </td>
-                        <td><button onclick="editUser('${u.id}')" class="btn-primary" style="padding: 4px 12px; font-size: 0.7rem;">EDIT</button></td>
-                    </tr>
-                `).join('');
+                renderUserTable();
             }
         }
 
@@ -1127,6 +1155,7 @@
             document.getElementById('edit-daily-used').value = user.dailyMinutesUsed || 0;
             document.getElementById('edit-upi').value = user.upiId || '';
             document.getElementById('edit-sponsor').value = user.sponsor?.mobile || '';
+            document.getElementById('edit-plan').value = user.plan;
             
             // Toggle Upgrade/Downgrade buttons
             const isPaid = user.plan === 'PREMIUM' || user.isBusinessUnlocked;
@@ -1211,7 +1240,9 @@
                 minutesBalance: parseInt(document.getElementById('edit-minutes').value),
                 dailyMinutesUsed: parseInt(document.getElementById('edit-daily-used').value),
                 upiId: document.getElementById('edit-upi').value,
-                sponsorMobile: document.getElementById('edit-sponsor').value
+                sponsorMobile: document.getElementById('edit-sponsor').value,
+                plan: document.getElementById('edit-plan').value,
+                isBusinessUnlocked: document.getElementById('edit-plan').value === 'PREMIUM'
             };
 
             const data = await api('/user/' + id, 'PUT', payload);

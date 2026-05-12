@@ -160,6 +160,26 @@ const processSuccessfulPayment = async ({ orderId, mobile, name, upiId, sponsorC
     
     if (user) {
         console.log(`[PAYMENT_UPGRADING] Upgrading existing user ${user.id}...`);
+        
+        // AUTO-MOVE: If user has no sponsor, or is FREE and a sponsorCode is provided, resolve it
+        let sponsorId = user.sponsorId;
+        if (!sponsorId && sponsorCode) {
+            const { registerUser } = require('../auth/registration.service');
+            // We can't easily call registerUser here because it creates a user, 
+            // but we can use the same logic to resolve sponsor
+            const sponsor = await prisma.user.findFirst({
+                where: { OR: [
+                    { mobile: sponsorCode }, 
+                    { referralCode: sponsorCode.toUpperCase() },
+                    { referralCode: sponsorCode }
+                ]}
+            });
+            if (sponsor) {
+                sponsorId = sponsor.id;
+                console.log(`[PAYMENT_SPONSOR_RESOLVED] Linked existing user ${mobile} to sponsor ${sponsor.mobile}`);
+            }
+        }
+
         user = await prisma.user.update({
             where: { mobile },
             data: {
@@ -167,6 +187,7 @@ const processSuccessfulPayment = async ({ orderId, mobile, name, upiId, sponsorC
                 upiId: upiId || user.upiId,
                 plan: 'PREMIUM',
                 isBusinessUnlocked: true,
+                sponsorId: sponsorId || undefined,
                 referralCode: user.referralCode || generateReferralCode(),
                 minutesBalance: 3600
             }
@@ -326,6 +347,23 @@ const verifyPasswordPayment = async (req, res) => {
         
         if (user) {
             console.log(`[PASSWORD_PAYMENT_UPGRADING] Upgrading existing user ${user.id}...`);
+            
+            // AUTO-MOVE: If user has no sponsor, or is FREE and a sponsorCode is provided, resolve it
+            let sponsorId = user.sponsorId;
+            if (!sponsorId && sponsorCode) {
+                const sponsor = await prisma.user.findFirst({
+                    where: { OR: [
+                        { mobile: sponsorCode }, 
+                        { referralCode: sponsorCode.toUpperCase() },
+                        { referralCode: sponsorCode }
+                    ]}
+                });
+                if (sponsor) {
+                    sponsorId = sponsor.id;
+                    console.log(`[PASSWORD_SPONSOR_RESOLVED] Linked existing user ${mobile} to sponsor ${sponsor.mobile}`);
+                }
+            }
+
             user = await prisma.user.update({
                 where: { mobile },
                 data: {
@@ -333,6 +371,7 @@ const verifyPasswordPayment = async (req, res) => {
                     upiId: upiId || user.upiId,
                     plan: 'PREMIUM',
                     isBusinessUnlocked: true,
+                    sponsorId: sponsorId || undefined,
                     referralCode: user.referralCode || generateReferralCode(),
                     minutesBalance: 3600
                 }
