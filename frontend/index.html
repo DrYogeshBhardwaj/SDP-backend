@@ -325,6 +325,31 @@
         @media (max-width: 600px) {
             .floating-demo { bottom: 15px; left: 15px; font-size: 0.75rem; padding: 10px 16px; }
         }
+
+        .login-btn-top {
+            position: absolute;
+            top: 40px;
+            right: 40px;
+            z-index: 100;
+            padding: 10px 25px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: 0.3s;
+            backdrop-filter: blur(10px);
+        }
+        .login-btn-top:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: var(--brand-blue);
+            transform: translateY(-2px);
+        }
+        @media (max-width: 900px) {
+            .login-btn-top { top: 20px; right: 20px; font-size: 0.75rem; padding: 8px 16px; }
+        }
     </style>
 </head>
 <body class="scientific-grid">
@@ -347,6 +372,9 @@
     <section class="hero">
         <div class="breathing-orb"></div>
         <div class="aura-glow"></div>
+        
+        <a href="join.html" class="login-btn-top">MEMBER LOGIN</a>
+
         <div class="hero-container">
             <div class="hero-text">
                 <span class="top-brand"><img src="Logo.png" style="width: 25px; height: auto; vertical-align: middle; margin-right: 10px; filter: drop-shadow(0 0 5px var(--brand-blue));"> Sinaank Therapy</span>

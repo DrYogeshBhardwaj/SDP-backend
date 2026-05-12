@@ -18,6 +18,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Hind:wght@400;700&display=swap" rel="stylesheet">
     <script src="js/config.js"></script>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         .rewards-grid {
@@ -149,6 +150,14 @@
             </div>
         </div>
 
+        <!-- Income Trend Chart -->
+        <div class="stat-card glass" style="grid-column: 1 / -1; padding: 2rem;">
+            <div class="stat-title-new" style="margin-bottom: 1.5rem;">Income Performance</div>
+            <div style="height: 250px; width: 100%;">
+                <canvas id="incomeChart"></canvas>
+            </div>
+        </div>
+
         <!-- History -->
         <div class="stat-card glass" style="grid-column: 1 / -1; text-align: left;">
             <div class="stat-title-new">Reward History</div>
@@ -209,7 +218,59 @@
                 });
 
                 renderHistory(u.transactions || []);
+                renderIncomeChart(u.transactions || []);
             }
+        }
+
+        function renderIncomeChart(txs) {
+            const ctx = document.getElementById('incomeChart').getContext('2d');
+            
+            // Group earnings by date
+            const earningsByDate = {};
+            txs.filter(t => t.type === 'CREDIT' && t.category === 'BONUS').forEach(t => {
+                const date = new Date(t.createdAt).toLocaleDateString();
+                earningsByDate[date] = (earningsByDate[date] || 0) + t.amount;
+            });
+
+            const labels = Object.keys(earningsByDate).reverse().slice(-7); // Last 7 days with data
+            const data = labels.map(l => earningsByDate[l]);
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Earnings (₹)',
+                        data: data,
+                        borderColor: '#00D8FF',
+                        backgroundColor: 'rgba(0, 216, 255, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#00D8FF',
+                        pointBorderColor: '#fff',
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 10 } }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 10 } }
+                        }
+                    }
+                }
+            });
         }
 
         function renderHistory(txs) {

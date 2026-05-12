@@ -446,9 +446,15 @@
                 <div style="margin-top: 2rem; border-top: 1px solid var(--border-glass); padding-top: 1.5rem; width: 100%;">
                     <div class="card-title" style="font-size: 0.6rem;">SESSION DURATION</div>
                     <div class="time-selector">
-                        <button class="time-btn btn-t-2" onclick="setTime(2, this)">2 MIN</button>
-                        <button class="time-btn btn-t-5" onclick="setTime(5, this)">5 MIN 🔒</button>
-                        <button class="time-btn btn-t-10" onclick="setTime(10, this)">10 MIN 🔒</button>
+                        <button class="time-btn btn-t-2 active" onclick="setTime(2, this)">2 MIN</button>
+                        <button class="time-btn btn-t-5" onclick="setTime(5, this)">
+                            5 MIN
+                            <span class="lock-icon" style="font-size: 0.6rem; margin-left: 4px; opacity: 0.5;">🔒</span>
+                        </button>
+                        <button class="time-btn btn-t-10" onclick="setTime(10, this)">
+                            10 MIN
+                            <span class="lock-icon" style="font-size: 0.6rem; margin-left: 4px; opacity: 0.5;">🔒</span>
+                        </button>
                     </div>
                     <button onclick="startTherapy()" id="global-sync-btn" class="btn-primary glow-start btn-pulse" style="width: 100%; padding: 20px; margin-top: 1rem;">अनुभव शुरू करें (START)</button>
                 </div>
@@ -476,9 +482,15 @@
                 <div style="margin-top: 2rem; border-top: 1px solid var(--border-glass); padding-top: 1.5rem; width: 100%;">
                     <div class="card-title" style="font-size: 0.6rem;">SESSION DURATION</div>
                     <div class="time-selector">
-                        <button class="time-btn btn-t-2" onclick="setTime(2, this)">2 MIN</button>
-                        <button class="time-btn btn-t-5" onclick="setTime(5, this)">5 MIN 🔒</button>
-                        <button class="time-btn btn-t-10" onclick="setTime(10, this)">10 MIN 🔒</button>
+                        <button class="time-btn btn-t-2 active" onclick="setTime(2, this)">2 MIN</button>
+                        <button class="time-btn btn-t-5" onclick="setTime(5, this)">
+                            5 MIN
+                            <span class="lock-icon" style="font-size: 0.6rem; margin-left: 4px; opacity: 0.5;">🔒</span>
+                        </button>
+                        <button class="time-btn btn-t-10" onclick="setTime(10, this)">
+                            10 MIN
+                            <span class="lock-icon" style="font-size: 0.6rem; margin-left: 4px; opacity: 0.5;">🔒</span>
+                        </button>
                     </div>
                     <button onclick="startTherapy()" class="btn-primary glow-start combo-start-btn" style="width: 100%; padding: 20px; margin-top: 1rem;" disabled>अनुभव शुरू करें (START)</button>
                 </div>
@@ -503,9 +515,15 @@
                 <div style="margin-top: 2rem; border-top: 1px solid var(--border-glass); padding-top: 1.5rem; width: 100%;">
                     <div class="card-title" style="font-size: 0.6rem;">SESSION DURATION</div>
                     <div class="time-selector">
-                        <button class="time-btn btn-t-2" onclick="setTime(2, this)">2 MIN</button>
-                        <button class="time-btn btn-t-5" onclick="setTime(5, this)">5 MIN 🔒</button>
-                        <button class="time-btn btn-t-10" onclick="setTime(10, this)">10 MIN 🔒</button>
+                        <button class="time-btn btn-t-2 active" onclick="setTime(2, this)">2 MIN</button>
+                        <button class="time-btn btn-t-5" onclick="setTime(5, this)">
+                            5 MIN
+                            <span class="lock-icon" style="font-size: 0.6rem; margin-left: 4px; opacity: 0.5;">🔒</span>
+                        </button>
+                        <button class="time-btn btn-t-10" onclick="setTime(10, this)">
+                            10 MIN
+                            <span class="lock-icon" style="font-size: 0.6rem; margin-left: 4px; opacity: 0.5;">🔒</span>
+                        </button>
                     </div>
                     <button onclick="startTherapy()" class="btn-primary glow-start choice-start-btn" style="width: 100%; padding: 20px; margin-top: 1rem;" disabled>अनुभव शुरू करें (START)</button>
                 </div>
@@ -634,9 +652,18 @@
                 document.getElementById('header-name').innerText = userData.name || 'Sinaank User';
                 document.getElementById('header-mobile').innerText = `+91 ${userData.mobile}`;
                 
-                // Set 10 MIN as DEFAULT for all users (Lock logic handles restriction)
-                selectedTime = 10;
-                updateTimeUI(10);
+                // Check plan and unlock UI
+                const isPaid = userData.plan === 'PREMIUM' || userData.isBusinessUnlocked;
+                if (isPaid) {
+                    document.querySelectorAll('.lock-icon').forEach(el => el.style.display = 'none');
+                    // Set 10 MIN as DEFAULT for paid users
+                    selectedTime = 10;
+                    updateTimeUI(10);
+                } else {
+                    // Set 2 MIN as DEFAULT for free users
+                    selectedTime = 2;
+                    updateTimeUI(2);
+                }
 
                 calculateAuto();
             }

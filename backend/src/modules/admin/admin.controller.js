@@ -238,7 +238,7 @@ const getCashLogs = async (req, res) => {
         const logs = await prisma.transaction.findMany({
             take: 100,
             orderBy: { createdAt: 'desc' },
-            include: { user: { select: { mobile: true } } }
+            include: { user: { select: { mobile: true, name: true } } }
         });
         return successResponse(res, 200, 'Cash Logs', logs);
     } catch (err) {
