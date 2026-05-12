@@ -300,6 +300,7 @@
                         <table id="revenue-logs-table">
                             <thead>
                                     <tr>
+                                        <th>SL No</th>
                                         <th>Date</th>
                                         <th>Mobile</th>
                                         <th>User Name</th>
@@ -910,8 +911,9 @@
                 const revData = await api('/cash-logs');
                 if (revData.success) {
                     const revenueLogs = revData.data.filter(l => ['REGISTRATION_FEE', 'PLAN_UPGRADE'].includes(l.category));
-                    document.getElementById('revenue-logs-body').innerHTML = revenueLogs.map(l => `
+                    document.getElementById('revenue-logs-body').innerHTML = revenueLogs.map((l, index) => `
                         <tr>
+                            <td>${index + 1}</td>
                             <td>${formatDate(l.createdAt)}</td>
                             <td>${l.user ? l.user.mobile : '-'}</td>
                             <td style="font-size: 0.8rem; font-weight: 600;">${l.user ? (l.user.name || 'Anonymous') : '-'}</td>
