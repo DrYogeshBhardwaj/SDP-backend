@@ -248,7 +248,10 @@
             <div id="view-wholesale" class="view">
                 <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem;">
                     <h2 style="font-size: 2.5rem; letter-spacing: -1px; margin: 0;">Wholesale Overview</h2>
-                    <button onclick="loadStats(true)" class="btn-primary" style="padding: 10px 20px; font-size: 0.7rem; background: rgba(0,216,255,0.1); border: 1px solid var(--primary); color: var(--primary);">🔄 SYNC ALL DATA</button>
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="recalculateCommissions()" class="btn-primary" style="padding: 10px 20px; font-size: 0.7rem; background: #ffab00; border: none; color: #000; font-weight: 800;">⚡ RECALCULATE BONUSES (FIX PENDING)</button>
+                        <button onclick="loadStats(true)" class="btn-primary" style="padding: 10px 20px; font-size: 0.7rem; background: rgba(0,216,255,0.1); border: 1px solid var(--primary); color: var(--primary);">🔄 REFRESH STATS</button>
+                    </div>
                 </div>
                 
                 <!-- Alerts Section -->
@@ -361,13 +364,14 @@
                 <div id="cash-requests-section" class="stat-card glass" style="margin-top: 1rem; padding: 0;">
                     <table id="payout-table">
                         <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>User Mobile</th>
-                                <th>Payment Info (Amount + UPI)</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>User Name</th>
+                                    <th>User Mobile</th>
+                                    <th>Payment Info (Amount + UPI)</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
                         </thead>
                         <tbody id="payout-table-body"></tbody>
                     </table>
@@ -985,10 +989,11 @@
                 document.getElementById('payout-table-body').innerHTML = data.data.map(p => `
                     <tr style="${p.status === 'PAID' ? 'background: rgba(0,200,83,0.05);' : ''}">
                         <td>${formatDate(p.createdAt)}</td>
-                        <td>${p.user.mobile}</td>
+                        <td style="font-weight: 800;">${p.user?.name || '-'}</td>
+                        <td>${p.user?.mobile || '-'}</td>
                         <td>
                             <div style="font-weight: 800; font-size: 1.1rem; color: #fff;">₹${p.amount}</div>
-                            <div style="color: var(--primary); font-family: monospace; font-size: 0.8rem;">UPI: ${p.user.upiId || 'NOT SET'}</div>
+                            <div style="color: var(--primary); font-family: monospace; font-size: 0.8rem;">UPI: ${p.user?.upiId || 'NOT SET'}</div>
                         </td>
                         <td>
                             <span class="badge" style="background: ${p.status === 'PAID' ? '#00c853' : p.status === 'APPROVED' ? 'var(--primary)' : 'rgba(255,255,255,0.05)'}; color: ${p.status === 'PAID' || p.status === 'APPROVED' ? '#000' : 'var(--text-dim)'}; border: none;">
@@ -1456,6 +1461,30 @@
         document.getElementById('master-pass').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') verifyMasterLock();
         });
+        async function recalculateCommissions() {
+            if (!confirm("This will scan the entire network tree and distribute any missing commissions. Continue?")) return;
+            
+            // Show sync overlay
+            document.getElementById('sync-overlay').style.display = 'flex';
+            document.getElementById('sync-progress').style.width = '20%';
+            document.getElementById('sync-text').innerText = "AUDITING NETWORK TREE...";
+
+            try {
+                const data = await api('/recalculate-commissions', 'POST', {});
+                if (data.success) {
+                    document.getElementById('sync-progress').style.width = '100%';
+                    document.getElementById('sync-text').innerText = "AUDIT COMPLETE: " + data.data.message;
+                    await new Promise(r => setTimeout(r, 1500));
+                    loadStats(true);
+                } else {
+                    alert("Error: " + data.message);
+                }
+            } catch (e) {
+                alert("Failed to reach server");
+            } finally {
+                document.getElementById('sync-overlay').style.display = 'none';
+            }
+        }
     </script>
 <script src="js/analytics.js"></script>
 </body>

@@ -776,6 +776,88 @@ const transferCommission = async (req, res) => {
     }
 };
 
+const recalculateCommissions = async (req, res) => {
+    try {
+        console.log(`[RECALCULATE_START] Requested by admin ${req.user.userId}`);
+        
+        // 1. Get all Premium users
+        const premiumUsers = await prisma.user.findMany({
+            where: { plan: 'PREMIUM' },
+            include: { 
+                sponsor: { include: { sponsor: true } }
+            }
+        });
+
+        let fixedCount = 0;
+
+        for (const user of premiumUsers) {
+            if (!user.sponsorId) continue;
+
+            const l1 = user.sponsor;
+            const l2 = l1?.sponsor;
+
+            // L1 Bonus (₹100)
+            if (l1 && l1.plan === 'PREMIUM') {
+                const l1Bonus = await prisma.transaction.findFirst({
+                    where: { userId: l1.id, fromUserId: user.id, category: 'BONUS', amount: 100 }
+                });
+
+                if (!l1Bonus) {
+                    await prisma.$transaction([
+                        prisma.wallet.updateMany({
+                            where: { userId: l1.id, type: 'CASH' },
+                            data: { balance: { increment: 100 } }
+                        }),
+                        prisma.transaction.create({
+                            data: {
+                                userId: l1.id,
+                                fromUserId: user.id,
+                                amount: 100,
+                                type: 'CREDIT',
+                                category: 'BONUS',
+                                description: `RECALC_FIX: Referral Income (L1) from ${user.mobile}`
+                            }
+                        })
+                    ]);
+                    fixedCount++;
+                }
+            }
+
+            // L2 Bonus (₹80)
+            if (l2 && l2.plan === 'PREMIUM') {
+                const l2Bonus = await prisma.transaction.findFirst({
+                    where: { userId: l2.id, fromUserId: user.id, category: 'BONUS', amount: 80 }
+                });
+
+                if (!l2Bonus) {
+                    await prisma.$transaction([
+                        prisma.wallet.updateMany({
+                            where: { userId: l2.id, type: 'CASH' },
+                            data: { balance: { increment: 80 } }
+                        }),
+                        prisma.transaction.create({
+                            data: {
+                                userId: l2.id,
+                                fromUserId: user.id,
+                                amount: 80,
+                                type: 'CREDIT',
+                                category: 'BONUS',
+                                description: `RECALC_FIX: Team Income (L2) from ${user.mobile}`
+                            }
+                        })
+                    ]);
+                    fixedCount++;
+                }
+            }
+        }
+
+        return successResponse(res, 200, 'Recalculation Complete', { fixedCount, message: `System audited and fixed ${fixedCount} missing commissions.` });
+    } catch (err) {
+        console.error('[RECALCULATE_ERROR]', err);
+        return errorResponse(res, 500, 'Failed to recalculate: ' + err.message);
+    }
+};
+
 module.exports = { 
     getStats, 
     getAllUsers, 
@@ -796,5 +878,6 @@ module.exports = {
     createManualPayout,
     manualUpgrade,
     getAnalytics,
-    transferCommission
+    transferCommission,
+    recalculateCommissions
 };

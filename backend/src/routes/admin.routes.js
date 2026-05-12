@@ -34,6 +34,7 @@ router.put('/upgrade-user/:id', adminController.manualUpgrade);
 router.get('/config', adminController.getSystemConfig);
 router.post('/update-config', adminController.updateSystemConfig);
 router.post('/manual-payout', adminController.createManualPayout);
+router.post('/recalculate-commissions', adminController.recalculateCommissions);
 router.get('/security-logs', adminController.getSecurityLogs);
 router.get('/analytics', adminController.getAnalytics);
 
