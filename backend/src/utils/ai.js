@@ -40,18 +40,16 @@ async function getAIResponse(userMessage) {
     }
 
     const models = [
-        "gemini-flash-latest",
-        "gemini-2.0-flash",
-        "gemini-2.5-flash",
-        "gemini-pro-latest",
-        "gemini-1.5-flash"
+        "gemini-1.5-flash",
+        "gemini-1.5-pro",
+        "gemini-pro"
     ];
     
     const keyDebug = `${key.substring(0, 4)}...${key.substring(key.length - 4)}`;
     
     for (const model of models) {
         try {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+            const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${key}`;
             const response = await axios.post(url, {
                 contents: [{
                     parts: [{
