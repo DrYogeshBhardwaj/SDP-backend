@@ -35,6 +35,7 @@ router.get('/config', adminController.getSystemConfig);
 router.post('/update-config', adminController.updateSystemConfig);
 router.post('/manual-payout', adminController.createManualPayout);
 router.post('/recalculate-commissions', adminController.recalculateCommissions);
+router.post('/purge-revenue', adminController.purgeRevenue);
 router.get('/security-logs', adminController.getSecurityLogs);
 router.get('/analytics', adminController.getAnalytics);
 

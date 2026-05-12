@@ -249,6 +249,7 @@
                 <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem;">
                     <h2 style="font-size: 2.5rem; letter-spacing: -1px; margin: 0;">Wholesale Overview</h2>
                     <div style="display: flex; gap: 10px;">
+                        <button onclick="purgeRevenue()" class="btn-primary" style="padding: 10px 20px; font-size: 0.7rem; background: #ff5252; border: none; color: #fff; font-weight: 800;">🗑️ PURGE & RESET REVENUE</button>
                         <button onclick="recalculateCommissions()" class="btn-primary" style="padding: 10px 20px; font-size: 0.7rem; background: #ffab00; border: none; color: #000; font-weight: 800;">⚡ RECALCULATE BONUSES (FIX PENDING)</button>
                         <button onclick="loadStats(true)" class="btn-primary" style="padding: 10px 20px; font-size: 0.7rem; background: rgba(0,216,255,0.1); border: 1px solid var(--primary); color: var(--primary);">🔄 REFRESH STATS</button>
                     </div>
@@ -1476,6 +1477,30 @@
                     document.getElementById('sync-text').innerText = "AUDIT COMPLETE: " + data.data.message;
                     await new Promise(r => setTimeout(r, 1500));
                     loadStats(true);
+                } else {
+                    alert("Error: " + data.message);
+                }
+            } catch (e) {
+                alert("Failed to reach server");
+            } finally {
+                document.getElementById('sync-overlay').style.display = 'none';
+            }
+        }
+        async function purgeRevenue() {
+            if (!confirm("CRITICAL ACTION: This will delete ALL revenue records and re-create the official 15 entries. Duplicates will be permanently removed. Continue?")) return;
+            
+            document.getElementById('sync-overlay').style.display = 'flex';
+            document.getElementById('sync-progress').style.width = '30%';
+            document.getElementById('sync-text').innerText = "PURGING OLD RECORDS...";
+
+            try {
+                const data = await api('/purge-revenue', 'POST', {});
+                if (data.success) {
+                    document.getElementById('sync-progress').style.width = '100%';
+                    document.getElementById('sync-text').innerText = "CLEANUP COMPLETE: " + data.data.created + " ENTRIES RESTORED.";
+                    await new Promise(r => setTimeout(r, 2000));
+                    loadStats(true);
+                    loadDisbursements();
                 } else {
                     alert("Error: " + data.message);
                 }
