@@ -2,8 +2,8 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function cleanupRevenue() {
-    console.log('\n--- SINAANK REVENUE CLEANUP & AUDIT ---');
-    console.log('Target: Synchronize Revenue with the official 15-entry list.\n');
+    console.log('\n--- SINAANK REVENUE PURGE & RESET (FRESH START) ---');
+    console.log('Action: Deleting ALL old revenue records and recreating the official 15 entries.\n');
 
     const correctEntries = [
         { mobile: '9540068900', name: 'Ravi yadav', date: '2026-05-12', description: 'Manual Activation via Password (₹299)' },
@@ -24,72 +24,44 @@ async function cleanupRevenue() {
     ];
 
     try {
-        const idsToKeep = [];
+        // 1. PURGE ALL OLD DATA
+        const purgeRes = await prisma.transaction.deleteMany({
+            where: {
+                category: { in: ['PLAN_UPGRADE', 'REGISTRATION_FEE'] }
+            }
+        });
+        console.log(`[!] PURGED ${purgeRes.count} old revenue records.`);
 
+        // 2. RECREATE FRESH DATA
+        let createdCount = 0;
         for (const entry of correctEntries) {
             const user = await prisma.user.findUnique({ where: { mobile: entry.mobile } });
             if (!user) {
-                console.log(`[!] User ${entry.mobile} (${entry.name}) missing from DB. Skipping...`);
+                console.log(`[?] User ${entry.mobile} missing from User table. Skipping re-creation.`);
                 continue;
             }
 
-            // Find if a record already exists for this user
-            const existing = await prisma.transaction.findFirst({
-                where: { 
-                    userId: user.id, 
-                    category: { in: ['PLAN_UPGRADE', 'REGISTRATION_FEE'] } 
+            await prisma.transaction.create({
+                data: {
+                    userId: user.id,
+                    amount: 299,
+                    type: 'CREDIT',
+                    category: 'PLAN_UPGRADE',
+                    description: entry.description,
+                    createdAt: new Date(entry.date)
                 }
             });
-
-            if (existing) {
-                // Update existing record to match correct details
-                const updated = await prisma.transaction.update({
-                    where: { id: existing.id },
-                    data: {
-                        description: entry.description,
-                        createdAt: new Date(entry.date),
-                        amount: 299,
-                        type: 'CREDIT',
-                        category: 'PLAN_UPGRADE'
-                    }
-                });
-                idsToKeep.push(updated.id);
-                console.log(`[OK] Verified/Updated record for ${entry.mobile}`);
-            } else {
-                // Create missing record
-                const created = await prisma.transaction.create({
-                    data: {
-                        userId: user.id,
-                        amount: 299,
-                        type: 'CREDIT',
-                        category: 'PLAN_UPGRADE',
-                        description: entry.description,
-                        createdAt: new Date(entry.date)
-                    }
-                });
-                idsToKeep.push(created.id);
-                console.log(`[+] Created missing record for ${entry.mobile}`);
-            }
+            createdCount++;
+            console.log(`[+] Re-created entry for ${entry.mobile}`);
         }
 
-        // Delete all OTHER revenue records (Duplicates or incorrect ones)
-        const deleteRes = await prisma.transaction.deleteMany({
-            where: {
-                category: { in: ['PLAN_UPGRADE', 'REGISTRATION_FEE'] },
-                id: { notIn: idsToKeep }
-            }
-        });
-
-        console.log(`\nCleanup successful: Deleted ${deleteRes.count} invalid/duplicate records.`);
-        
-        const finalCount = await prisma.transaction.count({
-            where: { category: { in: ['PLAN_UPGRADE', 'REGISTRATION_FEE'] } }
-        });
-        console.log(`Final Database Revenue Entries: ${finalCount}`);
-        console.log(`Total Revenue Amount: ₹${finalCount * 299}`);
+        console.log(`\nRESET COMPLETE!`);
+        console.log(`Purged: ${purgeRes.count}`);
+        console.log(`Re-created: ${createdCount} (Target: 15)`);
+        console.log(`Final Total In: ₹${createdCount * 299}`);
 
     } catch (err) {
-        console.error('Cleanup failed:', err);
+        console.error('Purge failed:', err);
     } finally {
         await prisma.$disconnect();
     }
