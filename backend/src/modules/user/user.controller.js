@@ -97,7 +97,7 @@ const submitQuery = async (req, res) => {
                  await prisma.supportQuery.update({
                      where: { id: query.id },
                      data: { 
-                         response: `Admin (AI): ${aiReply}`,
+                         response: aiReply,
                          status: 'RESOLVED' 
                      }
                  });
