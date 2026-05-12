@@ -20,6 +20,12 @@ MLM & EARNINGS:
 - UPI ID is locked once saved. Contact support to change.
 
 TONE: Professional, authoritative yet caring, and strictly helpful.
+
+LANGUAGE RULE:
+- Always respond in the SAME LANGUAGE as the user's query.
+- If the user asks in Hindi, reply in Hindi.
+- If the user asks in English, reply in English.
+- Maintain the same helpful information regardless of language.
 `;
 
 async function getAIResponse(userMessage) {
