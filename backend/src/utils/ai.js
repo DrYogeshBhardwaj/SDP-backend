@@ -1,4 +1,4 @@
-const axios = require('axios');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const SINAANK_KNOWLEDGE = `
 You are the Official Sinaank Admin (AI Support). Your goal is to provide expert guidance to our partners and users.
@@ -39,43 +39,27 @@ async function getAIResponse(userMessage) {
         return "Support AI is currently in maintenance. Please set the API Key in environment.";
     }
 
-    const models = [
-        "gemini-1.5-flash",
-        "gemini-1.5-pro",
-        "gemini-pro"
-    ];
-    
-    const keyDebug = `${key.substring(0, 4)}...${key.substring(key.length - 4)}`;
-    
-    for (const model of models) {
+    try {
+        const genAI = new GoogleGenerativeAI(key);
+        // Using the most stable model name for SDK
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+        const prompt = `${SINAANK_KNOWLEDGE}\n\nUser Query: ${userMessage}`;
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        return response.text();
+    } catch (error) {
+        console.error("Gemini SDK Error:", error.message);
+        
+        // Fallback to older model if flash is not available
         try {
-            const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${key}`;
-            const response = await axios.post(url, {
-                contents: [{
-                    parts: [{
-                        text: `${SINAANK_KNOWLEDGE}\n\nUser Query: ${userMessage}`
-                    }]
-                }]
-            }, {
-                headers: { 'Content-Type': 'application/json' }
-            });
-
-            if (response.data && response.data.candidates && response.data.candidates[0].content) {
-                return response.data.candidates[0].content.parts[0].text;
-            }
-        } catch (error) {
-            let errMsg = error.response ? JSON.stringify(error.response.data) : error.message;
-            
-            // Special check for leaked key
-            if (error.response && error.response.status === 403 && errMsg.includes("leaked")) {
-                return "CRITICAL: The Gemini API Key has been reported as LEAKED by Google. Please generate a new key in Google AI Studio and update the server configuration.";
-            }
-
-            console.error(`Direct API Error with ${model}:`, errMsg);
-            
-            if (model === models[models.length - 1]) {
-                return `AI Support is currently under load or configuration is pending. Error: ${errMsg}.`;
-            }
+            const genAI = new GoogleGenerativeAI(key);
+            const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+            const result = await model.generateContent(`${SINAANK_KNOWLEDGE}\n\nUser Query: ${userMessage}`);
+            const response = await result.response;
+            return response.text();
+        } catch (e2) {
+            return `AI Support is currently under load. Please try again later. Error: ${e2.message}`;
         }
     }
 }
