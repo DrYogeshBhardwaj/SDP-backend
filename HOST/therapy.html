@@ -626,8 +626,10 @@
         }
 
         function setupGuestMode() {
-            document.getElementById('header-name').innerText = "Guest Experience";
-            document.getElementById('header-mobile').innerText = "Session Active";
+            const urlParams = new URLSearchParams(window.location.search);
+            const guestMobile = urlParams.get('mobile') || 'Guest';
+            document.getElementById('header-name').innerText = "Demo Experience";
+            document.getElementById('header-mobile').innerText = guestMobile.length === 10 ? `+91 ${guestMobile}` : "Guest Mode";
             selectedTime = 3;
             timeLeft = 180;
             calculateDailyUniversalTheme();
