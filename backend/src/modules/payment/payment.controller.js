@@ -189,7 +189,7 @@ const processSuccessfulPayment = async ({ orderId, mobile, name, upiId, sponsorC
                 isBusinessUnlocked: true,
                 sponsorId: sponsorId || undefined,
                 referralCode: user.referralCode || generateReferralCode(),
-                minutesBalance: 3600
+                minutesBalance: 1100
             }
         });
     } else {
@@ -373,7 +373,7 @@ const verifyPasswordPayment = async (req, res) => {
                     isBusinessUnlocked: true,
                     sponsorId: sponsorId || undefined,
                     referralCode: user.referralCode || generateReferralCode(),
-                    minutesBalance: 3600
+                    minutesBalance: 1100
                 }
             });
         } else {
@@ -386,7 +386,7 @@ const verifyPasswordPayment = async (req, res) => {
                 data: { 
                     plan: 'PREMIUM', 
                     isBusinessUnlocked: true,
-                    minutesBalance: 3600
+                    minutesBalance: 1100
                 }
             });
         }
