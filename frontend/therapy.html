@@ -445,16 +445,7 @@
                 
                 <div style="margin-top: 2rem; border-top: 1px solid var(--border-glass); padding-top: 1.5rem; width: 100%;">
                     <div class="card-title" style="font-size: 0.6rem;">SESSION DURATION</div>
-                    <div class="time-selector">
-                        <button class="time-btn btn-t-2 active" onclick="setTime(2, this)">2 MIN</button>
-                        <button class="time-btn btn-t-5" onclick="setTime(5, this)">
-                            5 MIN
-                            <span class="lock-icon" style="font-size: 0.6rem; margin-left: 4px; opacity: 0.5;">🔒</span>
-                        </button>
-                        <button class="time-btn btn-t-10" onclick="setTime(10, this)">
-                            10 MIN
-                            <span class="lock-icon" style="font-size: 0.6rem; margin-left: 4px; opacity: 0.5;">🔒</span>
-                        </button>
+                        <button class="time-btn btn-t-3 active" onclick="setTime(3, this)">3 MIN</button>
                     </div>
                     <button onclick="startTherapy()" id="global-sync-btn" class="btn-primary glow-start btn-pulse" style="width: 100%; padding: 20px; margin-top: 1rem;">अनुभव शुरू करें (START)</button>
                 </div>
@@ -481,16 +472,7 @@
 
                 <div style="margin-top: 2rem; border-top: 1px solid var(--border-glass); padding-top: 1.5rem; width: 100%;">
                     <div class="card-title" style="font-size: 0.6rem;">SESSION DURATION</div>
-                    <div class="time-selector">
-                        <button class="time-btn btn-t-2 active" onclick="setTime(2, this)">2 MIN</button>
-                        <button class="time-btn btn-t-5" onclick="setTime(5, this)">
-                            5 MIN
-                            <span class="lock-icon" style="font-size: 0.6rem; margin-left: 4px; opacity: 0.5;">🔒</span>
-                        </button>
-                        <button class="time-btn btn-t-10" onclick="setTime(10, this)">
-                            10 MIN
-                            <span class="lock-icon" style="font-size: 0.6rem; margin-left: 4px; opacity: 0.5;">🔒</span>
-                        </button>
+                        <button class="time-btn btn-t-3 active" onclick="setTime(3, this)">3 MIN</button>
                     </div>
                     <button onclick="startTherapy()" class="btn-primary glow-start combo-start-btn" style="width: 100%; padding: 20px; margin-top: 1rem;" disabled>अनुभव शुरू करें (START)</button>
                 </div>
@@ -514,16 +496,7 @@
 
                 <div style="margin-top: 2rem; border-top: 1px solid var(--border-glass); padding-top: 1.5rem; width: 100%;">
                     <div class="card-title" style="font-size: 0.6rem;">SESSION DURATION</div>
-                    <div class="time-selector">
-                        <button class="time-btn btn-t-2 active" onclick="setTime(2, this)">2 MIN</button>
-                        <button class="time-btn btn-t-5" onclick="setTime(5, this)">
-                            5 MIN
-                            <span class="lock-icon" style="font-size: 0.6rem; margin-left: 4px; opacity: 0.5;">🔒</span>
-                        </button>
-                        <button class="time-btn btn-t-10" onclick="setTime(10, this)">
-                            10 MIN
-                            <span class="lock-icon" style="font-size: 0.6rem; margin-left: 4px; opacity: 0.5;">🔒</span>
-                        </button>
+                        <button class="time-btn btn-t-3 active" onclick="setTime(3, this)">3 MIN</button>
                     </div>
                     <button onclick="startTherapy()" class="btn-primary glow-start choice-start-btn" style="width: 100%; padding: 20px; margin-top: 1rem;" disabled>अनुभव शुरू करें (START)</button>
                 </div>
@@ -534,7 +507,7 @@
         <div id="session-view" class="view-content" style="display: none; justify-content: center; align-items: center; padding-top: 5vh;">
             <div class="meditation-secondary" id="active-mode-label" style="margin-bottom: 2rem;">AUTO MODE</div>
             
-            <div class="timer-display" id="timer">02:00</div>
+            <div class="timer-display" id="timer">03:00</div>
             
             <div class="breath-guide" style="margin-top: 4rem;">
                 <div class="breath-circle"></div>
@@ -768,14 +741,10 @@
         }
 
         function setTime(min, el) {
-            if (userData && userData.plan === 'FREE' && min > 2) {
-                showUpgradePopup();
-                return;
-            }
-            selectedTime = min;
+            selectedTime = 3; // Always 3
             document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.btn-t-' + min).forEach(b => b.classList.add('active'));
-            document.getElementById('timer').innerText = `${String(min).padStart(2,'0')}:00`;
+            document.querySelectorAll('.btn-t-3').forEach(b => b.classList.add('active'));
+            document.getElementById('timer').innerText = `03:00`;
         }
 
         function showUpgradePopup() {

@@ -12,7 +12,7 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rewards & Earnings | Sinaank Therapy</title>
+    <title>Rewards & Earnings | Sinaank Wellness</title>
     <link rel="stylesheet" href="css/v1.css">
     <link rel="icon" type="image/png" href="Logo.png">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Hind:wght@400;700&display=swap" rel="stylesheet">
@@ -307,12 +307,12 @@
         }
 
         function copyToClipboard() {
-            navigator.clipboard.writeText(`Experience Sinaank Digital Therapy 🌿 Start your energy alignment journey here: ${currentLink}`);
+            navigator.clipboard.writeText(`Experience Sinaank Wellness 🌿 Start your energy alignment journey here: ${currentLink}`);
             alert("Link Copied!");
         }
 
         function shareWhatsApp() {
-            window.open(`https://wa.me/?text=${encodeURIComponent('Experience Sinaank Digital Therapy 🌿 Start your energy alignment journey here: ' + currentLink)}`, '_blank');
+            window.open(`https://wa.me/?text=${encodeURIComponent('Experience Sinaank Wellness 🌿 Start your energy alignment journey here: ' + currentLink)}`, '_blank');
         }
 
         async function upgradePlan(plan, amount) {
@@ -328,7 +328,7 @@
                     key: data.data.key,
                     amount: data.data.amount,
                     currency: "INR",
-                    name: "Sinaank Therapy",
+                    name: "Sinaank Wellness",
                     order_id: data.data.orderId,
                     handler: async function (response) {
                         const vRes = await fetch(CONFIG.API_BASE_URL + '/api/payment/verify', {
