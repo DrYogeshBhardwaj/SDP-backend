@@ -42,7 +42,7 @@ async function getAIResponse(userMessage) {
     try {
         const genAI = new GoogleGenerativeAI(key);
         // Using the most stable model name for SDK
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
         const prompt = `${SINAANK_KNOWLEDGE}\n\nUser Query: ${userMessage}`;
         const result = await model.generateContent(prompt);
@@ -54,7 +54,7 @@ async function getAIResponse(userMessage) {
         // Fallback to older model if flash is not available
         try {
             const genAI = new GoogleGenerativeAI(key);
-            const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+            const model = genAI.getGenerativeModel({ model: "gemini-pro-latest" });
             const result = await model.generateContent(`${SINAANK_KNOWLEDGE}\n\nUser Query: ${userMessage}`);
             const response = await result.response;
             return response.text();
